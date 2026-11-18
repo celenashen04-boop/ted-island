@@ -4,10 +4,11 @@ import { mkdirSync, readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { plots, canPlant } from './public/plots.mjs';
 
-const vercelPreview = process.env.VERCEL === '1';
+const startedDirectly = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
+const vercelPreview = process.env.VERCEL === '1' || !startedDirectly;
 const directory = process.env.TED_DATA_DIR ?? (vercelPreview
   ? join(tmpdir(), 'ted-island')
   : fileURLToPath(new URL('./data/', import.meta.url)));
@@ -97,7 +98,7 @@ const files = new Map([
   ['/scene.mjs', [new URL('./public/scene.mjs', import.meta.url), 'text/javascript; charset=utf-8']],
   ['/app.mjs', [new URL('./public/app.mjs', import.meta.url), 'text/javascript; charset=utf-8']],
   ['/plots.mjs', [new URL('./public/plots.mjs', import.meta.url), 'text/javascript; charset=utf-8']]
-].map(([path, [url, type]]) => [path, [readFileSync(url), type]]));
+]);
 
 function playerFor(req, res) {
   const existing = /(?:^|;\s*)ted-player=([a-f0-9-]{36})(?:;|$)/.exec(req.headers.cookie ?? '')?.[1];
@@ -175,13 +176,14 @@ async function plant(req, res, player) {
   broadcast();
 }
 
-const server = createServer(async (req, res) => {
+export async function handleRequest(req, res) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'no-referrer');
   const path = new URL(req.url, 'http://localhost').pathname;
   try {
-    if (req.method === 'GET' && files.has(path)) {
-      const [data, type] = files.get(path);
+    if (!vercelPreview && req.method === 'GET' && files.has(path)) {
+      const [url, type] = files.get(path);
+      const data = readFileSync(url);
       res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-cache' });
       return res.end(data);
     }
@@ -191,7 +193,9 @@ const server = createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', 'X-Accel-Buffering': 'no' });
       clients.set(res, player);
       res.on('close', () => clients.delete(res));
-      return res.write('data: ' + JSON.stringify(snapshot(player)) + '\n\n');
+      res.write('data: ' + JSON.stringify(snapshot(player)) + '\n\n');
+      if (vercelPreview) await new Promise(resolve => res.once('close', resolve));
+      return;
     }
     const match = /^\/api\/plants\/([a-f0-9-]{36})\/(article|water)$/.exec(path);
     if (req.method === 'GET' && match?.[2] === 'article') {
@@ -226,11 +230,14 @@ const server = createServer(async (req, res) => {
     if (!res.headersSent) json(res, 500, { error: 'The garden could not save that change. Try again.' });
     else res.destroy();
   }
-});
+}
 const heartbeat = setInterval(() => {
   for (const res of clients.keys()) res.write(': heartbeat\n\n');
 }, 15000);
 heartbeat.unref();
-server.listen(Number(process.env.PORT ?? 4173), process.env.HOST ?? '127.0.0.1', () => {
-  console.log('TED Island running at http://' + server.address().address + ':' + server.address().port);
-});
+if (startedDirectly) {
+  const server = createServer(handleRequest);
+  server.listen(Number(process.env.PORT ?? 4173), process.env.HOST ?? '127.0.0.1', () => {
+    console.log('TED Island running at http://' + server.address().address + ':' + server.address().port);
+  });
+}

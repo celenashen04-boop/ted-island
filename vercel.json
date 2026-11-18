@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "builds": [
+    { "src": "public/**", "use": "@vercel/static" },
+    { "src": "api/garden.mjs", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/garden.mjs?__garden_route=$1" },
+    { "src": "/", "dest": "/public/index.html" },
+    { "src": "/(style\\.css|scene\\.mjs|app\\.mjs|plots\\.mjs)", "dest": "/public/$1" }
+  ]
+}
