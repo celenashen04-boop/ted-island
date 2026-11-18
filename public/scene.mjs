@@ -29,16 +29,8 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
   const throwButton=document.getElementById('seed-mode');
   const seedLabel=document.getElementById('seed-label')??throwButton;
   const moveStick=document.getElementById('move-stick');
-  const touchLayout=window.matchMedia?.('(pointer: coarse)');
   const movement={side:0,ahead:0};
   let stickId=null;
-  function updateControls(){
-    const mobile=touchLayout?.matches;
-    controls.textContent=throwing
-      ? (mobile?'Pull back from the seed to throw':'WASD walk · Drag the seed to throw · Q to cancel')
-      : (mobile?'Joystick to move · Swipe to look · Tap plants':'WASD walk · Drag or arrow keys to look · Click a plant to read');
-  }
-  const controls=document.getElementById('controls');
   const canvasReady=()=>canvas===document.activeElement && !document.querySelector('dialog[open]');
   const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
   const ctx = canvas.getContext('2d');
@@ -333,7 +325,6 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
     canvas.parentElement?.classList.toggle('is-throwing',active);
     throwButton.setAttribute('aria-pressed',String(active));
     seedLabel.textContent=active?'Cancel throw':'Throw seed';
-    updateControls();
     canvas.focus({preventScroll:true});
   }
 
@@ -692,8 +683,6 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
       if(stickId===event.pointerId)resetStick();
     });
   }
-  touchLayout?.addEventListener?.('change',updateControls);
-  updateControls();
   throwButton.addEventListener('click',toggleThrow);
   window.addEventListener('keydown',event=>{
     if(!canvasReady() || event.ctrlKey || event.metaKey || event.altKey)return;
