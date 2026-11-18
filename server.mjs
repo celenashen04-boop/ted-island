@@ -2,12 +2,17 @@ import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { plots, canPlant } from './public/plots.mjs';
 
-const directory = process.env.TED_DATA_DIR ?? fileURLToPath(new URL('./data/', import.meta.url));
+const vercelPreview = process.env.VERCEL === '1';
+const directory = process.env.TED_DATA_DIR ?? (vercelPreview
+  ? join(tmpdir(), 'ted-island')
+  : fileURLToPath(new URL('./data/', import.meta.url)));
 mkdirSync(directory, { recursive: true });
-const db = new DatabaseSync(directory + '/garden.sqlite');
+const db = new DatabaseSync(join(directory, 'garden.sqlite'));
 const plantColumns=`
   id TEXT PRIMARY KEY,
   owner TEXT NOT NULL,
@@ -87,12 +92,12 @@ const getPDF = db.prepare('SELECT pdf FROM plants WHERE id=?');
 const clients = new Map();
 const maxPDF = 10 * 1024 * 1024;
 const files = new Map([
-  ['/', ['index.html', 'text/html; charset=utf-8']],
-  ['/style.css', ['style.css', 'text/css; charset=utf-8']],
-  ['/scene.mjs', ['scene.mjs', 'text/javascript; charset=utf-8']],
-  ['/app.mjs', ['app.mjs', 'text/javascript; charset=utf-8']],
-  ['/plots.mjs', ['plots.mjs', 'text/javascript; charset=utf-8']]
-].map(([path, [name, type]]) => [path, [readFileSync(new URL('./public/' + name, import.meta.url)), type]]));
+  ['/', [new URL('./public/index.html', import.meta.url), 'text/html; charset=utf-8']],
+  ['/style.css', [new URL('./public/style.css', import.meta.url), 'text/css; charset=utf-8']],
+  ['/scene.mjs', [new URL('./public/scene.mjs', import.meta.url), 'text/javascript; charset=utf-8']],
+  ['/app.mjs', [new URL('./public/app.mjs', import.meta.url), 'text/javascript; charset=utf-8']],
+  ['/plots.mjs', [new URL('./public/plots.mjs', import.meta.url), 'text/javascript; charset=utf-8']]
+].map(([path, [url, type]]) => [path, [readFileSync(url), type]]));
 
 function playerFor(req, res) {
   const existing = /(?:^|;\s*)ted-player=([a-f0-9-]{36})(?:;|$)/.exec(req.headers.cookie ?? '')?.[1];
