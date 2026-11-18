@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="A shared research garden on a floating island.">
+  <title>TED Island · CHI Research Garden</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="world" aria-label="TED Island research garden">
+    <canvas id="map" tabindex="0" aria-label="First-person island. Use W A S D to walk, arrow keys to look, click a plant to read its research, and press Q to throw a seed."></canvas>
+    <p class="controls" id="controls">WASD walk · Drag or arrow keys to look · Click a plant to read</p>
+    <div class="move-stick" id="move-stick" aria-hidden="true"><span></span></div>
+    <button type="button" id="seed-mode" class="seed-mode" aria-pressed="false"><span id="seed-label">Throw seed</span><kbd>Q</kbd></button>
+    <p class="message" id="message" role="status"></p>
+  </main>
+  <dialog id="plant-dialog">
+    <form id="plant-form">
+      <div class="dialog-header"><h2>Plant a research seed</h2><button type="button" data-close aria-label="Close">×</button></div>
+      <p class="muted">Your seed landed on open grass. Add your research to plant it.</p>
+      <label>Article title<input name="title" required maxlength="120"></label>
+      <label>Research idea<textarea name="idea" required maxlength="500" rows="4" placeholder="What question are you exploring?"></textarea></label>
+      <label>Research article (PDF, up to 10 MB)<input name="article" type="file" accept=".pdf,application/pdf" required></label>
+      <p class="muted">Players who can enter this garden can read your idea and open your PDF.</p>
+      <p class="error" id="plant-error" role="alert"></p>
+      <button class="primary" type="submit">Plant research seed</button>
+    </form>
+  </dialog>
+  <dialog id="idea-dialog">
+    <div class="dialog-header"><p class="muted">Research seed</p><button type="button" data-close aria-label="Close">×</button></div>
+    <h2 id="idea-title"></h2>
+    <p id="idea-text"></p>
+    <p id="idea-growth" class="muted" aria-live="polite"></p>
+    <div class="idea-actions">
+      <a class="secondary" id="article-link" target="_blank" rel="noopener">Open research PDF</a>
+      <button class="primary" id="water" type="button">♡ Like · Water</button>
+    </div>
+    <p class="error" id="water-error" role="alert"></p>
+  </dialog>
+  <script type="module" src="/app.mjs"></script>
+</body>
+</html>

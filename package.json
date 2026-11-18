@@ -1,0 +1,7 @@
+{
+  "name": "ted-island",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": { "dev": "node server.mjs", "start": "node server.mjs" }
+}
