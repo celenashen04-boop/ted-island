@@ -76,12 +76,12 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
       face([q,Q,S,s],color);face([p,t,T,P],'#ffc68e');
     }
   }
-  function crystal(x,y,z,rx,ry,rz,color,sides=7) {
+  function crystal(x,y,z,rx,ry,rz,color,sides=7,layer=2) {
     const ring=Array.from({length:sides},(_,i)=>[x+rx*Math.cos(i*2*Math.PI/sides),y,z+rz*Math.sin(i*2*Math.PI/sides)]);
     ring.forEach((a,i)=>{
       const b=ring[(i+1)%sides];
-      face([a,[x,y+ry,z],b],color);
-      face([a,b,[x,y-ry*.72,z]],color);
+      face([a,[x,y+ry,z],b],color,1,null,layer);
+      face([a,b,[x,y-ry*.72,z]],color,1,null,layer);
     });
   }
   function branch(a,b,r,color){
@@ -152,6 +152,14 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
   {
     const terrain=Math.sqrt(3);
     origin=[0,0,0];
+    // Fill the whole footprint beneath the tiles so their antialiased edges
+    // cannot reveal rock or sky between them.
+    const outline=[
+      [-3.5,-2.5],[-3.5,2.5],[-2.5,2.5],[-2.5,3.5],
+      [2.5,3.5],[2.5,2.5],[3.5,2.5],[3.5,-2.5],
+      [2.5,-2.5],[2.5,-3.5],[-2.5,-3.5],[-2.5,-2.5]
+    ];
+    face(outline.map(([x,z])=>[x*tileWidth,0,z*tileDepth]),lawn[0],1,null,.5);
     for(let j=-3;j<=3;j++)for(let i=-3;i<=3;i++){
       const radius=Math.hypot(i,j);
       if(Math.abs(i)+Math.abs(j)===6) continue;
@@ -204,8 +212,8 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
     origin=[0,0,0];
     for(const sign of [-1,1]){
       const a=sign*(2.98*terrain+random()*.27), b=(random()-.5)*2, c=-.68-random()*.69;
-      box(a,c,b,.25,.28,.25,pick(rocks),pick(moss));
-      crystal(a,c,b,.165,.18,.16,pick(rocks),4);
+      box(a,c,b,.25,.28,.25,pick(rocks),pick(moss),0);
+      crystal(a,c,b,.165,.18,.16,pick(rocks),4,0);
     }
   }
   let width, height;
