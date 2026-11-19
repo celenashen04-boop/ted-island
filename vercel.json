@@ -7,6 +7,6 @@
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/garden.mjs?__garden_route=$1" },
     { "src": "/", "dest": "/public/index.html" },
-    { "src": "/(style\\.css|scene\\.mjs|app\\.mjs|plots\\.mjs)", "dest": "/public/$1" }
+    { "src": "/(style\\.css|scene\\.mjs|app\\.mjs|islands\\.mjs|world\\.mjs|plots\\.mjs)", "dest": "/public/$1" }
   ]
 }

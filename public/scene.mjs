@@ -1,3 +1,4 @@
+import { islands, islandRim, islandLandmarks } from './islands.mjs';
 import { onIsland, canPlant, tileWidth, tileDepth } from './plots.mjs';
 
 export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
@@ -35,6 +36,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
   const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
   const ctx = canvas.getContext('2d');
   const faces = [];
+  let currentIsland=null, distantFaces=[], distantLabels=[];
   let origin, seed = 417;
   const random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
   const pick = list => list[Math.floor(random()*list.length)];
@@ -47,21 +49,21 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
     const channel = shift => Math.round(Math.max(0,Math.min(255,((n>>shift)&255)*light)));
     return 'rgb('+[channel(16),channel(8),channel(0)].join(',')+')';
   }
-  function face(vertices, color, alpha = 1, decal = null, layer = 2) {
+  function face(vertices, color, alpha = 1, decal = null, layer = 2, mesh = faces) {
     const [a,b,c] = vertices;
     const u = b.map((v,i)=>v-a[i]), v = c.map((n,i)=>n-a[i]);
     const normal = [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
     const length = Math.hypot(...normal) || 1;
     const lighting = .82 + .27*(normal[0]*-.45+normal[1]*.8+normal[2]*.39)/length;
-    faces.push({points:vertices.map(p=>p.map((n,i)=>n+origin[i])),normal,color:color && tint(color,lighting),alpha,decal,layer});
+    mesh.push({points:vertices.map(p=>p.map((n,i)=>n+origin[i])),normal,color:color && tint(color,lighting),alpha,decal,layer});
   }
-  function box(x,y,z,w,h,d,color,top=color,layer=2) {
+  function box(x,y,z,w,h,d,color,top=color,layer=2,mesh=faces) {
     const X=x+w/2, Z=z+d/2, Y=y+h; x-=w/2;z-=d/2;
     const a=[x,y,z], b=[X,y,z], c=[X,y,Z], e=[x,y,Z];
     const A=[x,Y,z], B=[X,Y,z], C=[X,Y,Z], E=[x,Y,Z];
-    face([a,b,c,e],color,1,null,layer);face([A,E,C,B],top,1,null,layer);
-    face([a,A,B,b],color,1,null,layer);face([b,B,C,c],color,1,null,layer);
-    face([e,c,C,E],color,1,null,layer);face([a,e,E,A],color,1,null,layer);
+    face([a,b,c,e],color,1,null,layer,mesh);face([A,E,C,B],top,1,null,layer,mesh);
+    face([a,A,B,b],color,1,null,layer,mesh);face([b,B,C,c],color,1,null,layer,mesh);
+    face([e,c,C,E],color,1,null,layer,mesh);face([a,e,E,A],color,1,null,layer,mesh);
   }
   function arch(x,y,z,r,leg,thickness,depth) {
     const R=r+thickness, spring=y+leg;
@@ -216,6 +218,51 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
       crystal(a,c,b,.165,.18,.16,pick(rocks),4,0);
     }
   }
+  function setIsland(id){
+    if(currentIsland===id)return;
+    const current=islands.find(island=>island.id===id);
+    if(!current)return;
+    currentIsland=id;
+    distantFaces=[];distantLabels=[];
+    const savedOrigin=origin;
+    const spacing=9, size=6.1;
+    for(const island of islands){
+      if(island.id===id)continue;
+      origin=[(island.x-current.x)*spacing,(island.y-current.y)*spacing,(island.z-current.z)*spacing];
+      const rim=islandRim.map(([x,z])=>[x*size,0,z*size]);
+      face([...rim].reverse(),island.color,1,null,-1,distantFaces);
+      for(let i=0;i<rim.length;i++){
+        const corner=rim[i],next=rim[(i+1)%rim.length];
+        const edge=[corner[0]*.85,-.75,corner[2]*.85];
+        const nextEdge=[next[0]*.85,-.75,next[2]*.85];
+        face([corner,next,nextEdge,edge],i%2?'#a5a0a1':'#b2a2a7',1,null,-1,distantFaces);
+        face([edge,nextEdge,[0,-4.1,.35]],i%2?'#88889d':'#a294a0',1,null,-1,distantFaces);
+      }
+      for(const [x,z,y] of islandLandmarks){
+        box(x*size,0,z*size,.82,y*size,.74,'#d3b49e','#f3d5b8',-1,distantFaces);
+        box(x*size,y*size,z*size,.98,.13,.88,'#f3d5b8',undefined,-1,distantFaces);
+      }
+      for(const [x,z] of [[-.33,-.22],[.38,.18]]){
+        box(x*size,0,z*size,.16,.86,.16,'#997b75',undefined,-1,distantFaces);
+        box(x*size,.68,z*size,.84,.38,.75,'#dc9da2','#efb3b0',-1,distantFaces);
+      }
+      distantLabels.push({name:island.name,position:[origin[0],origin[1]+3.85,origin[2]]});
+    }
+    origin=savedOrigin;
+  }
+
+  function drawIslandLabel(text,[x,y]){
+    ctx.save();
+    ctx.font='600 13px system-ui';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    const w=Math.min(width-16,ctx.measureText(text).width+18);
+    const left=clamp(x-w/2,8,width-w-8);
+    ctx.beginPath();ctx.roundRect(left,y-11,w,22,6);
+    ctx.fillStyle='#203747d9';ctx.fill();
+    ctx.fillStyle='#fff8e9';ctx.fillText(text,left+w/2,y,w-12);
+    ctx.restore();
+  }
+
   let width, height;
   function sky(){
     const sky=ctx.createLinearGradient(0,0,width*.3,height);
@@ -343,7 +390,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
   }
 
   function plantSize(plant){
-    return plant.likes>=5?.76:plant.likes>=2?.52:plant.likes?.34:.11;
+    return [.11,.34,.52,.76,1.06][plant.growth] ?? .11;
   }
 
   function drawPlant(project,plant,scale,now) {
@@ -354,7 +401,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
     ctx.save();ctx.translate(sx,sy);
     ctx.beginPath();ctx.ellipse(0,0,.12*scale,.055*scale,0,0,Math.PI*2);
     ctx.fillStyle='#715642';ctx.fill();
-    if(!plant.likes){
+    if(!plant.growth){
       ctx.restore();
       drawSeed(seedX,seedScreenY,clamp(.061*scale,5,24),-.45);
     }else{
@@ -364,20 +411,20 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
         ctx.beginPath();ctx.ellipse(side*tall*.18,-tall*level,tall*.20,tall*.073,side*-.55,0,Math.PI*2);
         ctx.fillStyle=color;ctx.fill();
       }
-      if(plant.likes>=5){
+      if(plant.growth>=3){
         for(let petal=0;petal<6;petal++){
           const a=petal*Math.PI/3;
           ctx.beginPath();ctx.arc(Math.cos(a)*tall*.105,-tall+Math.sin(a)*tall*.105,tall*.082,0,Math.PI*2);
-          ctx.fillStyle='#ffc2c5';ctx.fill();
+          ctx.fillStyle=plant.growth===4?'#ffc2c5':'#aed071';ctx.fill();
         }
         ctx.beginPath();ctx.arc(0,-tall,tall*.066,0,Math.PI*2);ctx.fillStyle='#ffe29c';ctx.fill();
       }
       ctx.restore();
     }
-    const centerX=plant.likes?sx:seedX;
-    const top=plant.likes?sy-tall*1.2:seedScreenY-clamp(.061*scale,5,24)*1.2;
-    const halfWidth=Math.max(12,(plant.likes ? .17 : .078)*scale);
-    if(clearPath(plant.x,plant.likes?plantSize(plant)*.62:seedY,plant.z)){
+    const centerX=plant.growth?sx:seedX;
+    const top=plant.growth?sy-tall*1.2:seedScreenY-clamp(.061*scale,5,24)*1.2;
+    const halfWidth=Math.max(12,(plant.growth ? .17 : .078)*scale);
+    if(clearPath(plant.x,plant.growth?plantSize(plant)*.62:seedY,plant.z)){
       plantHits.push({id:plant.id,left:centerX-halfWidth,right:centerX+halfWidth,top:top-5,bottom:sy+8});
     }
   }
@@ -456,7 +503,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
     const screen=([vx,vy,d])=>[width*.5+focal*vx/d,height*.5-focal*vy/d];
     const project=point=>screen(view(point));
     const visible=[];
-    for(const item of faces){
+    for(const item of [...distantFaces,...faces]){
       const [px,py,pz]=item.points[0], [nx,ny,nz]=item.normal;
       if(nx*(x-px)+ny*(eye-py)+nz*(z-pz)<=0)continue;
       const points=item.points.map(view), clipped=[];
@@ -474,6 +521,14 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
       visible.push({item,pixels,layer:item.layer,depth:clipped.reduce((sum,p)=>sum+p[2],0)/clipped.length,
         decal:item.decal&&points.every(p=>p[2]>=near)});
     }
+    for(const island of distantLabels){
+      const anchor=view(island.position);
+      if(anchor[2]<=near)continue;
+      const point=screen(anchor);
+      if(point[0]>=0 && point[0]<=width && point[1]>=12 && point[1]<=height-12){
+        visible.push({label:island.name,point,layer:-.7,depth:anchor[2]});
+      }
+    }
     for(const plant of plants){
       const depth=view([plant.x,.016,plant.z])[2];
       if(depth>.18)visible.push({plant,depth,layer:2});
@@ -482,7 +537,8 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
     // before structures so a large tile cannot cover smaller objects on it.
     visible.sort((a,b)=>a.layer-b.layer || b.depth-a.depth);
     plantHits=[];
-    for(const {item,pixels,plant,depth,decal} of visible){
+    for(const {item,pixels,plant,depth,decal,label,point} of visible){
+      if(label){drawIslandLabel(label,point);continue;}
       if(plant){drawPlant(project,plant,focal/depth,now);continue;}
       if(item.color){
         ctx.globalAlpha=item.alpha;ctx.fillStyle=item.color;ctx.beginPath();
@@ -704,5 +760,13 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
   canvas.addEventListener('blur',resetInput);
   window.addEventListener('blur',resetInput);
   requestAnimationFrame(draw);
-  return { update(next){plants=next;} };
+  return {
+    update(next,islandId){plants=next;setIsland(islandId);},
+    reset(){
+      ({x,z,yaw,pitch}=spawn);
+      feet=0;verticalSpeed=0;grounded=true;eye=eyeHeight;flight=null;
+      if(throwing)setThrowMode(false);
+      resetInput();
+    }
+  };
 }

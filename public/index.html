@@ -4,24 +4,50 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="A shared research garden on a floating island.">
-  <title>TED Island · CHI Research Garden</title>
+  <title>CHI Island · Research Garden</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <main class="world" aria-label="TED Island research garden">
+  <main class="world" aria-label="CHI Island research garden">
+    <button type="button" id="open-world" class="round-button world-button" aria-label="Open World View">World</button>
+    <div id="island-name" class="island-name"></div>
     <canvas id="map" tabindex="0" aria-label="First-person island. Use W A S D to walk, arrow keys to look, click a plant to read its research, and press Q to throw a seed."></canvas>
     <div class="move-stick" id="move-stick" aria-hidden="true"><span></span></div>
     <button type="button" id="seed-mode" class="seed-mode" aria-pressed="false"><span id="seed-label">Throw seed</span><kbd>Q</kbd></button>
+    <button type="button" id="open-catalog" aria-label="Seed Catalog" class="catalog-button round-button" aria-haspopup="dialog" aria-controls="seed-catalog">Seeds</button>
     <p class="message" id="message" role="status"></p>
   </main>
+  <section id="world-view" class="world-view" aria-label="World View" hidden>
+    <button type="button" id="close-world" class="round-button world-button" aria-label="Return to Player View">Play</button>
+    <button type="button" id="toggle-dashboard" class="catalog-button round-button dashboard-button" aria-label="Bridge dashboard" aria-controls="world-dashboard" aria-expanded="false">Bridges</button>
+    <canvas id="world-map" aria-label="Rotatable map of the CHI islands"></canvas>
+    <aside id="world-dashboard" class="world-dashboard" aria-labelledby="dashboard-title" inert>
+      <h1 id="dashboard-title">Bridge dashboard</h1>
+      <p id="world-home"></p>
+      <h2>Bridges</h2>
+      <div id="bridge-list"></div>
+      <h2>Followed plant updates</h2>
+      <div id="follow-updates"></div>
+    </aside>
+  </section>
+  <dialog id="seed-catalog" aria-labelledby="catalog-title">
+    <div class="dialog-header">
+      <h2 id="catalog-title">Seed Catalog</h2>
+      <button type="button" data-close aria-label="Close Seed Catalog">×</button>
+    </div>
+    <div id="catalog-items"><p>No seeds from other islands yet.</p></div>
+  </dialog>
   <dialog id="plant-dialog">
     <form id="plant-form">
       <div class="dialog-header"><h2>Plant a research seed</h2><button type="button" data-close aria-label="Close">×</button></div>
       <p class="muted">Your seed landed on open grass. Add your research to plant it.</p>
-      <label>Article title<input name="title" required maxlength="120"></label>
-      <label>Research idea<textarea name="idea" required maxlength="500" rows="4" placeholder="What question are you exploring?"></textarea></label>
-      <label>Research article (PDF, up to 10 MB)<input name="article" type="file" accept=".pdf,application/pdf" required></label>
-      <p class="muted">Players who can enter this garden can read your idea and open your PDF.</p>
+      <div id="seed-fields">
+        <label>Seed title<input name="title" maxlength="120" required></label>
+        <label>Short description<textarea name="idea" required maxlength="500" rows="3"></textarea></label>
+        <label>Open question<input name="question" required maxlength="300"></label>
+        <label>Paper or poster PDF (optional)<input name="article" type="file" accept=".pdf,application/pdf"></label>
+      </div>
+      <p id="adoption-confirmation" hidden></p>
       <p class="error" id="plant-error" role="alert"></p>
       <button class="primary" type="submit">Plant research seed</button>
     </form>
@@ -29,12 +55,27 @@
   <dialog id="idea-dialog">
     <div class="dialog-header"><p class="muted">Research seed</p><button type="button" data-close aria-label="Close">×</button></div>
     <h2 id="idea-title"></h2>
+    <p id="idea-origin" class="muted"></p>
     <p id="idea-text"></p>
+    <p id="idea-question"></p>
     <p id="idea-growth" class="muted" aria-live="polite"></p>
+    <p id="idea-participation" class="muted"></p>
     <div class="idea-actions">
       <a class="secondary" id="article-link" target="_blank" rel="noopener">Open research PDF</a>
       <button class="primary" id="water" type="button">♡ Like · Water</button>
+      <button class="secondary" id="follow" type="button">Follow</button>
     </div>
+    <h3>Shared discussion</h3>
+    <p id="contributors" class="muted"></p>
+    <div id="discussion"></div>
+    <form id="comment-form">
+      <div id="reply-context" class="reply-context" hidden>
+        <span id="reply-target"></span>
+        <button type="button" id="cancel-reply" class="secondary">Cancel reply</button>
+      </div>
+      <label>Comment · Fertilize<textarea name="comment" maxlength="1200" rows="2" required></textarea></label>
+      <button type="submit" id="post-comment" class="primary">Post comment</button>
+    </form>
     <p class="error" id="water-error" role="alert"></p>
   </dialog>
   <script type="module" src="/app.mjs"></script>

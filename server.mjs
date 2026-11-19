@@ -5,6 +5,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { createGarden } from './garden.mjs';
 import { plots, canPlant } from './public/plots.mjs';
 
 const startedDirectly = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
@@ -75,20 +76,7 @@ if(ownerIsUnique){
     db.exec('PRAGMA foreign_keys = ON');
   }
 }
-const list = db.prepare(`
-  SELECT p.id, p.x, p.z, p.title, p.idea, p.planted_at AS plantedAt,
-    p.owner = ? AS mine,
-    EXISTS (SELECT 1 FROM watering WHERE plant=p.id AND player=?) AS watered,
-    (SELECT count(*) FROM watering WHERE plant=p.id) AS likes
-  FROM plants p WHERE p.island=0 ORDER BY p.planted_at, p.id
-`);
-const find = db.prepare('SELECT owner FROM plants WHERE id=?');
-const nearby = db.prepare('SELECT id FROM plants WHERE island=0 AND (x-?)*(x-?)+(z-?)*(z-?) < .16');
-const insert = db.prepare(`
-  INSERT INTO plants (id,owner,island,plot,title,idea,pdf,planted_at,x,z)
-  VALUES (?,?,0,(SELECT COALESCE(MAX(plot),-1)+1 FROM plants WHERE island=0),?,?,?,?,?,?)
-`);
-const water = db.prepare('INSERT OR IGNORE INTO watering VALUES (?, ?)');
+const garden = createGarden(db);
 const getPDF = db.prepare('SELECT pdf FROM plants WHERE id=?');
 const clients = new Map();
 const maxPDF = 10 * 1024 * 1024;
@@ -97,6 +85,8 @@ const files = new Map([
   ['/style.css', [new URL('./public/style.css', import.meta.url), 'text/css; charset=utf-8']],
   ['/scene.mjs', [new URL('./public/scene.mjs', import.meta.url), 'text/javascript; charset=utf-8']],
   ['/app.mjs', [new URL('./public/app.mjs', import.meta.url), 'text/javascript; charset=utf-8']],
+  ['/islands.mjs', [new URL('./public/islands.mjs', import.meta.url), 'text/javascript; charset=utf-8']],
+  ['/world.mjs', [new URL('./public/world.mjs', import.meta.url), 'text/javascript; charset=utf-8']],
   ['/plots.mjs', [new URL('./public/plots.mjs', import.meta.url), 'text/javascript; charset=utf-8']]
 ]);
 
@@ -115,7 +105,7 @@ function json(res, status, value) {
 }
 
 function snapshot(player) {
-  return list.all(player, player);
+  return garden.snapshot(player);
 }
 
 function broadcast() {
@@ -156,24 +146,40 @@ async function plant(req, res, player) {
   };
   const coordinate = (name) => field(name) ? Math.round(Number(field(name))*1000)/1000 : NaN;
   const x = coordinate('x'), z = coordinate('z');
-  const title = field('title'), idea = field('idea');
-  if (!canPlant(x,z) || !title || title.length > 120 || !idea || idea.length > 500) {
-    return json(res, 400, { error: 'Aim at open grass and enter a title and research idea.' });
+  if (!canPlant(x,z)) return json(res,400,{error:'Aim at open grass.'});
+  if (field('island') !== String(garden.home(player).island)) {
+    return json(res,403,{error:'Return to your home island to plant.'});
   }
-  const article = form.get('article');
-  if (!(article instanceof File) || article.size === 0) {
-    return json(res, 400, { error: 'Upload a PDF research article.' });
+  const adopt=field('adopt');
+  const title=field('title'),idea=field('idea'),question=field('question');
+  let pdf=Buffer.alloc(0);
+  if(!adopt){
+    if(!title||title.length>120||!idea||idea.length>500||!question||question.length>300){
+      return json(res,400,{error:'Enter a title, a description, and an open question.'});
+    }
+    const article=form.get('article');
+    if(article instanceof File&&article.size>0){
+      if(article.size>maxPDF)return json(res,413,{error:'The PDF must be 10 MB or smaller.'});
+      pdf=Buffer.from(await article.arrayBuffer());
+      if(!/^%PDF-\d\.\d/.test(pdf.subarray(0,8).toString('ascii'))||!pdf.subarray(-1024).includes('%%EOF')){
+        return json(res,400,{error:'This file does not look like a PDF.'});
+      }
+    }
   }
-  if (article.size > maxPDF) return json(res, 413, { error: 'The PDF must be 10 MB or smaller.' });
-  const pdf = Buffer.from(await article.arrayBuffer());
-  if (!/^%PDF-\d\.\d/.test(pdf.subarray(0, 8).toString('ascii')) || !pdf.subarray(-1024).includes('%%EOF')) {
-    return json(res, 400, { error: 'This file does not look like a PDF.' });
-  }
-  if (nearby.get(x,x,z,z)) return json(res, 409, { error: 'A seed is already there. Aim at another spot.' });
-  const id = randomUUID();
-  insert.run(id, player, title, idea, pdf, new Date().toISOString(), x,z);
-  json(res, 201, { id });
+  const result=garden.plant(player,{x,z,title,idea,question,pdf,adopt});
+  if(result.error)return json(res,result.status,{error:result.error});
+  json(res,201,result);
   broadcast();
+}
+
+async function smallJSON(req){
+  let data='';
+  for await(const chunk of req.iterator({destroyOnReturn:false})){
+    data+=chunk.toString();
+    if(data.length>8192)return null;
+  }
+  try { return JSON.parse(data); }
+  catch { return null; }
 }
 
 export async function handleRequest(req, res) {
@@ -197,10 +203,10 @@ export async function handleRequest(req, res) {
       if (vercelPreview) await new Promise(resolve => res.once('close', resolve));
       return;
     }
-    const match = /^\/api\/plants\/([a-f0-9-]{36})\/(article|water)$/.exec(path);
+    const match = /^\/api\/plants\/([a-f0-9-]{36})\/(article|water|comment|follow)$/.exec(path);
     if (req.method === 'GET' && match?.[2] === 'article') {
       const row = getPDF.get(match[1]);
-      if (!row) return json(res, 404, { error: 'Article not found.' });
+      if (!row?.pdf.length || !garden.canRead(playerFor(req,res),match[1])) return json(res, 404, { error: 'Article not found.' });
       res.writeHead(200, {
         'Content-Type': 'application/pdf', 'Content-Disposition': 'inline; filename="research-article.pdf"',
         'Content-Security-Policy': "sandbox; default-src 'none'", 'Cache-Control': 'no-store'
@@ -209,18 +215,28 @@ export async function handleRequest(req, res) {
     }
     if (req.method === 'POST') {
       if (req.headers['x-ted-island'] !== 'garden' || req.headers['sec-fetch-site'] === 'cross-site') {
-        return json(res, 403, { error: 'Open TED Island to make changes.' });
+        return json(res, 403, { error: 'Open CHI Island to make changes.' });
       }
       const player = playerFor(req, res);
       if (path === '/api/plants') return await plant(req, res, player);
-      if (match?.[2] === 'water') {
-        const id = match[1];
-        const row = find.get(id);
-        if (!row) return json(res, 404, { error: 'Plant not found.' });
-        if (row.owner === player) return json(res, 403, { error: 'Other players can water your plant.' });
-        const result = water.run(id, player);
-        json(res, 200, { watered: true });
-        if (result.changes) broadcast();
+      if(match&&match[2]!=='article'){
+        const body=await smallJSON(req);
+        if(!Number.isInteger(body?.island))return json(res,400,{error:'Choose a plant on an island.'});
+        const id=match[1], action=match[2];
+        const message=typeof body.text==='string'?body.text.trim():'';
+        if(action==='comment'&&(!message||message.length>1200)){
+          return json(res,400,{error:'Write a comment of up to 1,200 characters.'});
+        }
+        const replyTo=action==='comment' ? body.replyTo??null : null;
+        if(replyTo!==null&&(!Number.isSafeInteger(replyTo)||replyTo<1)){
+          return json(res,400,{error:'Choose a valid comment to reply to.'});
+        }
+        const result=action==='follow'
+          ?garden.setFollow(player,id,body.island,body.enabled===true)
+          :garden.participate(player,id,body.island,action==='water'?'like':'comment',message,replyTo);
+        if(result.error)return json(res,result.status,{error:result.error});
+        json(res,200,{ok:true});
+        if(result.changed!==false)broadcast();
         return;
       }
     }
@@ -238,6 +254,6 @@ heartbeat.unref();
 if (startedDirectly) {
   const server = createServer(handleRequest);
   server.listen(Number(process.env.PORT ?? 4173), process.env.HOST ?? '127.0.0.1', () => {
-    console.log('TED Island running at http://' + server.address().address + ':' + server.address().port);
+    console.log('CHI Island running at http://' + server.address().address + ':' + server.address().port);
   });
 }

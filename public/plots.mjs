@@ -3,10 +3,10 @@ export const plots = [
   [2.19, 1.76], [3.11, .55], [-2.12, -2.19], [2.13, -2.19]
 ];
 
-export function plantStage(likes) {
-  if (likes >= 5) return 'In bloom';
-  if (likes >= 2) return 'Growing';
-  return likes ? 'Sprout' : 'Seed';
+const growthStages=['Seed planted','Sprout','Young plant','Tree','Mature tree'];
+
+export function plantStage(growth) {
+  return growthStages[growth] ?? growthStages[0];
 }
 
 export const tileWidth = .85 * Math.sqrt(3);

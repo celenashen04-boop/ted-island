@@ -1,16 +1,19 @@
-# TED Island · CHI Research Garden
+# CHI Island · Research Garden
 
-A local multiplayer prototype using Node.js 24 or newer. Run `npm run dev` from this directory and open [TED Island](http://127.0.0.1:4173). There are no package dependencies.
+A local multiplayer prototype using Node.js 24 or newer. Run `npm run dev` from this directory and open [CHI Island](http://127.0.0.1:4173). There are no package dependencies.
 
 ## Play
 
 1. Use **WASD** to walk and climb stairs. You fall when you walk off a ledge and respawn if you fall off the island. Drag the view or use the arrow keys to look around.
 2. Press **Q** or choose **Throw seed**, drag backward from the seed near the bottom of the view, and release. Pull farther to throw harder, pull down to loft the seed, and pull sideways to steer it in the opposite direction. The green arc previews the throw and stays visible while the seed flies. A seed can miss the island. If it lands on open grass, enter a title and research idea, upload a PDF (up to 10 MB), and choose **Plant research seed**.
-3. In a private window or a separate browser profile, click a seed or plant in the scene. Open its PDF or select **Like · Water**.
+3. Open **Seed Catalog** to adopt a seed from another island. Throw and plant it on your home island to start the bridge. In **World View**, check construction progress, find followed plant updates, or cross a bridge you helped complete.
+4. In a private window or a separate browser profile, click a seed or plant in the scene. Open its PDF or select **Like · Water**.
 
 On a phone, turn it sideways. The left joystick moves you, swiping the view turns the camera, and the **Throw seed** button arms the launcher. Drag the seed to throw and tap a planted seed to open its research.
 
-Each browser profile gets one guest identity and one like per other plant. Each guest can plant multiple seeds. Seeds can be placed anywhere on open grass with room around them. Plants sprout at one like, grow at two, and bloom at five. Players who can access the garden can open all uploaded articles.
+New guest identities are assigned one of three islands in rotation for this prototype. An existing planter keeps the original island. Each guest can plant multiple seeds and adopt each foreign seed once. A like waters a plant and a comment fertilizes it. Growth is shared across plantings.
+
+Bridges open after two residents from each island participate, the islands add four qualifying discussion contributions, and someone replies across the two islands. The dashboard shows Foundations, Walkway, and Connection progress. Contributors can cross, and a qualifying comment after opening can grant a resident access. See [context.md](context.md) for the full design.
 
 The server sends garden changes over Server-Sent Events. The SQLite database in `data/` holds research PDFs, seeds, and likes across refreshes and restarts. `TED_DATA_DIR` can point at a different persistent storage directory. The default address only accepts connections from this machine.
 
