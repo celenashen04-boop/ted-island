@@ -25,4 +25,4 @@ body.design-page{overflow:auto;min-height:100dvh;background:#f5f1e5;color:#20393
 .asset-upload{position:relative}
 
 .kit-main details{margin-bottom:1.75rem}
-.kit-main summary{font:700 1.2rem Georgia,serif;cursor:pointer;margin:1rem 0 .75rem}
+.kit-main summary{font:700 1.2rem var(--kit-font,Oswald),sans-serif;cursor:pointer;margin:1rem 0 .75rem}

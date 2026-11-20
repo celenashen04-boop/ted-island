@@ -192,13 +192,16 @@ export function createGarden(db) {
         : likes>=2&&commentCount>=2&&participantCount>=2 ? 2
         : likes>=1 ? 1 : 0;
     }
+    const visiblePlants=allLocations.filter(item=>accessible.has(item.island)&&bySeed.has(item.seed));
+    const readableSeeds=new Set(visiblePlants.map(item=>item.seed));
     return {
       home:island, islands, bridges,
       catalog:[...bySeed.values()].filter(card=>card.originalIsland!==island&&islands.some(entry=>entry.id===card.originalIsland))
-        .map(({comments,contributors,...card})=>card),
-      plants:allLocations.filter(item=>accessible.has(item.island)&&bySeed.has(item.seed))
-        .map(({seed,...location})=>({...bySeed.get(seed),...location})),
-      updates:updates.all(player,player)
+        .map(({id,title,idea,question,originalIsland,growth,plantedOn})=>({
+          id,title,idea,question,originalIsland,growth,plantedHere:plantedOn.includes(island)
+        })),
+      plants:visiblePlants.map(({seed,...location})=>({...bySeed.get(seed),...location})),
+      updates:updates.all(player,player).filter(item=>readableSeeds.has(item.seed))
     };
   }
   function plant(player, {x,z,title,idea,question,pdf,adopt}) {

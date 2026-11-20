@@ -7,13 +7,13 @@ export const themeFields = {
   text: { label: 'Panel text', value: '#243227' },
   hud: { label: 'Game controls', value: '#223f3b' },
   shelf: { label: 'Shelf finish', value: '#946849' },
-  font: { label: 'Heading font', value: 'serif', choices: ['serif', 'system-ui', 'monospace'] }
+  font: { label: 'Heading font', value: 'Oswald', choices: ['Oswald', 'system-ui', 'monospace'] }
 };
 
 const art = (id, label, hint) => ({ id, label, hint, type:'image' });
 const controls = [
     art('world','World View','Circular HUD button'),
-    art('player','Player View','Circular HUD button'),
+    art('player','Home island','Return to Player View button on the World View map'),
     art('bridges','Bridge dashboard','Circular HUD button'),
     art('catalog','Seed Catalog','Circular HUD button'),
     art('throw','Throw seed','Launcher button'),
@@ -69,7 +69,11 @@ async function stored(key,value){
     });
   } finally { db.close(); }
 }
-export const readKit = key => stored(key).then(kit=>kit??blankKit());
+export const readKit = key => stored(key).then(kit => {
+  if (!kit) return blankKit();
+  if (kit.theme.font === 'serif') kit.theme.font = themeFields.font.value;
+  return kit;
+});
 export const saveKit = (key,value) => stored(key,value);
 
 export async function checkAsset(id,blob){

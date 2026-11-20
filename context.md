@@ -4,18 +4,18 @@ Consult this file before changing CHI Island’s views, game rules, or data mode
 
 ## World View
 
-- Show all CHI islands and their names. Island A is **Health & Wellbeing**, Island B is **Sustainability**, and Island C is **Games & Play**.
+- Label islands by subject only: **Health & Wellbeing**, **Sustainability**, and **Games & Play**.
 - Let residents drag to rotate the world.
-- Place a circular button at the top left to switch to Player View.
+- Make the resident’s home island the only clickable island on the map. Select it to return to Player View. Other island labels are muted and inactive. Eligible residents can still cross through the bridge dashboard.
 - Keep the world map full width by default. A circular top-right button slides the bridge dashboard in and out, in the same position as Seed Catalog in Player View. The dashboard shows construction progress for every bridge connecting the resident’s home island to another CHI island.
 
 ## Player View
 - During onboarding, residents choose their domain from the three islands. The chosen domain becomes their home island. An existing resident completing onboarding can choose their home island. Previously planted seeds stay on their original islands. Profile photos and LinkedIn URLs are optional and are shown only to the resident who supplied them.
 - Show the other islands in the distance, using the same relative direction and height as World View. Use the island the player is standing on as the reference point.
 - Use the left joystick to move and drag on the right side to change the viewing direction.
-- Provide a circular button to switch to World View.
+- Provide a circular globe button to switch to World View.
 - Use a drag-and-release slingshot gesture to throw and plant seeds.
-- Place a circular **Seed Catalog** button at the top right.
+- Place a circular **Seed Catalog** button with a single seed icon at the top right.
 - Let residents select plants in the garden. Liking another resident’s plant on the same island waters it. Leaving a comment fertilizes it.
 - Let residents adopt seeds from other islands through the Seed Catalog. Residents discover seeds originating on their own island in the physical garden. Those seeds appear in the catalogs of residents on other islands.
 
@@ -24,9 +24,10 @@ Consult this file before changing CHI Island’s views, game rules, or data mode
 - Every resident can create and plant an idea seed on their home island using the slingshot.
 - A seed can start from an article title, a research idea, or an uploaded paper or poster. Include a short description and an open question to invite discussion.
 - Once planted, the seed appears on its original island and enters the catalog of residents on other islands.
-- Each seed retains its creator and original home island. Catalog cards show the title, description, original island, and planting status.
+- Each seed retains its creator and original home island. On the shelf, each packet shows only the research title. Select a packet to open a centered overlay with its subject, description, open question, and planting status. Click outside the overlay to return to the shelf.
 - Residents can select a seed from another island in the catalog and plant it on their own home island.
-- Arrange catalog cards on shelves by their original island. Residents can view all eligible shelves or filter to one island.
+- Show all eligible seed packets together in All islands, with a shelf beneath each row. Color each packet by its original island. Residents can filter to a single island. Packets lift on mouse hover or keyboard focus and give the same feedback on press on touchscreens.
+- The first time the Seed Catalog opens in a browser, show a dismissible tip explaining how to adopt and plant a seed and how this starts a bridge.
 - The catalog is the only place to adopt seeds. Each seed can be planted only once per island. Visiting an island gives no ability to collect or replant its seeds there or bring them home directly.
 
 ## Plant growth and shared discussion
@@ -64,11 +65,16 @@ Each like gives one water, and each comment or reply gives one nutrient. Count d
 - Third-island residents can help the shared plant grow but cannot build this bridge.
 - For a seed originating on A and also planted on B and C, track A–B and A–C independently. New activity from A can support both bridges. Activity from B supports A–B, and activity from C supports A–C. Each bridge needs its own endpoint residents and a reply between those two communities.
 
-## Crossing and continued participation
+## Crossing and exploring
 
 - Once construction finishes, everyone who contributed to that bridge can cross it.
 - A resident of either connected island who did not contribute during construction can earn crossing access after the bridge opens by commenting on a plant shared by the two islands.
-- Visitors can browse every plant on the destination island, including plants their home island does not share. They can read, like, and comment.
-- Visitors adopt seeds through the catalog when they want to plant them at home.
+- Without crossing access, residents can preview the other island’s idea seeds in the Seed Catalog, including the title, description, open question, and planting status. Catalog previews contain no discussions. If a seed is already planted on the resident’s home island, its shared discussion remains accessible from that home planting.
+- Crossing opens the destination island and its plant directory. Visitors can browse all plants there, including those that are not shared with their home island, and read the full discussions.
+- Visitors can read, like, comment, and reply on plants they visit.
+- Visiting gives no direct way to collect or bring a seed home. Adopting and planting seeds from another island remains a catalog action.
+
+## Continued participation
+
 - Completed bridges remain usable without maintenance. Residents can continue contributing to shared plants after construction ends.
 - Residents can follow plants and receive updates so they can return to the conversation after the first interaction or after the conference.
