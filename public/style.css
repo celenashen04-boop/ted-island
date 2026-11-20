@@ -135,21 +135,18 @@ canvas.over-plant{cursor:pointer}
 #onboarding .domain-card{display:flex;align-items:center;gap:.65rem;margin:0;padding:.55rem .65rem;border:1px solid #c9c4ab;border-left:.3rem solid var(--domain-color);border-radius:.5rem;background:#fffdf5}
 #onboarding .domain-card:has(:checked){background:#edf1de;border-color:#648371;border-left-color:var(--domain-color)}
 #onboarding .domain-card input{width:auto;flex:none;margin:0;accent-color:#315646}
-.profile-upload{display:flex;align-items:center;gap:.55rem;margin:.35rem 0}
-.profile-upload input{min-width:0}
-#photo-preview,#resident-photo{width:2rem;height:2rem;object-fit:cover;border-radius:50%;flex:none}
 #profile-linkedin{margin-top:.35rem}
-#resident-badge{display:flex;align-items:center;gap:.45rem}
-#resident-badge a{color:#fff4bd;font-size:.75rem;pointer-events:auto}
-#resident-photo{width:1.35rem;height:1.35rem}
-.profile-heading{font-weight:650;margin:.85rem 0 .35rem}
-.photo-picker{position:relative;display:inline-block}
-.photo-picker input{position:absolute;width:1px;height:1px;opacity:0;inset:0;padding:0}
-#onboarding .photo-picker label{display:inline-flex;align-items:center;min-height:44px;margin:0;padding:.4rem .75rem;border:1px solid #a8b7a0;border-radius:.55rem;background:#f2f5ed;color:#274b35;cursor:pointer}
-.photo-picker input:focus-visible + label{outline:2px solid #315646;outline-offset:3px}
-#photo-selection{display:block;overflow-wrap:anywhere}
-#photo-selection:empty{display:none}
-
+.share-linkedin-option{display:flex;align-items:center;font-size:.9rem;font-weight:500}
+.share-linkedin-option input{width:auto;flex:none;margin:0;accent-color:#315646}
+#resident-badge{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.4rem}
+#resident-badge a,#share-resident-linkedin{color:#fff4bd;font-size:.75rem;pointer-events:auto}
+#resident-photo{width:1.35rem;height:1.35rem;object-fit:cover;border-radius:50%;flex:none}
+#share-resident-linkedin{min-height:24px;padding:.1rem .35rem;border:1px solid #fff4bd77;border-radius:.3rem;background:transparent}
+#share-resident-linkedin[aria-pressed=true]{background:#fff4bd;color:#243227}
+.author-connection{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem .75rem;margin-top:1rem;padding-top:.9rem;border-top:1px solid #74877c55}
+.author-connection :is(a,button){min-height:44px}
+.author-connection button:disabled{opacity:.62}
+.author-connection p{font-size:.85rem;margin:0}
 
 body{color:var(--kit-text,#243227)}
 dialog{background:var(--kit-surface,#fffdf4);color:var(--kit-text,#243227)}

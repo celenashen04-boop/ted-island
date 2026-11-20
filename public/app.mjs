@@ -68,7 +68,7 @@ function announce(text) {
 
 const scene = createScene(map, {
   artwork,
-  onPlant: showIdea,
+  onPlant(id) { showIdea(id, true); },
   onThrowRequest() {
     if (!live) { announce('Connecting to the garden…'); return false; }
     if (currentIsland !== state.home) { announce('Return home to plant a seed.'); return false; }
@@ -151,6 +151,16 @@ const catalogExamples = {
 function activeCatalogSeed() {
   if (!openCatalogPacket) return null;
   return openCatalogPacket.preview ?? state?.catalog.find(seed => seed.id === openCatalogPacket.seedId);
+}
+
+function renderAuthorConnection(linkedin) {
+  const footer = byId('plant-author');
+  const link = footer.querySelector('a');
+  if (linkedin) link.href = linkedin;
+  else link.removeAttribute('href');
+  link.hidden = !linkedin;
+  footer.querySelector('button').hidden = Boolean(linkedin);
+  footer.querySelector('p').hidden = Boolean(linkedin);
 }
 
 function renderCatalogSeed() {
@@ -355,8 +365,9 @@ function renderIslandPlants() {
   }
 }
 
-function showIdea(id) {
+function showIdea(id, fromScene = false) {
   openPlant = id;
+  byId('plant-author').hidden = !fromScene;
   commentForm.reset();
   setReply(null);
   byId('water-error').textContent = '';
@@ -376,6 +387,7 @@ function renderIdea() {
   const article = byId('article-link');
   article.hidden = !plant.hasArticle;
   article.href = '/api/plants/' + plant.id + '/article';
+  if (!byId('plant-author').hidden) renderAuthorConnection(plant.authorLinkedin);
   waterButton.disabled = !live || changingPlant || Boolean(plant.mine || plant.watered);
   waterButton.textContent = plant.mine ? 'Your plant' : plant.watered ? '♥ Watered' : '♡ Like · Water';
   byId('follow').textContent = plant.following ? 'Unfollow' : 'Follow';
@@ -579,17 +591,10 @@ function connectGarden() {
 const onboarding = byId('onboarding');
 const onboardingForm = byId('onboarding-form');
 const onboardingFields = byId('onboarding-fields');
-const profilePhoto = byId('profile-file');
 const join = byId('join-island');
 const retry = byId('retry-profile');
 const onboardingError = byId('onboarding-error');
-let previewURL;
-
-function releasePhotoPreview() {
-  if (previewURL) URL.revokeObjectURL(previewURL);
-  previewURL = null;
-  byId('photo-preview').hidden = true;
-}
+const shareResidentLinkedin = byId('share-resident-linkedin');
 
 function enterGarden(profile) {
   const photo = byId('resident-photo');
@@ -601,11 +606,12 @@ function enterGarden(profile) {
   if (profile.linkedin) {
     linkedin.href = profile.linkedin;
     linkedin.hidden = false;
+    shareResidentLinkedin.hidden = false;
+    shareResidentLinkedin.setAttribute('aria-pressed', String(profile.shareLinkedin));
   }
   byId('resident-badge').hidden = false;
   playerView.inert = false;
   if (onboarding.open) onboarding.close();
-  releasePhotoPreview();
   connectGarden();
   map.focus({ preventScroll: true });
 }
@@ -639,38 +645,19 @@ async function loadProfile() {
   }
 }
 
-profilePhoto.addEventListener('change', () => {
-  releasePhotoPreview();
-  const file = profilePhoto.files[0];
-  byId('photo-selection').textContent = file ? file.name : '';
-  onboardingError.textContent = '';
-  if (!file) return;
-  previewURL = URL.createObjectURL(file);
-  const image = byId('photo-preview');
-  image.src = previewURL;
-  image.hidden = false;
-});
-
-async function photoForUpload(file) {
-  if (file.size <= 1024 * 1024 && ['image/jpeg','image/png','image/webp'].includes(file.type)) return file;
-  const image = byId('photo-preview');
+shareResidentLinkedin.addEventListener('click', async () => {
+  const enabled = shareResidentLinkedin.getAttribute('aria-pressed') !== 'true';
+  shareResidentLinkedin.disabled = true;
   try {
-    await image.decode();
-  } catch {
-    throw new Error('This photo format could not be opened. Choose a JPEG, PNG, or WebP image.');
+    const profile = await post('/api/profile/linkedin-sharing', {enabled});
+    shareResidentLinkedin.setAttribute('aria-pressed', String(profile.shareLinkedin));
+    announce(profile.shareLinkedin ? 'Your seeds and plants now link to your LinkedIn.' : 'Your LinkedIn is private again.');
+  } catch (error) {
+    announce(error.message || 'Could not update LinkedIn sharing.');
+  } finally {
+    shareResidentLinkedin.disabled = false;
   }
-  const scale = Math.min(1, 768 / Math.max(image.naturalWidth, image.naturalHeight));
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-  const context = canvas.getContext('2d', {alpha:false});
-  context.fillStyle = '#fff';
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  context.drawImage(image, 0, 0, canvas.width, canvas.height);
-  const photo = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', .8));
-  if (!photo || photo.size > 1024 * 1024) throw new Error('Could not resize this photo. Choose a smaller image.');
-  return new File([photo], 'profile-photo.jpg', {type:'image/jpeg'});
-}
+});
 
 onboardingForm.addEventListener('submit', async event => {
   event.preventDefault();
@@ -681,8 +668,6 @@ onboardingForm.addEventListener('submit', async event => {
   join.textContent = 'Setting up…';
   onboardingError.textContent = '';
   try {
-    const file = body.get('photo');
-    if (file instanceof File && file.size) body.set('photo', await photoForUpload(file));
     enterGarden(await post('/api/profile', body));
   } catch (error) {
     onboardingError.textContent = error.message || 'Could not save your resident profile.';

@@ -10,7 +10,7 @@ Consult this file before changing CHI Island’s views, game rules, or data mode
 - Keep the world map full width by default. A circular top-right button slides the bridge dashboard in and out, in the same position as Seed Catalog in Player View. The dashboard shows construction progress for every bridge connecting the resident’s home island to another CHI island.
 
 ## Player View
-- During onboarding, residents choose their domain from the three islands. The chosen domain becomes their home island. An existing resident completing onboarding can choose their home island. Previously planted seeds stay on their original islands. Profile photos and LinkedIn URLs are optional and are shown only to the resident who supplied them.
+- During onboarding, residents choose their domain from the three islands. The chosen domain becomes their home island. An existing resident completing onboarding can choose their home island. Previously planted seeds stay on their original islands. Residents can add an optional LinkedIn URL and choose whether to share it through their research. Previously uploaded profile photos stay visible only to the resident who supplied them.
 - Show the other islands in the distance, using the same relative direction and height as World View. Use the island the player is standing on as the reference point.
 - Use the left joystick to move and drag on the right side to change the viewing direction.
 - Provide a circular globe button to switch to World View.
@@ -25,6 +25,7 @@ Consult this file before changing CHI Island’s views, game rules, or data mode
 - A seed can start from an article title, a research idea, or an uploaded paper or poster. Include a short description and an open question to invite discussion.
 - Once planted, the seed appears on its original island and enters the catalog of residents on other islands.
 - Each seed retains its creator and original home island. On the shelf, each packet shows only the research title. Select a packet to open a centered overlay with its subject, description, open question, and planting status. Click outside the overlay to return to the shelf.
+- Show **Connect to author** at the bottom of the popup when a player selects a planted seed or plant directly in the 3D scene. It opens the original creator’s LinkedIn when they’ve chosen to share it. Residents can change sharing from their own island badge. Sharing is off by default, including for existing profiles.
 - Residents can select a seed from another island in the catalog and plant it on their own home island.
 - Show all eligible seed packets together in All islands, with a shelf beneath each row. Color each packet by its original island. Residents can filter to a single island. Packets lift on mouse hover or keyboard focus and give the same feedback on press on touchscreens.
 - The first time the Seed Catalog opens in a browser, show a dismissible tip explaining how to adopt and plant a seed and how this starts a bridge.

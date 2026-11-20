@@ -149,17 +149,8 @@ async function readForm(req,res,maxSize,limitMessage) {
   }
 }
 
-function photoFormat(data){
-  if(data.length>=24&&data.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))&&data.toString('ascii',12,16)==='IHDR')return 'image/png';
-  if(data.length>=12&&data[0]===255&&data[1]===216&&data[2]===255&&data.at(-2)===255&&data.at(-1)===217)return 'image/jpeg';
-  if(data.length>=20&&data.toString('ascii',0,4)==='RIFF'&&data.toString('ascii',8,12)==='WEBP'&&['VP8 ','VP8L','VP8X'].includes(data.toString('ascii',12,16)))return 'image/webp';
-  return null;
-}
-
 async function onboard(req,res,player){
-  const maxPhoto=1024*1024;
-  const sizeError='Use a profile photo of 1 MB or smaller.';
-  const form=await readForm(req,res,maxPhoto+32*1024,sizeError);
+  const form=await readForm(req,res,32*1024,'Use a shorter profile submission.');
   if(!form)return;
   const island=islands.find(entry=>String(entry.id)===form.get('island'));
   if(!island)return json(res,400,{error:'Choose one of the three domains.'});
@@ -175,15 +166,9 @@ async function onboard(req,res,player){
       return json(res,400,{error:'Enter a LinkedIn profile URL such as https://www.linkedin.com/in/your-name.'});
     }
   }
-  const file=form.get('photo');
-  let photo=null,photoType=null;
-  if(file instanceof File&&file.size>0){
-    if(file.size>maxPhoto)return json(res,413,{error:sizeError});
-    photo=Buffer.from(await file.arrayBuffer());
-    photoType=photoFormat(photo);
-    if(!photoType)return json(res,400,{error:'Upload a JPEG, PNG, or WebP profile photo.'});
-  }
-  const result=garden.finishProfile(player,{island:island.id,linkedin,photo,photoType});
+  const shareLinkedin=form.get('shareLinkedin')==='on';
+  if(shareLinkedin&&!linkedin)return json(res,400,{error:'Add your LinkedIn URL before choosing to share it.'});
+  const result=garden.finishProfile(player,{island:island.id,linkedin,shareLinkedin});
   if(result.error)return json(res,result.status,{error:result.error});
   return json(res,201,result);
 }
@@ -280,6 +265,15 @@ export async function handleRequest(req, res) {
       const player = playerFor(req, res);
       if (path === '/api/profile') return await onboard(req,res,player);
       if (!garden.profile(player).completed) return json(res,403,{error:'Complete your resident profile first.'});
+      if (path === '/api/profile/linkedin-sharing') {
+        const body=await smallJSON(req);
+        if(typeof body?.enabled!=='boolean')return json(res,400,{error:'Choose whether to share your LinkedIn profile.'});
+        const profile=garden.setLinkedinSharing(player,body.enabled);
+        if(!profile)return json(res,400,{error:'Add a LinkedIn URL before choosing to share it.'});
+        json(res,200,profile);
+        broadcast();
+        return;
+      }
       if (path === '/api/plants') return await plant(req, res, player);
       if(match&&match[2]!=='article'){
         const body=await smallJSON(req);

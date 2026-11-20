@@ -50,6 +50,9 @@ export function createGarden(db) {
   if (!db.prepare('PRAGMA table_info(comments)').all().some(column => column.name === 'reply_to')) {
     db.exec('ALTER TABLE comments ADD COLUMN reply_to INTEGER REFERENCES comments(id)');
   }
+  if (!db.prepare('PRAGMA table_info(resident_profiles)').all().some(column => column.name === 'share_linkedin')) {
+    db.exec('ALTER TABLE resident_profiles ADD COLUMN share_linkedin INTEGER NOT NULL DEFAULT 0');
+  }
   db.exec('CREATE INDEX IF NOT EXISTS bridge_contribution_pair ON bridge_contributions(a,b,player)');
 
   const transaction = (work) => {
@@ -75,27 +78,32 @@ export function createGarden(db) {
     }
     return row;
   }
-  const profileLookup = db.prepare(`SELECT linkedin,photo IS NOT NULL AS hasPhoto
+  const profileLookup = db.prepare(`SELECT linkedin,share_linkedin AS shareLinkedin,photo IS NOT NULL AS hasPhoto
     FROM resident_profiles WHERE player=?`);
   const legacyHome = db.prepare('SELECT island FROM plants WHERE owner=? ORDER BY planted_at LIMIT 1');
   const selectHome = db.prepare(`INSERT INTO residents(player,island) VALUES (?,?)
     ON CONFLICT(player) DO UPDATE SET island=excluded.island`);
-  const save = db.prepare('INSERT INTO resident_profiles(player,linkedin,photo,photo_type) VALUES (?,?,?,?)');
+  const save = db.prepare('INSERT INTO resident_profiles(player,linkedin,share_linkedin) VALUES (?,?,?)');
+  const updateLinkedinSharing = db.prepare("UPDATE resident_profiles SET share_linkedin=? WHERE player=? AND linkedin<>''");
   const photoFor = db.prepare('SELECT photo,photo_type AS type FROM resident_profiles WHERE player=?');
   function profile(player) {
     const saved=profileLookup.get(player);
     const existing=resident.get(player) ?? legacyHome.get(player);
     const island=islands.some(entry=>entry.id===existing?.island)?existing.island:null;
-    return { completed:Boolean(saved), island, linkedin:saved?.linkedin??'', hasPhoto:Boolean(saved?.hasPhoto) };
+    return { completed:Boolean(saved), island, linkedin:saved?.linkedin??'',
+      shareLinkedin:Boolean(saved?.shareLinkedin), hasPhoto:Boolean(saved?.hasPhoto) };
   }
-  function finishProfile(player,{island,linkedin,photo,photoType}) {
+  function finishProfile(player,{island,linkedin,shareLinkedin}) {
     return transaction(()=>{
       const previous=profile(player);
       if(previous.completed)return {status:409,error:'Your profile is already set up.'};
       selectHome.run(player,island);
-      save.run(player,linkedin,photo,photoType);
+      save.run(player,linkedin,Number(shareLinkedin));
       return profile(player);
     });
+  }
+  function setLinkedinSharing(player, enabled) {
+    return updateLinkedinSharing.run(Number(enabled),player).changes ? profile(player) : null;
   }
   const seed = db.prepare('SELECT id,owner,island,title,length(pdf) AS fileSize FROM plants WHERE id=?');
   const placement = db.prepare('SELECT 1 FROM placements WHERE seed=? AND island=?');
@@ -136,11 +144,13 @@ export function createGarden(db) {
       AND EXISTS(SELECT 1 FROM placements WHERE seed=? AND island=b.b)`);
   const cards = db.prepare(`SELECT p.id,p.title,p.idea,p.question,p.island AS originalIsland,
     p.owner=? AS mine,length(p.pdf)>0 AS hasArticle,r.seq AS creator,
+    CASE WHEN profile.share_linkedin=1 THEN NULLIF(profile.linkedin,'') END AS authorLinkedin,
     (SELECT count(*) FROM watering WHERE plant=p.id) AS likes,
     (SELECT count(*) FROM comments WHERE seed=p.id) AS commentCount,
     EXISTS(SELECT 1 FROM watering WHERE plant=p.id AND player=?) AS watered,
     EXISTS(SELECT 1 FROM follows WHERE seed=p.id AND player=?) AS following
     FROM plants p LEFT JOIN residents r ON r.player=p.owner
+    LEFT JOIN resident_profiles profile ON profile.player=p.owner
     WHERE EXISTS(SELECT 1 FROM placements WHERE seed=p.id) ORDER BY p.planted_at,p.id`);
   const locations = db.prepare('SELECT seed,island,x,z FROM placements');
   const discussions = db.prepare(`SELECT c.id,c.seed,c.island,c.body,c.created,c.reply_to AS replyTo,r.seq AS resident,
@@ -256,5 +266,5 @@ export function createGarden(db) {
     return db.prepare('SELECT island FROM placements WHERE seed=?').all(id)
       .some(row=>canVisit(player,row.island));
   }
-  return { home,snapshot,plant,participate,setFollow,canRead,profile,finishProfile,photoFor };
+  return { home,snapshot,plant,participate,setFollow,canRead,profile,finishProfile,photoFor,setLinkedinSharing };
 }
