@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createGarden } from './garden.mjs';
+import { islands } from './public/islands.mjs';
 import { plots, canPlant } from './public/plots.mjs';
 
 const startedDirectly = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
@@ -82,6 +83,10 @@ const clients = new Map();
 const maxPDF = 10 * 1024 * 1024;
 const files = new Map([
   ['/', [new URL('./public/index.html', import.meta.url), 'text/html; charset=utf-8']],
+  ['/design-kit', [new URL('./public/design-kit.html', import.meta.url), 'text/html; charset=utf-8']],
+  ['/design-kit.css', [new URL('./public/design-kit.css', import.meta.url), 'text/css; charset=utf-8']],
+  ['/design-kit.mjs', [new URL('./public/design-kit.mjs', import.meta.url), 'text/javascript; charset=utf-8']],
+  ['/design-assets.mjs', [new URL('./public/design-assets.mjs', import.meta.url), 'text/javascript; charset=utf-8']],
   ['/style.css', [new URL('./public/style.css', import.meta.url), 'text/css; charset=utf-8']],
   ['/scene.mjs', [new URL('./public/scene.mjs', import.meta.url), 'text/javascript; charset=utf-8']],
   ['/app.mjs', [new URL('./public/app.mjs', import.meta.url), 'text/javascript; charset=utf-8']],
@@ -115,31 +120,77 @@ function broadcast() {
   }
 }
 
-async function plant(req, res, player) {
-  const type = req.headers['content-type'] ?? '';
-  const maxBody = maxPDF + 32 * 1024;
-  if (Number(req.headers['content-length']) > maxBody) {
-    return json(res, 413, { error: 'The PDF must be 10 MB or smaller.' });
+async function readForm(req,res,maxSize,limitMessage) {
+  const type=req.headers['content-type']??'';
+  if(Number(req.headers['content-length'])>maxSize){
+    json(res,413,{error:limitMessage});
+    return null;
   }
-  if (!type.startsWith('multipart/form-data;')) {
-    return json(res, 415, { error: 'Upload a PDF research article.' });
+  if(!type.startsWith('multipart/form-data;')){
+    json(res,415,{error:'Submit the form from CHI Island.'});
+    return null;
   }
-  const chunks = [];
-  let bytes = 0;
-  for await (const chunk of req.iterator({ destroyOnReturn: false })) {
-    bytes += chunk.length;
-    if (bytes > maxBody) {
-      res.setHeader('Connection', 'close');
-      return json(res, 413, { error: 'The PDF must be 10 MB or smaller.' });
+  const chunks=[];
+  let bytes=0;
+  for await(const chunk of req.iterator({destroyOnReturn:false})){
+    bytes+=chunk.length;
+    if(bytes>maxSize){
+      res.setHeader('Connection','close');
+      json(res,413,{error:limitMessage});
+      return null;
     }
     chunks.push(chunk);
   }
-  let form;
   try {
-    form = await new Response(Buffer.concat(chunks), { headers: { 'Content-Type': type } }).formData();
+    return await new Response(Buffer.concat(chunks),{headers:{'Content-Type':type}}).formData();
   } catch {
-    return json(res, 400, { error: 'The article upload could not be read.' });
+    json(res,400,{error:'The upload could not be read.'});
+    return null;
   }
+}
+
+function photoFormat(data){
+  if(data.length>=24&&data.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))&&data.toString('ascii',12,16)==='IHDR')return 'image/png';
+  if(data.length>=12&&data[0]===255&&data[1]===216&&data[2]===255&&data.at(-2)===255&&data.at(-1)===217)return 'image/jpeg';
+  if(data.length>=20&&data.toString('ascii',0,4)==='RIFF'&&data.toString('ascii',8,12)==='WEBP'&&['VP8 ','VP8L','VP8X'].includes(data.toString('ascii',12,16)))return 'image/webp';
+  return null;
+}
+
+async function onboard(req,res,player){
+  const maxPhoto=1024*1024;
+  const sizeError='Use a profile photo of 1 MB or smaller.';
+  const form=await readForm(req,res,maxPhoto+32*1024,sizeError);
+  if(!form)return;
+  const island=islands.find(entry=>String(entry.id)===form.get('island'));
+  if(!island)return json(res,400,{error:'Choose one of the three domains.'});
+  const inputLink=form.get('linkedin');
+  let linkedin='';
+  if(typeof inputLink==='string'&&inputLink.trim()){
+    try {
+      const link=new URL(inputLink.trim());
+      const validHost=link.hostname==='linkedin.com'||link.hostname==='www.linkedin.com';
+      if(link.protocol!=='https:'||!validHost||link.username||link.password||link.port||!/^\/in\/[^/]+\/?$/.test(link.pathname)||link.href.length>300)throw Error();
+      linkedin='https://www.linkedin.com'+link.pathname;
+    }catch{
+      return json(res,400,{error:'Enter a LinkedIn profile URL such as https://www.linkedin.com/in/your-name.'});
+    }
+  }
+  const file=form.get('photo');
+  let photo=null,photoType=null;
+  if(file instanceof File&&file.size>0){
+    if(file.size>maxPhoto)return json(res,413,{error:sizeError});
+    photo=Buffer.from(await file.arrayBuffer());
+    photoType=photoFormat(photo);
+    if(!photoType)return json(res,400,{error:'Upload a JPEG, PNG, or WebP profile photo.'});
+  }
+  const result=garden.finishProfile(player,{island:island.id,linkedin,photo,photoType});
+  if(result.error)return json(res,result.status,{error:result.error});
+  return json(res,201,result);
+}
+
+async function plant(req, res, player) {
+  const form=await readForm(req,res,maxPDF+32*1024,'The PDF must be 10 MB or smaller.');
+  if(!form)return;
   const field = (name) => {
     const value = form.get(name);
     return typeof value === 'string' ? value.trim() : '';
@@ -193,9 +244,17 @@ export async function handleRequest(req, res) {
       res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-cache' });
       return res.end(data);
     }
-    if (req.method === 'GET' && path === '/api/garden') return json(res, 200, snapshot(playerFor(req, res)));
-    if (req.method === 'GET' && path === '/api/events') {
-      const player = playerFor(req, res);
+    if (req.method === 'GET' && path === '/api/profile') return json(res,200,garden.profile(playerFor(req,res)));
+    if (req.method === 'GET' && path === '/api/profile/photo') {
+      const row=garden.photoFor.get(playerFor(req,res));
+      if(!row?.photo)return json(res,404,{error:'No profile photo.'});
+      res.writeHead(200,{'Content-Type':row.type,'Cache-Control':'private, no-store'});
+      return res.end(row.photo);
+    }
+    if (req.method === 'GET' && (path === '/api/garden' || path === '/api/events')) {
+      const player=playerFor(req,res);
+      if(!garden.profile(player).completed)return json(res,403,{error:'Complete your resident profile first.'});
+      if(path==='/api/garden')return json(res,200,snapshot(player));
       res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', 'X-Accel-Buffering': 'no' });
       clients.set(res, player);
       res.on('close', () => clients.delete(res));
@@ -206,7 +265,8 @@ export async function handleRequest(req, res) {
     const match = /^\/api\/plants\/([a-f0-9-]{36})\/(article|water|comment|follow)$/.exec(path);
     if (req.method === 'GET' && match?.[2] === 'article') {
       const row = getPDF.get(match[1]);
-      if (!row?.pdf.length || !garden.canRead(playerFor(req,res),match[1])) return json(res, 404, { error: 'Article not found.' });
+      const player=playerFor(req,res);
+      if (!row?.pdf.length || !garden.profile(player).completed || !garden.canRead(player,match[1])) return json(res, 404, { error: 'Article not found.' });
       res.writeHead(200, {
         'Content-Type': 'application/pdf', 'Content-Disposition': 'inline; filename="research-article.pdf"',
         'Content-Security-Policy': "sandbox; default-src 'none'", 'Cache-Control': 'no-store'
@@ -218,6 +278,8 @@ export async function handleRequest(req, res) {
         return json(res, 403, { error: 'Open CHI Island to make changes.' });
       }
       const player = playerFor(req, res);
+      if (path === '/api/profile') return await onboard(req,res,player);
+      if (!garden.profile(player).completed) return json(res,403,{error:'Complete your resident profile first.'});
       if (path === '/api/plants') return await plant(req, res, player);
       if(match&&match[2]!=='article'){
         const body=await smallJSON(req);

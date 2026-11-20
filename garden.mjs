@@ -9,6 +9,12 @@ export function createGarden(db) {
     CREATE TABLE IF NOT EXISTS residents (
       seq INTEGER PRIMARY KEY, player TEXT NOT NULL UNIQUE, island INTEGER NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS resident_profiles (
+      player TEXT PRIMARY KEY REFERENCES residents(player),
+      linkedin TEXT NOT NULL DEFAULT '',
+      photo BLOB,
+      photo_type TEXT
+    );
     CREATE TABLE IF NOT EXISTS placements (
       seed TEXT NOT NULL REFERENCES plants(id), island INTEGER NOT NULL,
       x REAL NOT NULL, z REAL NOT NULL, PRIMARY KEY(seed,island)
@@ -69,6 +75,28 @@ export function createGarden(db) {
     }
     return row;
   }
+  const profileLookup = db.prepare(`SELECT linkedin,photo IS NOT NULL AS hasPhoto
+    FROM resident_profiles WHERE player=?`);
+  const legacyHome = db.prepare('SELECT island FROM plants WHERE owner=? ORDER BY planted_at LIMIT 1');
+  const selectHome = db.prepare(`INSERT INTO residents(player,island) VALUES (?,?)
+    ON CONFLICT(player) DO UPDATE SET island=excluded.island`);
+  const save = db.prepare('INSERT INTO resident_profiles(player,linkedin,photo,photo_type) VALUES (?,?,?,?)');
+  const photoFor = db.prepare('SELECT photo,photo_type AS type FROM resident_profiles WHERE player=?');
+  function profile(player) {
+    const saved=profileLookup.get(player);
+    const existing=resident.get(player) ?? legacyHome.get(player);
+    const island=islands.some(entry=>entry.id===existing?.island)?existing.island:null;
+    return { completed:Boolean(saved), island, linkedin:saved?.linkedin??'', hasPhoto:Boolean(saved?.hasPhoto) };
+  }
+  function finishProfile(player,{island,linkedin,photo,photoType}) {
+    return transaction(()=>{
+      const previous=profile(player);
+      if(previous.completed)return {status:409,error:'Your profile is already set up.'};
+      selectHome.run(player,island);
+      save.run(player,linkedin,photo,photoType);
+      return profile(player);
+    });
+  }
   const seed = db.prepare('SELECT id,owner,island,title,length(pdf) AS fileSize FROM plants WHERE id=?');
   const placement = db.prepare('SELECT 1 FROM placements WHERE seed=? AND island=?');
   const occupied = db.prepare('SELECT 1 FROM placements WHERE island=? AND (x-?)*(x-?)+(z-?)*(z-?) < .16');
@@ -81,6 +109,8 @@ export function createGarden(db) {
   const commentById = db.prepare('SELECT player,island FROM comments WHERE id=? AND seed=?');
   const queueActivity = db.prepare('INSERT INTO activity(seed,player,island,kind) VALUES (?,?,?,?)');
   const credit = db.prepare('INSERT INTO bridge_contributions(a,b,player,island,points,cross_reply) VALUES (?,?,?,?,?,?)');
+  const firstBridgeSide = db.prepare(`SELECT island FROM bridge_contributions
+    WHERE a=? AND b=? AND player=? AND points>0 ORDER BY id LIMIT 1`);
   const participation = db.prepare(`SELECT island, count(*) AS residents, sum(comments) AS comments, max(reply) AS reply
     FROM (SELECT island, player, min(2,sum(points=5)) AS comments, max(cross_reply) AS reply
           FROM bridge_contributions WHERE a=? AND b=? AND points>0 GROUP BY island,player)
@@ -203,6 +233,8 @@ export function createGarden(db) {
       const origin=seed.get(id).island;
       for(const bridge of related.all(residentIsland,residentIsland,origin,origin,id,id)){
         if(bridge.opened&&kind!=='comment')continue;
+        const previousSide=firstBridgeSide.get(bridge.a,bridge.b,player);
+        if(!bridge.opened&&previousSide&&previousSide.island!==residentIsland)continue;
         const other=bridge.a===residentIsland?bridge.b:bridge.a;
         const crossReply=kind==='comment'&&parent?.island===other;
         // A cross-island reply can occupy one of the resident's two counted comment slots.
@@ -221,5 +253,5 @@ export function createGarden(db) {
     return db.prepare('SELECT island FROM placements WHERE seed=?').all(id)
       .some(row=>canVisit(player,row.island));
   }
-  return { home,snapshot,plant,participate,setFollow,canRead };
+  return { home,snapshot,plant,participate,setFollow,canRead,profile,finishProfile,photoFor };
 }

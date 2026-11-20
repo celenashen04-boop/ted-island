@@ -1,0 +1,28 @@
+body.design-page{overflow:auto;min-height:100dvh;background:#f5f1e5;color:#203930}
+.kit-header,.kit-main{max-width:78rem;margin:auto;padding:1.4rem clamp(1rem,4vw,2.5rem)}
+.kit-header{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;border-bottom:1px solid #cdd2bb}
+.kit-home{color:#315646;font-weight:650;text-decoration:none}
+.kit-header h1{font-size:clamp(2rem,5vw,3.4rem);margin:.3rem 0 0}
+.kit-actions{display:flex;gap:.55rem;flex-wrap:wrap}
+.kit-import{position:relative;cursor:pointer}
+.kit-import input,.asset-upload input{position:absolute;inset:0;width:100%;opacity:0;cursor:pointer}
+.kit-import:focus-within,.asset-upload:focus-within{outline:2px solid #315646;outline-offset:3px}
+.kit-main section{margin:0 0 1.75rem}
+.kit-main section h2{font-size:1.6rem}
+#kit-status{margin:0;color:#486052;font-size:.92rem}
+#kit-error{color:#942f2f}
+#kit-error:empty{display:none}
+.kit-theme,.kit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr));gap:.7rem}
+.theme-field,.asset-slot{display:grid;gap:.55rem;align-content:start;background:#fffaf0;padding:.8rem;border:1px solid #d2c9aa;border-radius:.65rem;min-width:0}
+.theme-field input[type=color]{width:100%;height:2rem;padding:0;border:0;background:transparent}
+.theme-field select{font:inherit;padding:.3rem}
+.asset-slot h3{margin:0;font-size:1rem}
+.asset-preview{height:6rem;display:grid;place-items:center;background:repeating-conic-gradient(#eef0e2 0% 25%,#f8f9ee 0% 50%) 0/16px 16px;border-radius:.35rem;color:#64715f;font-size:.85rem}
+.asset-preview img{max-width:100%;max-height:5.65rem;object-fit:contain}
+.asset-slot p{margin:0;color:#4b6255;font-size:.85rem;overflow-wrap:anywhere}
+.asset-actions{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+.asset-actions .secondary{font-size:.8rem;padding:.35rem .5rem}
+.asset-upload{position:relative}
+
+.kit-main details{margin-bottom:1.75rem}
+.kit-main summary{font:700 1.2rem Georgia,serif;cursor:pointer;margin:1rem 0 .75rem}

@@ -1,16 +1,16 @@
 # CHI Island · Design context
 
-Consult this file before changing CHI Island’s views, game rules, or data model. Update it when design decisions change. It describes the intended platform behavior. The current prototype uses three islands and provisional home assignment. The rules below are the design reference.
+Consult this file before changing CHI Island’s views, game rules, or data model. Update it when design decisions change. It describes the intended platform behavior. The current prototype uses three islands and domain-based onboarding. The rules below are the design reference.
 
 ## World View
 
-- Show all CHI islands and their names.
+- Show all CHI islands and their names. Island A is **Health & Wellbeing**, Island B is **Sustainability**, and Island C is **Games & Play**.
 - Let residents drag to rotate the world.
 - Place a circular button at the top left to switch to Player View.
 - Keep the world map full width by default. A circular top-right button slides the bridge dashboard in and out, in the same position as Seed Catalog in Player View. The dashboard shows construction progress for every bridge connecting the resident’s home island to another CHI island.
 
 ## Player View
-- Residents are assigned a home island. The assignment method will be defined during onboarding design and is outside the current scope.
+- During onboarding, residents choose their domain from the three islands. The chosen domain becomes their home island. An existing resident completing onboarding can choose their home island. Previously planted seeds stay on their original islands. Profile photos and LinkedIn URLs are optional and are shown only to the resident who supplied them.
 - Show the other islands in the distance, using the same relative direction and height as World View. Use the island the player is standing on as the reference point.
 - Use the left joystick to move and drag on the right side to change the viewing direction.
 - Provide a circular button to switch to World View.
@@ -26,6 +26,7 @@ Consult this file before changing CHI Island’s views, game rules, or data mode
 - Once planted, the seed appears on its original island and enters the catalog of residents on other islands.
 - Each seed retains its creator and original home island. Catalog cards show the title, description, original island, and planting status.
 - Residents can select a seed from another island in the catalog and plant it on their own home island.
+- Arrange catalog cards on shelves by their original island. Residents can view all eligible shelves or filter to one island.
 - The catalog is the only place to adopt seeds. Each seed can be planted only once per island. Visiting an island gives no ability to collect or replant its seeds there or bring them home directly.
 
 ## Plant growth and shared discussion

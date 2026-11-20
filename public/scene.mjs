@@ -1,7 +1,7 @@
 import { islands, islandRim, islandLandmarks } from './islands.mjs';
 import { onIsland, canPlant, tileWidth, tileDepth } from './plots.mjs';
 
-export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
+export function createScene(canvas, { onPlant, onLanding, onThrowRequest, artwork = new Map() }) {
   let plants = [];
   const keys = new Set();
   const spawn={x:0,z:3.65,yaw:0,pitch:-.15};
@@ -228,6 +228,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
     const spacing=9, size=6.1;
     for(const island of islands){
       if(island.id===id)continue;
+      const firstFace=distantFaces.length;
       origin=[(island.x-current.x)*spacing,(island.y-current.y)*spacing,(island.z-current.z)*spacing];
       const rim=islandRim.map(([x,z])=>[x*size,0,z*size]);
       face([...rim].reverse(),island.color,1,null,-1,distantFaces);
@@ -246,7 +247,8 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
         box(x*size,0,z*size,.16,.86,.16,'#997b75',undefined,-1,distantFaces);
         box(x*size,.68,z*size,.84,.38,.75,'#dc9da2','#efb3b0',-1,distantFaces);
       }
-      distantLabels.push({name:island.name,position:[origin[0],origin[1]+3.85,origin[2]]});
+      for(let i=firstFace;i<distantFaces.length;i++)distantFaces[i].islandId=island.id;
+      distantLabels.push({id:island.id,name:island.name,position:[origin[0],origin[1]+3.85,origin[2]],center:[...origin]});
     }
     origin=savedOrigin;
   }
@@ -396,6 +398,8 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
   function drawPlant(project,plant,scale,now) {
     const [sx,sy]=project([plant.x,.016,plant.z]);
     const tall=plantSize(plant)*scale;
+    const sprite=artwork.get(['seed','sprout','young','tree','mature'][plant.growth]);
+    const spriteWidth=sprite ? Math.min(tall*2,tall*sprite.width/sprite.height) : 0;
     const seedY=.105+(reducedMotion?.matches?0:Math.sin(now*.003+plant.x*2+plant.z)*.038);
     const [seedX,seedScreenY]=project([plant.x,seedY,plant.z]);
     ctx.save();ctx.translate(sx,sy);
@@ -404,6 +408,9 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
     if(!plant.growth){
       ctx.restore();
       drawSeed(seedX,seedScreenY,clamp(.061*scale,5,24),-.45);
+    }else if(sprite){
+      ctx.drawImage(sprite,-spriteWidth/2,-tall,spriteWidth,tall);
+      ctx.restore();
     }else{
       ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(tall*.24,-tall*.5,0,-tall);
       ctx.strokeStyle='#526837';ctx.lineWidth=Math.max(1.5,scale*.023);ctx.stroke();
@@ -423,7 +430,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
     }
     const centerX=plant.growth?sx:seedX;
     const top=plant.growth?sy-tall*1.2:seedScreenY-clamp(.061*scale,5,24)*1.2;
-    const halfWidth=Math.max(12,(plant.growth ? .17 : .078)*scale);
+    const halfWidth=Math.max(12,plant.growth ? spriteWidth/2 : 0,(plant.growth ? .17 : .078)*scale);
     if(clearPath(plant.x,plant.growth?plantSize(plant)*.62:seedY,plant.z)){
       plantHits.push({id:plant.id,left:centerX-halfWidth,right:centerX+halfWidth,top:top-5,bottom:sy+8});
     }
@@ -504,6 +511,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
     const project=point=>screen(view(point));
     const visible=[];
     for(const item of [...distantFaces,...faces]){
+      if(item.islandId!==undefined&&artwork.has('island-'+item.islandId))continue;
       const [px,py,pz]=item.points[0], [nx,ny,nz]=item.normal;
       if(nx*(x-px)+ny*(eye-py)+nz*(z-pz)<=0)continue;
       const points=item.points.map(view), clipped=[];
@@ -522,6 +530,14 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
         decal:item.decal&&points.every(p=>p[2]>=near)});
     }
     for(const island of distantLabels){
+      const image=artwork.get('island-'+island.id),center=view(island.center);
+      if(image&&center[2]>near){
+        const [x,y]=screen(center);
+        const maxSize=focal*8/center[2];
+        const w=Math.min(maxSize,maxSize*image.width/image.height);
+        const h=w*image.height/image.width;
+        visible.push({image,bounds:[x-w/2,y-h*.35,w,h],layer:-1,depth:center[2]});
+      }
       const anchor=view(island.position);
       if(anchor[2]<=near)continue;
       const point=screen(anchor);
@@ -537,7 +553,8 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
     // before structures so a large tile cannot cover smaller objects on it.
     visible.sort((a,b)=>a.layer-b.layer || b.depth-a.depth);
     plantHits=[];
-    for(const {item,pixels,plant,depth,decal,label,point} of visible){
+    for(const {item,pixels,plant,depth,decal,label,point,image,bounds} of visible){
+      if(image){ctx.drawImage(image,...bounds);continue;}
       if(label){drawIslandLabel(label,point);continue;}
       if(plant){drawPlant(project,plant,focal/depth,now);continue;}
       if(item.color){
@@ -639,6 +656,13 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest }) {
 
   function drawSeed(sx,sy,radius,angle){
     ctx.save();ctx.translate(sx,sy);ctx.rotate(angle);ctx.scale(radius,radius);
+    const sprite=artwork.get('seed');
+    if(sprite){
+      const ratio=sprite.width/sprite.height,w=Math.min(2.2,2.2*ratio),h=w/ratio;
+      ctx.drawImage(sprite,-w/2,-h/2,w,h);
+      ctx.restore();
+      return;
+    }
     const coat=ctx.createLinearGradient(-.65,-.85,.72,.75);
     coat.addColorStop(0,'#fff0a4');coat.addColorStop(.42,'#e9a24e');coat.addColorStop(1,'#7d4629');
     ctx.beginPath();ctx.moveTo(0,-1.15);

@@ -1,6 +1,6 @@
 import { islandRim, islandLandmarks } from './islands.mjs';
 
-export function createWorld(canvas) {
+export function createWorld(canvas, artwork = new Map()) {
   const ctx=canvas.getContext('2d');
   let islands=[],bridges=[],home=0,yaw=.25,pitch=.55,drag=null;
 
@@ -25,11 +25,26 @@ export function createWorld(canvas) {
       const start=items.find(item=>item.id===home),end=items.find(item=>item.id===bridge.destination);
       if(!start||!end)continue;
       const [ax,ay]=project(start.position),[bx,by]=project(end.position);
+      const art=artwork.get(bridge.open?'bridge-open':bridge.progress>=40?'bridge-walkway':'bridge-foundation');
+      if(art){
+        const length=Math.hypot(bx-ax,by-ay);
+        ctx.save();ctx.translate(ax,ay);ctx.rotate(Math.atan2(by-ay,bx-ax));
+        ctx.drawImage(art,0,-9,length,18);ctx.restore();
+        continue;
+      }
       ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);
       ctx.lineWidth=3;ctx.strokeStyle=bridge.open?'#e6cd8d':'#b7a475';ctx.setLineDash(bridge.open?[]:[4,7]);ctx.stroke();
     }
     ctx.setLineDash([]);
     for(const island of items){
+      const image=artwork.get('island-'+island.id);
+      if(image){
+        const [x,y]=project(island.position);
+        const w=Math.min(scale*1.65,scale*1.9*image.width/image.height);
+        const h=w*image.height/image.width;
+        ctx.drawImage(image,x-w/2,y-h*.35,w,h);
+        continue;
+      }
       const tile=(x,z,y)=>project(rotate({x:island.x+x,y:island.y+y,z:island.z+z}));
       const edge=islandRim.map(([x,z])=>tile(x,z,0));
       const bottom=tile(0,0,-1.0);

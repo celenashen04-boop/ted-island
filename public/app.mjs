@@ -1,3 +1,4 @@
+import { installGameDesign } from './design-assets.mjs';
 import { createScene } from './scene.mjs';
 import { createWorld } from './world.mjs';
 import { plantStage } from './plots.mjs';
@@ -16,11 +17,13 @@ const worldView = byId('world-view');
 const dashboard = byId('world-dashboard');
 const dashboardButton = byId('toggle-dashboard');
 const playerView = map.closest('main');
-const world = createWorld(byId('world-map'));
+const artwork = new Map();
+const world = createWorld(byId('world-map'), artwork);
 let state = null;
 let currentIsland = null;
 let plants = [];
 let selectedAdoption = null;
+let catalogIsland = null;
 let pendingPlant = null;
 let openPlant = null;
 let replyTo = null;
@@ -52,6 +55,7 @@ function announce(text) {
 }
 
 const scene = createScene(map, {
+  artwork,
   onPlant: showIdea,
   onThrowRequest() {
     if (!live) { announce('Connecting to the garden…'); return false; }
@@ -107,36 +111,80 @@ function updateGarden() {
 
 function renderCatalog() {
   const list = byId('catalog-items');
-  const cards = state?.catalog ?? [];
+  const filters = byId('catalog-filters');
+  const focused = catalog.contains(document.activeElement) ? document.activeElement.dataset.catalogFocus : null;
   list.replaceChildren();
+  filters.replaceChildren();
+  if (!state) {
+    list.append(element('p', 'Connecting to the catalog…'));
+    return;
+  }
+
+  const foreignIslands = islands.filter(island => island.id !== state.home);
+  if (!foreignIslands.some(island => island.id === catalogIsland)) catalogIsland = null;
+  for (const island of [null, ...foreignIslands]) {
+    const id = island?.id ?? null;
+    const filter = button(island?.name ?? 'All islands', () => {
+      catalogIsland = id;
+      renderCatalog();
+    });
+    filter.className = 'catalog-filter';
+    filter.dataset.catalogFocus = 'filter-' + id;
+    filter.setAttribute('aria-pressed', String(catalogIsland === id));
+    filters.append(filter);
+  }
+
   if (selectedAdoption) {
-    const selection = element('p', 'Selected to plant · ' + selectedAdoption.title);
-    list.append(selection, button('Cancel adoption', () => {
+    const selection = element('div', null, 'catalog-selection');
+    const cancel = button('Cancel adoption', () => {
       selectedAdoption = null;
       updateGarden();
       renderCatalog();
-    }));
+    });
+    cancel.dataset.catalogFocus = 'cancel-adoption';
+    selection.append(element('p', 'Selected to plant · ' + selectedAdoption.title), cancel);
+    list.append(selection);
   }
-  if (!cards.length) {
-    list.append(element('p', 'No seeds from other islands yet.'));
-    return;
-  }
-  for (const seed of cards) {
-    const planted = seed.plantedOn.includes(state.home);
-    const card = element('article', null, 'catalog-card');
-    card.append(element('h3', seed.title), element('p', seed.idea),
-      element('p', islandName(seed.originalIsland) + ' · ' + (planted ? 'Planted on your island' : 'Available to adopt'), 'muted'));
-    if (!planted) {
-      if (seed.growth) card.append(element('p', 'This idea is already growing. Bring its current tree and shared conversation to your island.'));
-      card.append(button('Adopt seed', () => {
-        selectedAdoption = seed;
-        catalog.close();
-        showIsland(state.home);
-        renderCatalog();
-        announce('Seed selected. Use Throw adopted seed to plant it.');
-      }));
+
+  for (const island of foreignIslands.filter(entry => catalogIsland === null || entry.id === catalogIsland)) {
+    const shelf = element('section', null, 'catalog-shelf');
+    const heading = element('h3', 'Island ' + island.letter + ' — ' + island.name);
+    heading.id = 'shelf-' + island.id;
+    shelf.setAttribute('aria-labelledby', heading.id);
+    shelf.style.setProperty('--shelf-accent', island.color);
+    const header = element('header', null, 'shelf-header');
+    header.append(heading, element('p', island.description, 'muted'));
+    shelf.append(header);
+    const books = element('div', null, 'shelf-books');
+    const seeds = state.catalog.filter(seed => seed.originalIsland === island.id);
+    if (!seeds.length) books.append(element('p', 'No seeds on this shelf yet.', 'shelf-empty'));
+    for (const seed of seeds) {
+      const planted = seed.plantedOn.includes(state.home);
+      const picked = selectedAdoption?.id === seed.id;
+      const card = element('article', null, 'catalog-card');
+      card.append(element('h4', seed.title), element('p', seed.idea),
+        element('p', planted ? 'Planted on your island' : picked ? 'Selected to plant' : 'Available to adopt', 'seed-status'));
+      if (!planted && !picked) {
+        if (seed.growth) card.append(element('p', 'This idea is already growing. Bring its current tree and shared conversation to your island.', 'muted'));
+        const adopt = button('Adopt seed', () => {
+          selectedAdoption = seed;
+          catalog.close();
+          showIsland(state.home);
+          announce('Seed selected. Use Throw adopted seed to plant it.');
+        });
+        adopt.dataset.art = 'adopt';
+        adopt.dataset.catalogFocus = 'adopt-' + seed.id;
+        card.append(adopt);
+      }
+      books.append(card);
     }
-    list.append(card);
+    shelf.append(books);
+    list.append(shelf);
+  }
+  if (focused) {
+    const replacement = [...catalog.querySelectorAll('[data-catalog-focus]')]
+      .find(control => control.dataset.catalogFocus === focused);
+    replacement?.focus({ preventScroll: true });
   }
 }
 
@@ -350,24 +398,150 @@ commentForm.addEventListener('submit', async event => {
   }
 });
 
-const stream = new EventSource('/api/events');
-stream.addEventListener('message', event => {
-  state = JSON.parse(event.data);
-  if (currentIsland === null || (currentIsland !== state.home &&
-    !state.bridges.some(bridge => bridge.destination === currentIsland && bridge.canCross))) {
-    currentIsland = state.home;
-    selectedAdoption = null;
-    scene.reset();
+function connectGarden() {
+  const stream = new EventSource('/api/events');
+  stream.addEventListener('message', event => {
+    state = JSON.parse(event.data);
+    if (currentIsland === null || (currentIsland !== state.home &&
+      !state.bridges.some(bridge => bridge.destination === currentIsland && bridge.canCross))) {
+      currentIsland = state.home;
+      selectedAdoption = null;
+      scene.reset();
+    }
+    live = true;
+    updateGarden();
+    if (openPlant) renderIdea();
+    if (catalog.open) renderCatalog();
+    if (!worldView.hidden) renderWorld();
+  });
+  stream.addEventListener('error', () => {
+    live = false;
+    announce('Reconnecting to the garden…');
+    if (openPlant) renderIdea();
+  });
+}
+
+const onboarding = byId('onboarding');
+const onboardingForm = byId('onboarding-form');
+const onboardingFields = byId('onboarding-fields');
+const profilePhoto = byId('profile-file');
+const join = byId('join-island');
+const retry = byId('retry-profile');
+const onboardingError = byId('onboarding-error');
+let previewURL;
+
+function releasePhotoPreview() {
+  if (previewURL) URL.revokeObjectURL(previewURL);
+  previewURL = null;
+  byId('photo-preview').hidden = true;
+}
+
+function enterGarden(profile) {
+  const photo = byId('resident-photo');
+  if (profile.hasPhoto) {
+    photo.src = '/api/profile/photo';
+    photo.hidden = false;
   }
-  live = true;
-  updateGarden();
-  if (openPlant) renderIdea();
-  if (catalog.open) renderCatalog();
-  if (!worldView.hidden) renderWorld();
+  const linkedin = byId('resident-linkedin');
+  if (profile.linkedin) {
+    linkedin.href = profile.linkedin;
+    linkedin.hidden = false;
+  }
+  byId('resident-badge').hidden = false;
+  playerView.inert = false;
+  if (onboarding.open) onboarding.close();
+  releasePhotoPreview();
+  connectGarden();
+  map.focus({ preventScroll: true });
+}
+
+async function loadProfile() {
+  onboardingError.textContent = '';
+  retry.hidden = true;
+  try {
+    const response = await fetch('/api/profile', {cache:'no-store'});
+    if (!response.ok) throw new Error('Could not load your resident profile.');
+    const profile = await response.json();
+    if (profile.completed) return enterGarden(profile);
+    const options = byId('domain-options');
+    options.replaceChildren();
+    for (const island of islands) {
+      const name = element('strong', island.name);
+      const input = element('input');
+      input.type = 'radio'; input.name = 'island'; input.value = String(island.id); input.required = true;
+      input.checked = profile.island === island.id;
+      const card = element('label', null, 'domain-card');
+      card.style.setProperty('--domain-color', island.color);
+      const text = element('span');
+      text.append(name, element('small', island.description, 'muted'));
+      card.append(input, text);
+      options.append(card);
+    }
+    onboardingFields.disabled = false;
+    join.disabled = false;
+    (options.querySelector('input:checked') ?? options.querySelector('input')).focus();
+  } catch (error) {
+    onboardingError.textContent = error.message || 'Could not load your resident profile.';
+    retry.hidden = false;
+  }
+}
+
+profilePhoto.addEventListener('change', () => {
+  releasePhotoPreview();
+  const file = profilePhoto.files[0];
+  byId('photo-selection').textContent = file ? file.name : '';
+  onboardingError.textContent = '';
+  if (!file) return;
+  previewURL = URL.createObjectURL(file);
+  const image = byId('photo-preview');
+  image.src = previewURL;
+  image.hidden = false;
 });
-stream.addEventListener('error', () => {
-  live = false;
-  announce('Reconnecting to the garden…');
-  if (openPlant) renderIdea();
+
+async function photoForUpload(file) {
+  if (file.size <= 1024 * 1024 && ['image/jpeg','image/png','image/webp'].includes(file.type)) return file;
+  const image = byId('photo-preview');
+  try {
+    await image.decode();
+  } catch {
+    throw new Error('This photo format could not be opened. Choose a JPEG, PNG, or WebP image.');
+  }
+  const scale = Math.min(1, 768 / Math.max(image.naturalWidth, image.naturalHeight));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+  const context = canvas.getContext('2d', {alpha:false});
+  context.fillStyle = '#fff';
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const photo = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', .8));
+  if (!photo || photo.size > 1024 * 1024) throw new Error('Could not resize this photo. Choose a smaller image.');
+  return new File([photo], 'profile-photo.jpg', {type:'image/jpeg'});
+}
+
+onboardingForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (join.disabled) return;
+  const body = new FormData(onboardingForm);
+  onboardingFields.disabled = true;
+  join.disabled = true;
+  join.textContent = 'Setting up…';
+  onboardingError.textContent = '';
+  try {
+    const file = body.get('photo');
+    if (file instanceof File && file.size) body.set('photo', await photoForUpload(file));
+    enterGarden(await post('/api/profile', body));
+  } catch (error) {
+    onboardingError.textContent = error.message || 'Could not save your resident profile.';
+  } finally {
+    onboardingFields.disabled = false;
+    join.disabled = false;
+    join.textContent = 'Enter island';
+  }
 });
-map.focus({ preventScroll: true });
+retry.addEventListener('click', loadProfile);
+onboarding.addEventListener('cancel', event => event.preventDefault());
+installGameDesign(artwork).then(() => { if (!worldView.hidden) world.draw(); });
+playerView.inert = true;
+onboarding.showModal();
+loadProfile();
