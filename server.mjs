@@ -84,12 +84,6 @@ const clients = new Map();
 const maxPDF = 10 * 1024 * 1024;
 const files = new Map([
   ['/', [new URL('./public/index.html', import.meta.url), 'text/html; charset=utf-8']],
-  ...['spiral','verdant','pinwheel'].map(id => [
-    '/studios/' + id,
-    [new URL('./public/studios/' + id + '.html', import.meta.url), 'text/html; charset=utf-8']
-  ]),
-  ['/studios/studio.css', [new URL('./public/studios/studio.css', import.meta.url), 'text/css; charset=utf-8']],
-  ['/studios/studio.mjs', [new URL('./public/studios/studio.mjs', import.meta.url), 'text/javascript; charset=utf-8']],
   ['/design-kit', [new URL('./public/design-kit.html', import.meta.url), 'text/html; charset=utf-8']],
   ['/design-kit.css', [new URL('./public/design-kit.css', import.meta.url), 'text/css; charset=utf-8']],
   ['/design-kit.mjs', [new URL('./public/design-kit.mjs', import.meta.url), 'text/javascript; charset=utf-8']],

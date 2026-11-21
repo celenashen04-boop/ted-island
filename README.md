@@ -31,18 +31,6 @@ Island GLB files can be attached to the kit for handoff. Optional 2D thumbnails 
 
 Both views use the animated, procedural models from the [CHI 2027 island kit](https://github.com/RayZiruiLiu/chi-2027-code-native-islands/tree/3445ee91011e588c3980329eb25573a6505b84f6). Spiral Harbor is Health & Wellbeing, Verdant Springs is Sustainability, and Pinwheel Island is Games & Play. The models' navigation data sets walkable surfaces, planting ground, and bridge landings. The model renderer requires WebGL 2.
 
-### Individual island studios
-
-The main website links to three standalone, full-page viewers:
-
-- [Spiral Harbor](/studios/spiral)
-- [Verdant Springs](/studios/verdant)
-- [Pinwheel Island](/studios/pinwheel)
-
-Each viewer has orbit and on-foot exploration. On desktop, click the scene while exploring to capture the mouse; press Esc to free it. On touch screens, use the joystick and drag the scene to look. **Navigation data** downloads the island's boundary, walkable surface types, water mask, obstacles, bridge landings, exact scene scale and rotation, and the current player dimensions and step limits.
-
-The standalone viewers import the same editable `public/island-kit/source/` modules and `public/island-kit/navigation.mjs` used by the main website. Changes to an island source module therefore appear in its viewer and in the main website without a separate model export or merge. Shared studio controls live in `public/studios/studio.mjs`; the main website's player and multiplayer logic stay in `public/scene.mjs` and `public/app.mjs`. The studio uses the same Three.js lighting, tone mapping, background gradient, model scale, and collision functions as the main view.
-
 ## Design references
 
 - [Growth and bridges](docs/growth-and-bridges.html) shows the five acorn oak stages, bridge design studies, and an interactive crossing. Open the HTML in a browser.
