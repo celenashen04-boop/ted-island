@@ -4,8 +4,8 @@ A local multiplayer prototype using Node.js 24 or newer. Run `npm run dev` from 
 
 ## Play
 
-1. Use **WASD** to walk and climb stairs. You fall when you walk off a ledge and respawn if you fall off the island. Drag the view or use the arrow keys to look around.
-2. Press **Q** or select the bottom-right **+** to open the slingshot. Drag backward from the seed near the bottom of the view and release. The green arc previews where it will land. If the seed lands on open grass, add a title, short description, open question, and optional PDF (up to 10 MB), then choose **Plant research seed**.
+1. Use **WASD** to walk and climb stairs. The edges of the islands and bridges stop you from walking into the gap. Drag the view or use the arrow keys to look around.
+2. Press **Q** or select the bottom-right **+** to ready an acorn. Face open grass and tap or click anywhere in the scene for the same short forward throw. If the acorn lands on open grass, add a title, short description, open question, and optional PDF (up to 10 MB), then choose **Plant research seed**.
 3. Open **Seed Catalog** to adopt a seed from another island. Plant it on your home island to start a bridge. Use the bridge icon in **World View** to check progress, see followed plant updates, and find the bridge entrance. Cross completed bridges on foot in **Player View**.
 4. In a private window or a separate browser profile, click a seed or plant in the scene. Open its PDF or select **Like · Water**.
 

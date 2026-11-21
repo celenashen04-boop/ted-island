@@ -21,15 +21,16 @@ Consult this file before changing CHI Island’s views, game rules, or data mode
 - Show the other islands in the distance, using the same relative direction and height as World View. Use the island the player is standing on as the reference point.
 - Show the trees growing toward the connected island and the resulting bridge directly in the 3D scene. Eligible players can step onto the completed span and walk across in Player View.
 - Use the left joystick to move and drag on the right side to change the viewing direction.
+- Stop walking at the outer edges of islands and completed bridges. An eligible player can walk between an island and the bridge entrance.
 - Provide a circular globe button to switch to World View.
-- Open the slingshot with the bottom-right plus button. It rotates into an × that cancels the throw. Show a bottom tip explaining how to throw and how planting lets other residents interact with the research.
+- Ready an acorn with the bottom-right plus button. It rotates into an × that cancels the throw. Show “Tap to throw.” A tap or click anywhere in the scene sends the acorn the same short distance in the direction the player faces, unless it hits an obstacle first. Frame the flight and hold briefly on the landing. Dragging adjusts the camera while the acorn is ready. Keep the earlier slingshot control available as an alternate in the scene code.
 - Place a circular **Seed Catalog** button with a single seed icon at the top right.
 - Let residents select plants in the garden. Liking another resident’s plant on the same island waters it. Leaving a comment fertilizes it.
 - Let residents adopt seeds from other islands through the Seed Catalog. Residents discover seeds originating on their own island in the physical garden. Those seeds appear in the catalogs of residents on other islands.
 
 ## Seed creation and planting
 
-- Every resident can create and plant an idea seed on their home island using the slingshot.
+- Every resident can create and plant an idea seed on their home island by readying an acorn and tapping the scene to throw it.
 - A seed can start from an article title, a research idea, or an uploaded paper or poster. Include a short description and an open question to invite discussion.
 - Once planted, the seed appears on its original island and enters the catalog of residents on other islands.
 - Each seed retains its creator and original home island. On the shelf, each packet shows only the research title. Select a packet to open a centered overlay with its description, open question, and adoption action or planting status. Catalog and planted seed popups show the original island in a pill and keep the close button visible while the content scrolls. Click or tap outside either popup to close it.
@@ -51,7 +52,7 @@ Consult this file before changing CHI Island’s views, game rules, or data mode
 
 ### Prototype growth thresholds
 
-- Use a low-poly acorn oak for the default growth art. Show a capped acorn, a two-leaf sprout, a lobed-leaf sapling, a small oak, and a wider mature oak. Use the same acorn in the slingshot and in flight.
+- Use a low-poly acorn oak for the default growth art. Show a capped acorn, a two-leaf sprout, a lobed-leaf sapling, a small oak, and a wider mature oak. Use the same acorn when ready to throw and in flight.
 
 | Stage | Water required | Nutrients required | Participation requirement |
 | --- | ---: | ---: | --- |

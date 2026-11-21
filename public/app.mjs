@@ -9,6 +9,7 @@ const map = byId('map');
 const message = byId('message');
 const seedLauncher = byId('seed-mode');
 const plantingTip = byId('planting-tip');
+const throwControl = 'tap';
 const plantDialog = byId('plant-dialog');
 const landscapeDialog = byId('landscape-required');
 const catalog = byId('seed-catalog');
@@ -90,6 +91,7 @@ const showParticipationTip = firstUseTip('participation-tip', byId('follow'));
 
 const scene = createScene(map, {
   artwork,
+  throwControl,
   onPlant(id) { showIdea(id, true); },
   onCross(destination, position) {
     const away = currentIsland === state.home ? destination : currentIsland;
@@ -154,9 +156,7 @@ function updateGarden() {
   const launchLabel = selectedAdoption ? 'Plant adopted seed' : 'Plant a seed';
   seedLauncher.setAttribute('aria-label', launchLabel);
   seedLauncher.title = launchLabel + ' (Q)';
-  plantingTip.textContent = selectedAdoption
-    ? 'Drag the seed back and release it onto grass to bring this research and its shared discussion to your island.'
-    : 'Drag the seed back and release it onto grass. Plant one of your research articles, ideas, or interests so others can discuss it and help it grow.';
+  plantingTip.textContent = throwControl === 'slingshot' ? 'Drag back and release.' : 'Tap to throw.';
 }
 
 const catalogExamples = {

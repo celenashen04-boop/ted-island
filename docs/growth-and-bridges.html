@@ -893,17 +893,20 @@ function createScene(canvas, { onPlant, onLanding, onThrowRequest, onCross=()=>{
   }
 
   function moveTo(px,pz){
-    if(grounded && !onIsland(px,pz)){
-      for(const {path,canCross,open} of bridges){
-        if(!open || canCross)continue;
-        const {distance,offset}=path.locate(px,pz);
-        if(distance<0 || distance>path.length || Math.abs(offset)>bridgeHalfWidth)continue;
-        if(performance.now()>=nextBridgeNotice){
-          nextBridgeNotice=performance.now()+3000;
-          onBridgeLocked();
+    if(!onIsland(px,pz,radius) && bridgeFloorAt(px,pz,Infinity)===-Infinity){
+      if(grounded){
+        for(const {path,canCross,open} of bridges){
+          if(!open || canCross)continue;
+          const {distance,offset}=path.locate(px,pz);
+          if(distance<0 || distance>path.length || Math.abs(offset)>bridgeHalfWidth)continue;
+          if(performance.now()>=nextBridgeNotice){
+            nextBridgeNotice=performance.now()+3000;
+            onBridgeLocked();
+          }
+          break;
         }
-        return;
       }
+      return;
     }
     let step=feet;
     if(grounded){

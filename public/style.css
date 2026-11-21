@@ -19,7 +19,7 @@ form label{display:grid;gap:.35rem;margin-top:.85rem;font-weight:650}form input,
 
 .seed-mode,.catalog-button{position:absolute;right:max(1rem,env(safe-area-inset-right));padding:.47rem .7rem;border:1px solid #f0eac9;border-radius:.48rem;color:#fffdf1;background:#26392e;font-size:.875rem;font-weight:650}
 
-.is-throwing canvas{cursor:grab}.is-throwing canvas:active{cursor:grabbing}
+.is-throwing canvas{cursor:crosshair}
 
 canvas.over-plant{cursor:pointer}
 

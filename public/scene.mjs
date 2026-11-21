@@ -1,14 +1,16 @@
 import { islands, islandLandmarks, islandSpacing } from './islands.mjs';
 import { onIsland, canPlant, tileWidth, tileDepth, bridgePath, bridgeSurfaceHeight, bridgeHalfWidth, traceOakConnection } from './plots.mjs';
 
-export function createScene(canvas, { onPlant, onLanding, onThrowRequest, onCross=()=>{}, onBridgeLocked=()=>{}, artwork = new Map() }) {
+export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwControl='tap', onCross=()=>{}, onBridgeLocked=()=>{}, artwork = new Map() }) {
   let plants = [];
   const keys = new Set();
   const spawn={x:0,z:3.65,yaw:0,pitch:-.15};
   let {x,z,yaw,pitch}=spawn;
   let feet=0, verticalSpeed=0, grounded=true, eye=1.05;
   const eyeHeight=1.05, bodyHeight=1.12, radius=.13, maxStep=.25;
-  const near=.055, slingY=.75;
+  const near=.055, readyY=.75, gravity=9.8, seedRadius=.055;
+  const useSlingshot=throwControl==='slingshot';
+  const tapRange=3.2, tapFlightTime=.74, tapLandingPauseMs=160;
   const focalLength=(width,height)=>Math.max(height*.77,width*.48);
   const colliders=[];
 
@@ -370,7 +372,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, onCros
     return {fraction:entry,normal};
   }
 
-  function trajectory(dx,dy){
+  function slingTrajectory(dx,dy){
     const pullDistance=Math.max(1,Math.hypot(dx,dy));
     const strength=clamp((pullDistance-10)/135,0,1)**1.65;
     const turn=clamp(Math.atan2(-dx,Math.max(dy,pullDistance*.54)),-.87,.87);
@@ -382,21 +384,44 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, onCros
     const launchPitch=Math.min(clamp(pitch+.50+.49*dy/pullDistance,.10,1.10),maxForwardPitch);
     const speed=1.65+strength*11.95;
     const horizontalSpeed=speed*Math.cos(launchPitch);
-    const lift=speed*Math.sin(launchPitch);
-    const gravity=9.8, seedRadius=.055, launchDistance=.56;
+    return predictThrow(releasePosition(),Math.sin(heading)*horizontalSpeed,
+      speed*Math.sin(launchPitch),-Math.cos(heading)*horizontalSpeed);
+  }
+
+  function releasePosition(){
+    const launchDistance=.56;
     const viewport=canvas.getBoundingClientRect();
     const focal=focalLength(viewport.width,viewport.height);
-    const drop=focal>0 ? (slingY-.5)*viewport.height*launchDistance/focal : 0;
+    const drop=focal>0 ? (readyY-.5)*viewport.height*launchDistance/focal : 0;
     const releaseHeight=eye+Math.sin(pitch)*launchDistance-Math.cos(pitch)*drop;
     const forwardOffset=Math.cos(pitch)*launchDistance+Math.sin(pitch)*drop;
-    const fromX=x+Math.sin(yaw)*forwardOffset,fromZ=z-Math.cos(yaw)*forwardOffset;
-    const vx=Math.sin(heading)*horizontalSpeed,vz=-Math.cos(heading)*horizontalSpeed;
+    return [x+Math.sin(yaw)*forwardOffset,releaseHeight,z-Math.cos(yaw)*forwardOffset];
+  }
+
+  function tapTrajectory(){
+    const reach=.56;
+    const releaseHeight=eye-.23;
+    const forwardX=Math.sin(yaw), forwardZ=-Math.cos(yaw);
+    const speed=(tapRange-reach)/tapFlightTime;
+    const lift=(seedRadius-releaseHeight)/tapFlightTime+gravity*tapFlightTime/2;
+    const arc=predictThrow([x+forwardX*reach,releaseHeight,z+forwardZ*reach],
+      forwardX*speed,lift,forwardZ*speed,true);
+    const {width,height}=canvas.getBoundingClientRect();
+    const halfView=Math.atan2(Math.max(1,height*.5-24),focalLength(width,height));
+    const angles=arc.samples.map(({position:[px,py,pz]})=>Math.atan2(py-eye,
+      (px-x)*forwardX+(pz-z)*forwardZ));
+    const low=Math.min(...angles), high=Math.max(...angles);
+    pitch=high-low<=2*halfView?clamp(pitch,high-halfView,low+halfView):(low+high)/2;
+    return arc;
+  }
+
+  function predictThrow([fromX,releaseHeight,fromZ],vx,lift,vz,stopAtGround=false){
     const point=t=>[fromX+vx*t,releaseHeight+lift*t-gravity*t*t/2,fromZ+vz*t];
     const timeToHeight=y=>(lift+Math.sqrt(Math.max(0,lift*lift+2*gravity*(releaseHeight-y))))/gravity;
     const groundTime=timeToHeight(seedRadius);
     const [tx,,tz]=point(groundTime);
     const hitsGround=onIsland(tx,tz);
-    const limit=hitsGround?groundTime:timeToHeight(-3.6);
+    const limit=hitsGround||stopAtGround?groundTime:timeToHeight(-3.6);
 
     // Sweep between consecutive prediction samples so thin features still register a hit.
     const samples=[{time:0,position:point(0)}];
@@ -555,17 +580,20 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, onCros
   }
 
   function moveTo(px,pz){
-    if(grounded && !onIsland(px,pz)){
-      for(const {path,canCross,open} of bridges){
-        if(!open || canCross)continue;
-        const {distance,offset}=path.locate(px,pz);
-        if(distance<0 || distance>path.length || Math.abs(offset)>bridgeHalfWidth)continue;
-        if(performance.now()>=nextBridgeNotice){
-          nextBridgeNotice=performance.now()+3000;
-          onBridgeLocked();
+    if(!onIsland(px,pz,radius) && bridgeFloorAt(px,pz,Infinity)===-Infinity){
+      if(grounded){
+        for(const {path,canCross,open} of bridges){
+          if(!open || canCross)continue;
+          const {distance,offset}=path.locate(px,pz);
+          if(distance<0 || distance>path.length || Math.abs(offset)>bridgeHalfWidth)continue;
+          if(performance.now()>=nextBridgeNotice){
+            nextBridgeNotice=performance.now()+3000;
+            onBridgeLocked();
+          }
+          break;
         }
-        return;
       }
+      return;
     }
     let step=feet;
     if(grounded){
@@ -580,7 +608,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, onCros
   }
 
   function walk(dt){
-    if(canvasReady()){
+    if(canvasReady() && (!flight || useSlingshot)){
       const side=Number(keys.has('KeyD'))-Number(keys.has('KeyA'))+movement.side;
       const ahead=Number(keys.has('KeyW'))-Number(keys.has('KeyS'))+movement.ahead;
       yaw+=(Number(keys.has('ArrowRight'))-Number(keys.has('ArrowLeft')))*dt*1.8;
@@ -624,7 +652,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, onCros
     requestAnimationFrame(draw);
     walk(last?Math.min(.045,(now-last)/1000):0);
     last=now;
-    if(flight && now>=flight.start+flight.duration*1000){
+    if(flight && now>=flight.start+flight.duration*1000+(useSlingshot?0:tapLandingPauseMs)){
       const {result,landing}=flight;
       flight=null;
       onLanding(result,landing);
@@ -711,9 +739,12 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, onCros
       }
     }
     const pulling=pull && Math.hypot(pull.dx,pull.dy)*pull.gain>=10;
-    const arc=pulling?trajectory(pull.dx*pull.gain,pull.dy*pull.gain):flight;
+    const arc=useSlingshot && (pulling?slingTrajectory(pull.dx*pull.gain,pull.dy*pull.gain):flight);
     if(arc)drawTrajectory(arc,view,screen,Boolean(flight));
-    if(throwing)drawSling();
+    if(throwing){
+      if(useSlingshot)drawSling();
+      else drawSeed(width/2,height*readyY,14,-.34);
+    }
     if(flight){
       const t=clamp((now-flight.start)/1000,0,flight.duration);
       const position=view(flight.point(t));
@@ -780,7 +811,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, onCros
   }
 
   function drawSling(){
-    const centerX=width/2,centerY=height*slingY;
+    const centerX=width/2,centerY=height*readyY;
     const sx=centerX+(pull?.dx??0),sy=centerY+(pull?.dy??0);
     ctx.save();
     ctx.lineCap='round';ctx.lineJoin='round';
@@ -815,14 +846,15 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, onCros
     pitch=clamp(pitch-dy*.0035,-1.33,1.16);
   }
   let pointer=null, traveled=0, lastPointer=null;
+  const tapSlop=event=>throwing&&!useSlingshot&&event.pointerType==='touch'?10:4;
   canvas.addEventListener('pointerdown',event=>{
     if(event.button!==0 && event.pointerType!=='touch')return;
     canvas.focus();
-    if(throwing){
+    if(throwing && useSlingshot){
       const rect=canvas.getBoundingClientRect();
-      const centerX=rect.left+rect.width/2,centerY=rect.top+rect.height*slingY;
+      const centerX=rect.left+rect.width/2,centerY=rect.top+rect.height*readyY;
       if(!pull&&Math.hypot(event.clientX-centerX,event.clientY-centerY)<=30){
-        const gain=event.pointerType==='touch' ? Math.max(1,145/Math.max(45,rect.height*(1-slingY)-14)) : 1;
+        const gain=event.pointerType==='touch' ? Math.max(1,145/Math.max(45,rect.height*(1-readyY)-14)) : 1;
         pull={id:event.pointerId,centerX,centerY,dx:0,dy:0,gain};
         canvas.setPointerCapture(event.pointerId);
         return;
@@ -844,7 +876,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, onCros
     const dy=event.pointerType==='touch'?cursor.y-lastPointer.y:event.movementY;
     lastPointer=cursor;
     traveled+=Math.abs(dx)+Math.abs(dy);
-    if(traveled>4)look(dx,dy);
+    if(traveled>tapSlop(event) && (!flight || useSlingshot))look(dx,dy);
   });
   canvas.addEventListener('pointerup',event=>{
     if(pull?.id===event.pointerId){
@@ -852,14 +884,21 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, onCros
       const dy=clamp(event.clientY-pull.centerY,-175,175)*pull.gain;
       pull=null;
       if(Math.hypot(dx,dy)<10)return;
-      flight={...trajectory(dx,dy),start:performance.now()};
+      flight={...slingTrajectory(dx,dy),start:performance.now()};
       setThrowMode(false);
       return;
     }
     if(event.pointerId!==pointer)return;
     pointer=null;
-    if(traveled>4 || throwing || flight)return;
+    if(traveled>tapSlop(event) || flight)return;
     const {x,y}=pointerPosition(event);
+    if(throwing){
+      if(!useSlingshot && onThrowRequest()){
+        flight={...tapTrajectory(),start:performance.now()};
+        setThrowMode(false);
+      }
+      return;
+    }
     const plant=plantAt(x,y);
     if(plant)onPlant(plant.id);
   });
