@@ -3,6 +3,7 @@ import { createScene } from './scene.mjs';
 import { createWorld } from './world.mjs';
 import { plantStage } from './plots.mjs';
 import { islands } from './islands.mjs';
+import { createIslandRenderer } from './island-kit/render.mjs';
 
 const byId = id => document.getElementById(id);
 const map = byId('map');
@@ -29,8 +30,9 @@ const dashboard = byId('world-dashboard');
 const dashboardButton = byId('toggle-dashboard');
 const playerView = map.closest('main');
 const artwork = new Map();
+const islandRenderer = createIslandRenderer();
 const homeIslandButton = byId('home-island');
-const world = createWorld(byId('world-map'), artwork, homeIslandButton, closeWorld);
+const world = createWorld(byId('world-map'), artwork, homeIslandButton, closeWorld, islandRenderer);
 let state = null;
 let currentIsland = null;
 let plants = [];
@@ -91,6 +93,8 @@ const showParticipationTip = firstUseTip('participation-tip', byId('follow'));
 
 const scene = createScene(map, {
   artwork,
+  islandRenderer,
+  isVisible: () => worldView.hidden,
   throwControl,
   onPlant(id) { showIdea(id, true); },
   onCross(destination, position) {
@@ -98,8 +102,8 @@ const scene = createScene(map, {
     if (destination !== state.home && currentIsland !== state.home) return;
     if (!state.bridges.some(bridge => bridge.destination === away && bridge.canCross)) return;
     currentIsland = destination;
-    scene.arrive(position);
     updateGarden();
+    scene.arrive(position);
     announce(destination === state.home ? 'Back on your home island.' : 'You crossed to ' + islandName(destination) + '.');
   },
   onBridgeLocked() { announce('Comment on a shared plant to earn access to this bridge.'); },

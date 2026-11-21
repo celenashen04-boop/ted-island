@@ -2,6 +2,22 @@
 
 Consult this file before changing CHI Island’s views, game rules, or data model. Update it when design decisions change. It describes the intended platform behavior. The current prototype uses three islands and domain-based onboarding. The rules below are the design reference.
 
+## Island environments
+
+| Research domain | Island model |
+| --- | --- |
+| Health & Wellbeing | Spiral Harbor |
+| Sustainability | Verdant Springs |
+| Games & Play | Pinwheel Island |
+
+Player View and World View share the same animated environments. Keep the research domain names in the game UI. Follow the terrain for movement and planting, and attach walkable bridges to the models’ designated landing decks.
+
+In Player View, players automatically step up onto stair treads and low objects with a stable top and enough headroom. The maximum rise is three-quarters of their character height. Taller obstacles such as the pinwheel mast, and unbridged island edges, block movement.
+
+Use the island meshes for solid-object collision in Player View. Keep stairs, decks, and ramps walkable, preserve clearance through openings, and allow residents to wade through shallow water.
+
+Scale the three animated islands to 1.125 times their original width, height, and depth. Keep saved plants in the same relative locations.
+
 ## Instruction overlays
 
 - Use shared frosted glass for instructions and short in-game guidance. Use a low-opacity warm tint, soft blur, and dark text. Use a solid surface when blur is unavailable or the player requests more contrast.

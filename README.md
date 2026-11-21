@@ -25,7 +25,11 @@ Vercel uses temporary storage for this preview. Seeds, likes, and PDFs may disap
 
 Open the [Design Kit](http://127.0.0.1:4173/design-kit) to upload artwork for buttons, plant stages, bridge stages, and island thumbnails, or to edit the shared UI theme. **Preview in game** loads the draft in a separate tab. **Apply in this browser** applies that draft to normal play in the current browser. Export the kit as JSON and import it in another browser to hand off artwork. The kit stays in browser storage until exported.
 
-Island GLB files can be attached to the kit for handoff. The game previews 2D island thumbnails in World View and as distant island art. First-person terrain and physics still use the existing island geometry.
+Island GLB files can be attached to the kit for handoff. Optional 2D thumbnails can replace distant island art in the game.
+
+## Island models
+
+Both views use the animated, procedural models from the [CHI 2027 island kit](https://github.com/RayZiruiLiu/chi-2027-code-native-islands/tree/3445ee91011e588c3980329eb25573a6505b84f6). Spiral Harbor is Health & Wellbeing, Verdant Springs is Sustainability, and Pinwheel Island is Games & Play. The models' navigation data sets walkable surfaces, planting ground, and bridge landings. The model renderer requires WebGL 2.
 
 ## Design references
 

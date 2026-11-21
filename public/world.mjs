@@ -1,7 +1,8 @@
 import { islandRim, islandLandmarks, islandSpacing } from './islands.mjs';
 import { bridgePath, traceOakConnection } from './plots.mjs';
+import { islandModel } from './island-kit/navigation.mjs';
 
-export function createWorld(canvas, artwork, homeButton, enterHome) {
+export function createWorld(canvas, artwork, homeButton, enterHome, islandRenderer=null) {
   const ctx=canvas.getContext('2d');
   let islands=[],bridges=[],home=0,yaw=.25,pitch=.55,drag=null,targets=[];
 
@@ -12,10 +13,15 @@ export function createWorld(canvas, artwork, homeButton, enterHome) {
     const ratio=Math.min(devicePixelRatio||1,2);
     canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);
     ctx.setTransform(ratio,0,0,ratio,0,0);
-    const sky=ctx.createLinearGradient(0,0,width,height);
-    sky.addColorStop(0,'#182d3c');sky.addColorStop(1,'#355964');
-    ctx.fillStyle=sky;ctx.fillRect(0,0,width,height);
     const scale=Math.min(width/8,height/5.6);
+    if(islandRenderer){
+      ctx.clearRect(0,0,width,height);
+      islandRenderer.world(canvas,{width,height,yaw,pitch,scale},artwork);
+    }else{
+      const sky=ctx.createLinearGradient(0,0,width,height);
+      sky.addColorStop(0,'#182d3c');sky.addColorStop(1,'#355964');
+      ctx.fillStyle=sky;ctx.fillRect(0,0,width,height);
+    }
     const rotate=({x,y,z})=>({x:x*Math.cos(yaw)-z*Math.sin(yaw),y,z:x*Math.sin(yaw)+z*Math.cos(yaw)});
     const project=({x,y,z})=>[width/2+x*scale,height*.53+(z*Math.sin(pitch)-y*Math.cos(pitch))*scale];
     const items=islands.map(island=>({...island,position:rotate(island)})).sort((a,b)=>a.position.z-b.position.z);
@@ -35,7 +41,7 @@ export function createWorld(canvas, artwork, homeButton, enterHome) {
         ctx.drawImage(art,0,-9,length,18);ctx.restore();
         continue;
       }
-      const route=bridgePath(bridge,home);
+      const route=bridgePath(bridge,home,Boolean(islandRenderer));
       if(!route)continue;
       const mapPoint=([x,y,z])=>project(rotate({
         x:start.x+x/islandSpacing,y:start.y+y/islandSpacing,z:start.z+z/islandSpacing
@@ -82,6 +88,13 @@ export function createWorld(canvas, artwork, homeButton, enterHome) {
         continue;
       }
       const tile=(x,z,y)=>project(rotate({x:island.x+x,y:island.y+y,z:island.z+z}));
+      if(islandRenderer){
+        const model=islandModel(island.id);
+        const rim=model.boundary().map(([x,z])=>model.localToIsland(x,z));
+        targets.push({id:island.id,polygons:[rim.map(([x,z])=>tile(x/islandSpacing,z/islandSpacing,0))]});
+        drawOaks(island.id);
+        continue;
+      }
       const edge=islandRim.map(([x,z])=>tile(x,z,0));
       const bottom=tile(0,0,-1.0);
       const sides=edge.map((point,index)=>[point,edge[(index+1)%edge.length],bottom]);
@@ -171,6 +184,14 @@ export function createWorld(canvas, artwork, homeButton, enterHome) {
     canvas.style.cursor='';
   });
   new ResizeObserver(draw).observe(canvas);
+  if(islandRenderer){
+    let lastDraw=0;
+    const animate=now=>{
+      requestAnimationFrame(animate);
+      if(canvas.clientWidth && now-lastDraw>=45){lastDraw=now;draw();}
+    };
+    requestAnimationFrame(animate);
+  }
   return {
     update(state){({islands,bridges,home}=state);draw();},
     draw

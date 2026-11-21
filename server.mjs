@@ -6,8 +6,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createGarden } from './garden.mjs';
-import { islands } from './public/islands.mjs';
-import { plots, canPlant } from './public/plots.mjs';
+import { islands, islandScale } from './public/islands.mjs';
+import { plots } from './public/plots.mjs';
+import { canPlantOnIsland } from './public/island-kit/navigation.mjs';
 
 const startedDirectly = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
 const vercelPreview = process.env.VERCEL === '1' || !startedDirectly;
@@ -182,9 +183,12 @@ async function plant(req, res, player) {
   };
   const coordinate = (name) => field(name) ? Math.round(Number(field(name))*1000)/1000 : NaN;
   const x = coordinate('x'), z = coordinate('z');
-  if (!canPlant(x,z)) return json(res,400,{error:'Aim at open grass.'});
-  if (field('island') !== String(garden.home(player).island)) {
+  const island = garden.home(player).island;
+  if (field('island') !== String(island)) {
     return json(res,403,{error:'Return to your home island to plant.'});
+  }
+  if (!canPlantOnIsland(island,x*islandScale,z*islandScale)) {
+    return json(res,400,{error:'Aim at open grass.'});
   }
   const adopt=field('adopt');
   const title=field('title'),idea=field('idea'),question=field('question');
@@ -223,6 +227,16 @@ export async function handleRequest(req, res) {
   res.setHeader('Referrer-Policy', 'no-referrer');
   const path = new URL(req.url, 'http://localhost').pathname;
   try {
+    if (!vercelPreview && req.method === 'GET' && /^\/island-kit\/(?:[a-z]+\/)*[a-z0-9.-]+\.m?js$/i.test(path)) {
+      let data;
+      try { data = readFileSync(new URL('./public' + path, import.meta.url)); }
+      catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+        return json(res,404,{error:'Not found.'});
+      }
+      res.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-cache' });
+      return res.end(data);
+    }
     if (!vercelPreview && req.method === 'GET' && files.has(path)) {
       const [url, type] = files.get(path);
       const data = readFileSync(url);

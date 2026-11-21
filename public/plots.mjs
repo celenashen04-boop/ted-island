@@ -1,4 +1,5 @@
-import { islands, islandSpacing } from './islands.mjs';
+import { islands, islandScale, islandSpacing } from './islands.mjs';
+import { islandModel } from './island-kit/navigation.mjs';
 
 export const plots = [
   [-2.13, 1.7], [-3.10, .55], [-1.08, 2.72], [1.10, 2.72],
@@ -35,10 +36,11 @@ export function canPlant(x,z) {
 }
 
 export const bridgeHalfWidth = .65;
+export const oakTreeHeightScale = 1.6;
 const boughRadius = .69;
 const boughOval = .86;
 
-export function bridgePath(bridge, currentIsland) {
+export function bridgePath(bridge, currentIsland, useKit=true) {
   if (!bridge.span) return null;
   const origin = islands.find(island=>island.id===currentIsland);
   const ends = bridge.span.ends.map(plant=>({...plant, location:islands.find(island=>island.id===plant.island)}));
@@ -50,26 +52,36 @@ export function bridgePath(bridge, currentIsland) {
   const dz = (last.z-first.z)/lengthBetweenIslands;
   const endpoints = ends.map(({island,x,z,location},index)=>{
     const sign=index===0?1:-1;
-    let distance=0;
-    while(onIsland((distance+.05)*dx*sign,(distance+.05)*dz*sign,bridgeHalfWidth+.15))distance+=.05;
     const offsetX=(location.x-origin.x)*islandSpacing;
     const offsetZ=(location.z-origin.z)*islandSpacing;
     const y=(location.y-origin.y)*islandSpacing;
+    if(useKit){
+      const model=islandModel(island);
+      const landing=model.landingFor(ends[1-index].island);
+      const [wx,wy,wz]=landing.world;
+      const treeX=x*islandScale,treeZ=z*islandScale;
+      const ground=model.queryIsland(treeX,treeZ,0).height;
+      return {island,x:wx-origin.x*islandSpacing,z:wz-origin.z*islandSpacing,y:wy-origin.y*islandSpacing+.04,
+        tree:{x:offsetX+treeX,y:y+ground,z:offsetZ+treeZ}};
+    }
+    let distance=0;
+    while(onIsland((distance+.05)*dx*sign,(distance+.05)*dz*sign,bridgeHalfWidth+.15))distance+=.05;
     return {island,x:offsetX+distance*dx*sign,z:offsetZ+distance*dz*sign,y:y+.06,
       tree:{x:offsetX+x,y,z:offsetZ+z}};
   });
   const [start,end] = endpoints;
   const length = Math.hypot(end.x-start.x,end.z-start.z);
+  const alongX=(end.x-start.x)/length, alongZ=(end.z-start.z)/length;
   return {
     endpoints,length,
     point(distance,offset=0) {
       const t=distance/length;
-      return [start.x+dx*distance-dz*offset,
+      return [start.x+alongX*distance-alongZ*offset,
         start.y+(end.y-start.y)*t+.35*Math.sin(Math.PI*t),
-        start.z+dz*distance+dx*offset];
+        start.z+alongZ*distance+alongX*offset];
     },
     locate(x,z) {
-      return {distance:(x-start.x)*dx+(z-start.z)*dz,offset:(z-start.z)*dx-(x-start.x)*dz};
+      return {distance:(x-start.x)*alongX+(z-start.z)*alongZ,offset:(z-start.z)*alongX-(x-start.x)*alongZ};
     }
   };
 }
@@ -109,7 +121,8 @@ export function traceOakConnection(path,index,growth,joined,drawBough) {
       return point;
     };
     const start=curve(0);
-    const base=[end.tree.x,end.tree.y+[0,0,.23,.38,.52][growth]+strand*.03,end.tree.z];
+    const branchHeight=[0,0,.23,.38,.52][growth]*(growth>=3?oakTreeHeightScale:1);
+    const base=[end.tree.x,end.tree.y+branchHeight+strand*.03,end.tree.z];
     const rootReach=growth===2?.44:1;
     const root=Array.from({length:9},(_,step)=>{
       const t=rootReach*step/8;
