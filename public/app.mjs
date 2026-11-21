@@ -7,7 +7,10 @@ import { islands } from './islands.mjs';
 const byId = id => document.getElementById(id);
 const map = byId('map');
 const message = byId('message');
+const seedLauncher = byId('seed-mode');
+const plantingTip = byId('planting-tip');
 const plantDialog = byId('plant-dialog');
+const landscapeDialog = byId('landscape-required');
 const catalog = byId('seed-catalog');
 const catalogSeed = byId('catalog-seed');
 const adoptSeed = byId('catalog-seed-adopt');
@@ -26,10 +29,7 @@ const dashboardButton = byId('toggle-dashboard');
 const playerView = map.closest('main');
 const artwork = new Map();
 const homeIslandButton = byId('home-island');
-const world = createWorld(byId('world-map'), artwork, homeIslandButton, () => {
-  if (currentIsland === state.home) closeWorld();
-  else showIsland(state.home);
-});
+const world = createWorld(byId('world-map'), artwork, homeIslandButton, closeWorld);
 let state = null;
 let currentIsland = null;
 let plants = [];
@@ -37,7 +37,9 @@ let selectedAdoption = null;
 let catalogIsland = null;
 let openCatalogPacket = null;
 let pendingPlant = null;
+let plantWaitingForLandscape = false;
 let openPlant = null;
+let openPlantFromScene = false;
 let replyTo = null;
 let live = false;
 let submitting = false;
@@ -66,9 +68,39 @@ function announce(text) {
   if (text) messageTimer = setTimeout(() => { message.textContent = ''; }, 3700);
 }
 
+function firstUseTip(id, focusTarget) {
+  const tip = byId(id);
+  const key = 'chi-island.' + id + '-seen';
+  let dismissed = false;
+  try { dismissed = localStorage.getItem(key) === '1'; }
+  catch { /* Dismissal still works for this page. */ }
+  tip.querySelector('button').addEventListener('click', () => {
+    dismissed = true;
+    tip.hidden = true;
+    try { localStorage.setItem(key, '1'); }
+    catch { /* Keep the in-memory dismissal. */ }
+    focusTarget.focus({preventScroll:true});
+  });
+  return (visible = true) => { tip.hidden = dismissed || !visible; };
+}
+
+const showMovementTip = firstUseTip('movement-tip', map);
+const showWorldTip = firstUseTip('world-tip', homeIslandButton);
+const showParticipationTip = firstUseTip('participation-tip', byId('follow'));
+
 const scene = createScene(map, {
   artwork,
   onPlant(id) { showIdea(id, true); },
+  onCross(destination, position) {
+    const away = currentIsland === state.home ? destination : currentIsland;
+    if (destination !== state.home && currentIsland !== state.home) return;
+    if (!state.bridges.some(bridge => bridge.destination === away && bridge.canCross)) return;
+    currentIsland = destination;
+    scene.arrive(position);
+    updateGarden();
+    announce(destination === state.home ? 'Back on your home island.' : 'You crossed to ' + islandName(destination) + '.');
+  },
+  onBridgeLocked() { announce('Comment on a shared plant to earn access to this bridge.'); },
   onThrowRequest() {
     if (!live) { announce('Connecting to the garden…'); return false; }
     if (currentIsland !== state.home) { announce('Return home to plant a seed.'); return false; }
@@ -89,7 +121,8 @@ const scene = createScene(map, {
     const confirmation = byId('adoption-confirmation');
     confirmation.hidden = !adoption;
     confirmation.textContent = adoption ? 'Plant “' + adoption.title + '” here to begin connecting the islands.' : '';
-    plantDialog.showModal();
+    plantWaitingForLandscape = landscapeDialog.open;
+    if (!plantWaitingForLandscape) plantDialog.showModal();
   }
 });
 
@@ -98,6 +131,7 @@ function setDashboard(open) {
   dashboard.inert = !open;
   dashboard.classList.toggle('is-open', open);
   dashboardButton.setAttribute('aria-expanded', String(open));
+  showWorldTip(!open);
   if (restoreFocus) dashboardButton.focus();
 }
 
@@ -108,23 +142,21 @@ function closeWorld() {
   map.focus({ preventScroll: true });
 }
 
-function showIsland(id) {
-  currentIsland = id;
-  scene.reset();
-  updateGarden();
-  closeWorld();
-}
-
 function updateGarden() {
   plants = state.plants.filter(plant => plant.island === currentIsland);
-  scene.update(plants,currentIsland);
+  scene.update(plants,currentIsland,state.bridges);
   const visiting = currentIsland !== state.home;
   browsePlants.hidden = !visiting;
-  byId('seed-mode').hidden = visiting;
+  seedLauncher.hidden = visiting;
   if (!visiting && islandPlants.open) islandPlants.close();
   if (islandPlants.open) renderIslandPlants();
   byId('island-name').textContent = islandName(currentIsland) + (currentIsland === state.home ? ' · Home' : ' · Visiting');
-  byId('seed-label').textContent = selectedAdoption ? 'Throw adopted seed' : 'Throw seed';
+  const launchLabel = selectedAdoption ? 'Plant adopted seed' : 'Plant a seed';
+  seedLauncher.setAttribute('aria-label', launchLabel);
+  seedLauncher.title = launchLabel + ' (Q)';
+  plantingTip.textContent = selectedAdoption
+    ? 'Drag the seed back and release it onto grass to bring this research and its shared discussion to your island.'
+    : 'Drag the seed back and release it onto grass. Plant one of your research articles, ideas, or interests so others can discuss it and help it grow.';
 }
 
 const catalogExamples = {
@@ -158,9 +190,14 @@ function renderAuthorConnection(linkedin) {
   const link = footer.querySelector('a');
   if (linkedin) link.href = linkedin;
   else link.removeAttribute('href');
-  link.hidden = !linkedin;
-  footer.querySelector('button').hidden = Boolean(linkedin);
-  footer.querySelector('p').hidden = Boolean(linkedin);
+  footer.hidden = !linkedin;
+}
+
+function renderSeedIsland(id, islandId) {
+  const pill = byId(id);
+  const island = islands.find(entry => entry.id === islandId);
+  pill.textContent = island?.name ?? 'Unknown island';
+  pill.style.setProperty('--island-accent', island?.color ?? '#a5b76e');
 }
 
 function renderCatalogSeed() {
@@ -172,13 +209,15 @@ function renderCatalogSeed() {
   const preview = Boolean(openCatalogPacket.preview);
   const picked = selectedAdoption?.id === seed.id && !preview;
   byId('catalog-seed-title').textContent = seed.title;
-  byId('catalog-seed-origin').textContent = 'From ' + islandName(seed.originalIsland);
+  renderSeedIsland('catalog-seed-origin', seed.originalIsland);
   byId('catalog-seed-idea').textContent = seed.idea;
   const question = byId('catalog-seed-question');
   question.textContent = seed.question ?? '';
   question.hidden = !seed.question;
-  byId('catalog-seed-status').textContent = preview ? 'Example seed · Preview only'
-    : seed.plantedHere ? 'Planted on your island' : picked ? 'Selected to plant' : 'Available to adopt';
+  const status = byId('catalog-seed-status');
+  status.textContent = preview ? 'Example seed · Preview only'
+    : seed.plantedHere ? 'Planted on your island' : picked ? 'Selected to plant' : '';
+  status.hidden = !status.textContent;
   adoptSeed.hidden = preview || seed.plantedHere || picked;
   byId('catalog-seed-growth').hidden = adoptSeed.hidden || !seed.growth;
 }
@@ -189,6 +228,7 @@ function catalogPacket(seed, island, preview = false) {
     openCatalogPacket = {key, seedId: seed.id, preview: preview ? seed : null};
     renderCatalogSeed();
     catalogSeed.showModal();
+    catalogSeed.querySelector('.seed-detail-body').scrollTop = 0;
   });
   packet.className = 'packet-cover';
   packet.style.setProperty('--packet-accent', island.color);
@@ -279,13 +319,14 @@ function renderWorld() {
   byId('world-home').textContent = 'Home · ' + islandName(state.home);
   const list = byId('bridge-list');
   list.replaceChildren();
-  if (currentIsland !== state.home) list.append(button('Return home', () => showIsland(state.home)));
+  if (currentIsland !== state.home) list.append(button('Find bridge home', () => findBridge(state.home)));
   if (!state.bridges.length) list.append(element('p', 'Plant a seed from another island to start a bridge. Crossing lets you explore that island’s plants and discussions.', 'bridge-next'));
   for (const bridge of state.bridges) {
     const card = element('article');
     const name = islandName(bridge.destination);
     card.className = 'bridge-card';
-    card.append(element('h3', name), element('strong', (bridge.open ? 'Bridge open' : 'Bridge building') + ' · ' + bridge.progress + '%'));
+    const status = bridge.open ? 'Bridge open' : bridge.progress === 100 ? 'Waiting for mature trees' : 'Bridge building';
+    card.append(element('h3', name), element('strong', status + ' · ' + bridge.progress + '%'));
     const progress = element('progress');
     progress.max = 100; progress.value = bridge.progress;
     progress.setAttribute('aria-label', 'Bridge to ' + name);
@@ -309,12 +350,11 @@ function renderWorld() {
       card.append(details);
     }
     if (bridge.open) {
-      if (bridge.canCross) card.append(button('Cross to ' + name, () => {
-        showIsland(bridge.destination);
-        openIslandPlants();
-      }));
-      else card.append(element('p', 'Comment on a shared plant to earn crossing access. Until then, you can preview this island’s seeds in the catalog.', 'bridge-next'));
+      if (!bridge.canCross) card.append(element('p', 'Comment on a shared plant to earn crossing access. Until then, you can preview this island’s seeds in the catalog.', 'bridge-next'));
+      else if (currentIsland === state.home) card.append(button('Find bridge to ' + name, () => findBridge(bridge.destination)));
     } else {
+      if (bridge.progress === 100) card.append(element('p', 'Water and discuss “' + (bridge.span?.title ?? 'a shared plant') +
+        '” until both trees mature and join.', 'bridge-next'));
       if (bridge.foundations < 40) {
         const missing = bridge.endpoints.filter(side => side.residents < 2)
           .map(side => (2 - side.residents) + ' from ' + islandName(side.island)).join(' and ');
@@ -338,6 +378,11 @@ function renderWorld() {
     const text = {like:'Watered',comment:'New comment',plant:'Adopted'}[item.kind];
     updates.append(element('p', item.title + ' · ' + text + ' · ' + islandName(item.island)));
   }
+}
+
+function findBridge(destination) {
+  closeWorld();
+  if (scene.faceBridge(destination)) announce('Follow the roots to the bridge and walk across.');
 }
 
 function openIslandPlants() {
@@ -367,27 +412,28 @@ function renderIslandPlants() {
 
 function showIdea(id, fromScene = false) {
   openPlant = id;
-  byId('plant-author').hidden = !fromScene;
+  openPlantFromScene = fromScene;
   commentForm.reset();
   setReply(null);
   byId('water-error').textContent = '';
+  showParticipationTip();
   renderIdea();
   ideaDialog.showModal();
+  ideaDialog.querySelector('.seed-detail-body').scrollTop = 0;
 }
 
 function renderIdea() {
   const plant = plants.find(item => item.id === openPlant);
   if (!plant) return;
   byId('idea-title').textContent = plant.title;
-  byId('idea-origin').textContent = 'From ' + islandName(plant.originalIsland) + (plant.creator ? ' · Resident ' + plant.creator : '');
+  renderSeedIsland('idea-origin', plant.originalIsland);
   byId('idea-text').textContent = plant.idea;
   byId('idea-question').textContent = plant.question;
   byId('idea-growth').textContent = plantStage(plant.growth) + ' · ' + plant.likes + ' water · ' + plant.commentCount + ' nutrients';
-  byId('idea-participation').textContent = plant.participantCount + ' contributors · ' + plant.replyParticipantCount + ' have replied to someone else';
   const article = byId('article-link');
   article.hidden = !plant.hasArticle;
   article.href = '/api/plants/' + plant.id + '/article';
-  if (!byId('plant-author').hidden) renderAuthorConnection(plant.authorLinkedin);
+  renderAuthorConnection(openPlantFromScene ? plant.authorLinkedin : null);
   waterButton.disabled = !live || changingPlant || Boolean(plant.mine || plant.watered);
   waterButton.textContent = plant.mine ? 'Your plant' : plant.watered ? '♥ Watered' : '♡ Like · Water';
   byId('follow').textContent = plant.following ? 'Unfollow' : 'Follow';
@@ -409,9 +455,11 @@ function renderIdea() {
       discussion.append(block);
     }
   }
-  byId('contributors').textContent = plant.contributors.length
+  const contributors = byId('contributors');
+  contributors.hidden = !plant.contributors.length;
+  contributors.textContent = plant.contributors.length
     ? 'Contributors · ' + plant.contributors.map(item => 'Resident ' + item.resident + ' (' + islandName(item.island) + ')').join(', ')
-    : 'No contributions yet.';
+    : '';
 }
 
 function setReply(item) {
@@ -438,6 +486,7 @@ byId('open-world').addEventListener('click', () => {
   if (!state) return announce('Connecting to the garden…');
   worldView.hidden = false;
   playerView.inert = true;
+  showWorldTip();
   renderWorld();
   homeIslandButton.focus({ preventScroll: true });
 });
@@ -470,22 +519,26 @@ adoptSeed.addEventListener('click', () => {
   selectedAdoption = seed;
   catalogSeed.close();
   catalog.close();
-  showIsland(state.home);
-  announce('Seed selected. Use Throw adopted seed to plant it.');
+  updateGarden();
+  announce(currentIsland === state.home ? 'Seed selected. Tap + to plant it.' : 'Seed selected. Return to your home island to plant it.');
 });
-function onCatalogSeedBackdrop(event) {
-  if (event.target !== catalogSeed) return false;
-  const {left, right, top, bottom} = catalogSeed.getBoundingClientRect();
-  return event.clientX < left || event.clientX > right || event.clientY < top || event.clientY > bottom;
+function closeOnBackdrop(dialog) {
+  const onBackdrop = event => {
+    if (event.target !== dialog) return false;
+    const {left, right, top, bottom} = dialog.getBoundingClientRect();
+    return event.clientX < left || event.clientX > right || event.clientY < top || event.clientY > bottom;
+  };
+  let pressedBackdrop = false;
+  dialog.addEventListener('pointerdown', event => {
+    pressedBackdrop = onBackdrop(event);
+  });
+  dialog.addEventListener('click', event => {
+    if (pressedBackdrop && onBackdrop(event)) dialog.close();
+    pressedBackdrop = false;
+  });
 }
-let pressedCatalogSeedBackdrop = false;
-catalogSeed.addEventListener('pointerdown', event => {
-  pressedCatalogSeedBackdrop = onCatalogSeedBackdrop(event);
-});
-catalogSeed.addEventListener('click', event => {
-  if (pressedCatalogSeedBackdrop && onCatalogSeedBackdrop(event)) catalogSeed.close();
-  pressedCatalogSeedBackdrop = false;
-});
+closeOnBackdrop(catalogSeed);
+closeOnBackdrop(ideaDialog);
 catalogSeed.addEventListener('close', () => {
   if (catalogSeed.open) return;
   const key = openCatalogPacket?.key;
@@ -521,7 +574,7 @@ plantForm.addEventListener('submit', async event => {
     await post('/api/plants', body);
     selectedAdoption = null;
     updateGarden();
-    announce(point.adoption ? 'Seed planted. Check World View for your bridge.' : 'Seed planted');
+    announce(point.adoption ? 'Seed planted. Open Bridges in World View to track your bridge.' : 'Seed planted');
     plantDialog.close();
   } catch (failure) {
     error.textContent = failure.message || 'Unable to plant the seed.';
@@ -568,6 +621,7 @@ function connectGarden() {
   const stream = new EventSource('/api/events');
   stream.addEventListener('message', event => {
     state = JSON.parse(event.data);
+    const firstArrival = currentIsland === null;
     if (currentIsland === null || (currentIsland !== state.home &&
       !state.bridges.some(bridge => bridge.destination === currentIsland && bridge.canCross))) {
       currentIsland = state.home;
@@ -576,6 +630,7 @@ function connectGarden() {
     }
     live = true;
     updateGarden();
+    if (firstArrival) showMovementTip();
     if (openPlant) renderIdea();
     if (catalog.open) renderCatalog();
     if (catalogSeed.open) renderCatalogSeed();
@@ -679,7 +734,53 @@ onboardingForm.addEventListener('submit', async event => {
 });
 retry.addEventListener('click', loadProfile);
 onboarding.addEventListener('cancel', event => event.preventDefault());
+
+const mobilePreview = new URLSearchParams(location.search).get('preview') === 'mobile-game';
+const touchLayout = matchMedia('(pointer: coarse)');
+const portrait = matchMedia('(orientation: portrait)');
+const playLandscape = byId('play-landscape');
+const canLockLandscape = !mobilePreview && document.fullscreenEnabled &&
+  typeof screen.orientation?.lock === 'function';
+
+function updateOrientation() {
+  const mobile = touchLayout.matches || mobilePreview;
+  document.documentElement.classList.toggle('mobile-layout', mobile);
+  byId('movement-tip-text').textContent = mobile
+    ? 'Use the left joystick to move. Drag on the right to look around. Tap a plant to read it.'
+    : 'Use WASD to move. Drag or use the arrow keys to look around. Click a plant to read it.';
+  if (!mobilePreview && mobile && portrait.matches) {
+    if (!landscapeDialog.open) landscapeDialog.showModal();
+  } else if (landscapeDialog.open) {
+    landscapeDialog.close();
+    if (plantWaitingForLandscape) {
+      plantWaitingForLandscape = false;
+      plantDialog.showModal();
+    } else if (!document.querySelector('dialog[open]') && !playerView.inert) {
+      map.focus({preventScroll:true});
+    }
+  }
+}
+
+playLandscape.hidden = !canLockLandscape;
+playLandscape.addEventListener('click', async () => {
+  playLandscape.disabled = true;
+  const alreadyFullscreen = Boolean(document.fullscreenElement);
+  try {
+    if (!alreadyFullscreen) await document.documentElement.requestFullscreen();
+    await screen.orientation.lock('landscape');
+  } catch {
+    if (!alreadyFullscreen && document.fullscreenElement) await document.exitFullscreen().catch(() => {});
+    playLandscape.hidden = true;
+  } finally {
+    playLandscape.disabled = false;
+  }
+});
+landscapeDialog.addEventListener('cancel', event => event.preventDefault());
+touchLayout.addEventListener('change', updateOrientation);
+portrait.addEventListener('change', updateOrientation);
+
 installGameDesign(artwork).then(() => { if (!worldView.hidden) world.draw(); });
 playerView.inert = true;
 onboarding.showModal();
+updateOrientation();
 loadProfile();

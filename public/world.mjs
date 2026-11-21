@@ -1,4 +1,5 @@
-import { islandRim, islandLandmarks } from './islands.mjs';
+import { islandRim, islandLandmarks, islandSpacing } from './islands.mjs';
+import { bridgePath, traceOakConnection } from './plots.mjs';
 
 export function createWorld(canvas, artwork, homeButton, enterHome) {
   const ctx=canvas.getContext('2d');
@@ -22,6 +23,7 @@ export function createWorld(canvas, artwork, homeButton, enterHome) {
       ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
       ctx.closePath();ctx.fillStyle=color;ctx.fill();
     };
+    const oaks=new Map();
     for(const bridge of bridges){
       const start=items.find(item=>item.id===home),end=items.find(item=>item.id===bridge.destination);
       if(!start||!end)continue;
@@ -33,10 +35,41 @@ export function createWorld(canvas, artwork, homeButton, enterHome) {
         ctx.drawImage(art,0,-9,length,18);ctx.restore();
         continue;
       }
-      ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);
-      ctx.lineWidth=3;ctx.strokeStyle=bridge.open?'#e6cd8d':'#b7a475';ctx.setLineDash(bridge.open?[]:[4,7]);ctx.stroke();
+      const route=bridgePath(bridge,home);
+      if(!route)continue;
+      const mapPoint=([x,y,z])=>project(rotate({
+        x:start.x+x/islandSpacing,y:start.y+y/islandSpacing,z:start.z+z/islandSpacing
+      }));
+      const mapBough=(points,thickness,colors)=>{
+        const projected=points.map(mapPoint);
+        const stroke=(color,weight,raise=0)=>{
+          ctx.strokeStyle=color;
+          ctx.lineCap='round';
+          for(let i=1;i<projected.length;i++){
+            const [x1,y1]=projected[i-1], [x2,y2]=projected[i];
+            ctx.lineWidth=Math.max(.55,thickness((i-.5)/(projected.length-1))*scale/islandSpacing*weight);
+            ctx.beginPath();ctx.moveTo(x1,y1-raise);ctx.lineTo(x2,y2-raise);ctx.stroke();
+          }
+        };
+        stroke(colors[2],2.8);
+        stroke(colors[1],1.45,.7);
+      };
+      for(const [index,{island,tree}] of route.endpoints.entries()){
+        traceOakConnection(route,index,bridge.span.growth,bridge.open,mapBough);
+        if(bridge.span.growth>=3)oaks.set(island+':'+bridge.span.seed,{island,point:mapPoint([tree.x,tree.y,tree.z])});
+      }
     }
-    ctx.setLineDash([]);
+    function drawOaks(island){
+      for(const marker of oaks.values()){
+        if(marker.island!==island)continue;
+        const [x,y]=marker.point;
+        ctx.strokeStyle='#846448';ctx.lineWidth=4;ctx.lineCap='round';
+        ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y-13);ctx.stroke();
+        for(const [dx,dy,w,h,color] of [[-6,-14,7,4,'#8da25a'],[6,-13,7,4,'#97ab64'],[0,-17,9,6,'#bac67b']]){
+          ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x+dx,y+dy,w,h,0,0,Math.PI*2);ctx.fill();
+        }
+      }
+    }
     for(const island of items){
       const image=artwork.get('island-'+island.id);
       if(image){
@@ -45,6 +78,7 @@ export function createWorld(canvas, artwork, homeButton, enterHome) {
         const h=w*image.height/image.width;
         ctx.drawImage(image,x-w/2,y-h*.35,w,h);
         targets.push({id:island.id,polygons:[[[x-w/2,y-h*.35],[x+w/2,y-h*.35],[x+w/2,y+h*.65],[x-w/2,y+h*.65]]]});
+        drawOaks(island.id);
         continue;
       }
       const tile=(x,z,y)=>project(rotate({x:island.x+x,y:island.y+y,z:island.z+z}));
@@ -60,12 +94,13 @@ export function createWorld(canvas, artwork, homeButton, enterHome) {
         ctx.strokeStyle='#e4ceb0';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(...base);ctx.lineTo(...top);ctx.stroke();
         polygons.push([[top[0]-4,top[1]-3],[top[0]+4,top[1]-3],[base[0]+4,base[1]+3],[base[0]-4,base[1]+3]]);
       }
+      drawOaks(island.id);
     }
     const labels=[];
     const homeEntry=items.find(island=>island.id===home);
     homeButton.hidden=!homeEntry;
     for(const island of items){
-      const [x,y]=project({...island.position,y:island.position.y+.70});
+      const [x,y]=project({...island.position,y:island.position.y+.98});
       ctx.font='600 14px system-ui';
       const isHome=island.id===home;
       const h=isHome?44:23;

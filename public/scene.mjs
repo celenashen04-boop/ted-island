@@ -1,7 +1,7 @@
-import { islands, islandRim, islandLandmarks } from './islands.mjs';
-import { onIsland, canPlant, tileWidth, tileDepth } from './plots.mjs';
+import { islands, islandLandmarks, islandSpacing } from './islands.mjs';
+import { onIsland, canPlant, tileWidth, tileDepth, bridgePath, bridgeSurfaceHeight, bridgeHalfWidth, traceOakConnection } from './plots.mjs';
 
-export function createScene(canvas, { onPlant, onLanding, onThrowRequest, artwork = new Map() }) {
+export function createScene(canvas, { onPlant, onLanding, onThrowRequest, onCross=()=>{}, onBridgeLocked=()=>{}, artwork = new Map() }) {
   let plants = [];
   const keys = new Set();
   const spawn={x:0,z:3.65,yaw:0,pitch:-.15};
@@ -28,7 +28,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, artwor
   let plantHits=[], cursor=null;
   const reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)');
   const throwButton=document.getElementById('seed-mode');
-  const seedLabel=document.getElementById('seed-label')??throwButton;
+  const plantingTip=document.getElementById('planting-tip');
   const moveStick=document.getElementById('move-stick');
   const movement={side:0,ahead:0};
   let stickId=null;
@@ -36,7 +36,13 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, artwor
   const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
   const ctx = canvas.getContext('2d');
   const faces = [];
+  const outline=[
+    [-3.5,-2.5],[-3.5,2.5],[-2.5,2.5],[-2.5,3.5],
+    [2.5,3.5],[2.5,2.5],[3.5,2.5],[3.5,-2.5],
+    [2.5,-2.5],[2.5,-3.5],[-2.5,-3.5],[-2.5,-2.5]
+  ];
   let currentIsland=null, distantFaces=[], distantLabels=[];
+  let bridges=[], bridgeFaces=[], visiblePlants=[], nextBridgeNotice=0, fallLimit=-8;
   let origin, seed = 417;
   const random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
   const pick = list => list[Math.floor(random()*list.length)];
@@ -156,11 +162,6 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, artwor
     origin=[0,0,0];
     // Fill the whole footprint beneath the tiles so their antialiased edges
     // cannot reveal rock or sky between them.
-    const outline=[
-      [-3.5,-2.5],[-3.5,2.5],[-2.5,2.5],[-2.5,3.5],
-      [2.5,3.5],[2.5,2.5],[3.5,2.5],[3.5,-2.5],
-      [2.5,-2.5],[2.5,-3.5],[-2.5,-3.5],[-2.5,-2.5]
-    ];
     face(outline.map(([x,z])=>[x*tileWidth,0,z*tileDepth]),lawn[0],1,null,.5);
     for(let j=-3;j<=3;j++)for(let i=-3;i<=3;i++){
       const radius=Math.hypot(i,j);
@@ -225,12 +226,12 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, artwor
     currentIsland=id;
     distantFaces=[];distantLabels=[];
     const savedOrigin=origin;
-    const spacing=9, size=6.1;
+    const size=6.1;
     for(const island of islands){
       if(island.id===id)continue;
       const firstFace=distantFaces.length;
-      origin=[(island.x-current.x)*spacing,(island.y-current.y)*spacing,(island.z-current.z)*spacing];
-      const rim=islandRim.map(([x,z])=>[x*size,0,z*size]);
+      origin=[(island.x-current.x)*islandSpacing,(island.y-current.y)*islandSpacing,(island.z-current.z)*islandSpacing];
+      const rim=[...outline].reverse().map(([x,z])=>[x*tileWidth,0,z*tileDepth]);
       face([...rim].reverse(),island.color,1,null,-1,distantFaces);
       for(let i=0;i<rim.length;i++){
         const corner=rim[i],next=rim[(i+1)%rim.length];
@@ -251,6 +252,53 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, artwor
       distantLabels.push({id:island.id,name:island.name,position:[origin[0],origin[1]+3.85,origin[2]],center:[...origin]});
     }
     origin=savedOrigin;
+  }
+
+  function drawBough(points,thickness,colors) {
+    const sides=9;
+    const rings=points.map(([px,py,pz],index)=>{
+      const before=points[Math.max(0,index-1)],after=points[Math.min(index+1,points.length-1)];
+      const [dx,dy,dz]=after.map((value,i)=>value-before[i]);
+      const horizontal=Math.hypot(dx,dz)||1, length=Math.hypot(dx,dy,dz)||1;
+      const across=[-dz/horizontal,0,dx/horizontal];
+      const up=[-dx*dy/(horizontal*length),horizontal/length,-dz*dy/(horizontal*length)];
+      return Array.from({length:sides},(_,side)=>{
+        const angle=(side+.15)*Math.PI*2/sides+index*.018;
+        const radius=thickness(index/(points.length-1));
+        const width=Math.cos(angle)*radius, height=Math.sin(angle)*radius*.86;
+        return [px+across[0]*width+up[0]*height,py+up[1]*height,pz+across[2]*width+up[2]*height];
+      });
+    });
+    for(let index=1;index<rings.length;index++){
+      const a=rings[index-1],b=rings[index];
+      for(let side=0;side<sides;side++){
+        const next=(side+1)%sides;
+        face([a[side],b[side],b[next],a[next]],colors[side%colors.length],1,null,1.6,bridgeFaces);
+      }
+    }
+    face(rings[0],colors[0],1,null,1.6,bridgeFaces);
+    face([...rings.at(-1)].reverse(),colors[1],1,null,1.6,bridgeFaces);
+  }
+
+  function growBridgeMeshes(next) {
+    bridgeFaces=[];
+    const bridgeTrees=new Map();
+    bridges=next.flatMap(bridge=>{
+      if (!bridge.span?.ends.some(end=>end.island===currentIsland)) return [];
+      const path=bridgePath(bridge,currentIsland);
+      return path?[{...bridge,path}]:[];
+    });
+    fallLimit=Math.min(-8,...bridges.filter(bridge=>bridge.canCross)
+      .map(({path})=>Math.min(...path.endpoints.map(end=>end.y))-8));
+    for (const {span,path,open} of bridges) {
+      for (const [index,end] of path.endpoints.entries()) {
+        if (end.island!==currentIsland || (open && plants.find(plant=>plant.id===span.seed)?.growth!==4)) {
+          bridgeTrees.set(end.island+':'+span.seed,{...end.tree,id:span.seed,growth:span.growth,remote:end.island!==currentIsland});
+        }
+        traceOakConnection(path,index,span.growth,open,drawBough);
+      }
+    }
+    visiblePlants=[...plants.filter(plant=>!bridgeTrees.has(currentIsland+':'+plant.id)),...bridgeTrees.values()];
   }
 
   function drawIslandLabel(text,[x,y]){
@@ -381,7 +429,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, artwor
     pull=null;
     canvas.parentElement?.classList.toggle('is-throwing',active);
     throwButton.setAttribute('aria-pressed',String(active));
-    seedLabel.textContent=active?'Cancel throw':'Throw seed';
+    plantingTip.hidden=!active;
     canvas.focus({preventScroll:true});
   }
 
@@ -392,18 +440,76 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, artwor
   }
 
   function plantSize(plant){
-    return [.11,.34,.52,.76,1.06][plant.growth] ?? .11;
+    return [.11,.28,.51,.82,1.12][plant.growth] ?? .11;
+  }
+
+  function plantPolygon(points,color){
+    ctx.beginPath();
+    points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
+    ctx.closePath();
+    ctx.fillStyle=color;
+    ctx.fill();
+  }
+
+  function oakLeaf(x,y,size,angle,lobed,color){
+    ctx.save();
+    ctx.translate(x,y);ctx.rotate(angle);ctx.scale(size,size);
+    const edge=lobed?[[0,0],[.24,-.22],[.39,-.19],[.52,-.40],[.69,-.33],[.88,-.35],[1,-.12],
+      [.87,.11],[.65,.18],[.53,.10],[.34,.22],[.19,.13]]
+      :[[0,0],[.22,-.23],[.62,-.32],[1,-.12],[.74,.15],[.37,.22]];
+    plantPolygon(edge,color);
+    plantPolygon([[0,0],[1,-.12],[.65,.18],[.34,.22]],'#71854d');
+    ctx.restore();
+  }
+
+  function drawOak(tall,growth){
+    ctx.save();
+    ctx.scale(tall,tall);
+    if(growth<=2){
+      const young=growth===2;
+      plantPolygon([[-.036,0],[.036,0],[.057,-.66],[.014,-.82],[-.012,-.47]],young?'#8c6244':'#667b46');
+      oakLeaf(.014,-.58,.49,-.53,young,'#a8b76b');
+      oakLeaf(.012,-.42,.45,3.62,young,'#8fa459');
+      if(young){
+        oakLeaf(.028,-.27,.32,-.38,true,'#91a55b');
+        oakLeaf(.022,-.70,.36,-1.29,true,'#bec780');
+      }
+    }else{
+      const mature=growth===4;
+      plantPolygon([[-.17,0],[-.083,-.15],[-.059,-.49],[-.026,-.79],[.061,-.82],
+        [.076,-.47],[.086,-.14],[.16,0]],'#936747');
+      plantPolygon([[-.17,0],[-.083,-.15],[-.059,-.49],[-.026,-.79],[.014,-.71],[.007,-.30],[-.024,0]],'#76533d');
+      plantPolygon([[-.055,-.39],[-.28,-.59],[-.34,-.71],[-.25,-.67],[.01,-.49]],'#856044');
+      plantPolygon([[.044,-.46],[.31,-.71],[.38,-.70],[.24,-.53],[.075,-.34]],'#a77650');
+      const crown=[
+        [-.22,-.7,.24,.19,'#899b55','#acbc69'],
+        [.23,-.69,.24,.20,'#81944f','#a0b060'],
+        [0,-.83,.30,.20,'#9eae5c','#c0c779']
+      ];
+      if(mature) crown.unshift([-.38,-.57,.20,.16,'#829450','#a1b261'],
+        [.39,-.56,.19,.17,'#879950','#a7b968']);
+      for(const [x,y,w,h,shade,light] of crown){
+        const outline=[[-.95,.16],[-.92,-.42],[-.53,-.83],[.05,-1],[.65,-.75],[1,-.18],[.75,.49],[.15,.74],[-.59,.65]];
+        const facet=points=>points.map(([dx,dy])=>[x+dx*w,y+dy*h]);
+        plantPolygon(facet(outline),shade);
+        plantPolygon(facet([outline[1],outline[2],outline[3],outline[4],[.48,-.2],[-.35,.14]]),light);
+        plantPolygon(facet([[-.35,.14],[.48,-.2],outline[5],outline[6],outline[7]]),mature?'#96a65b':'#a0af61');
+      }
+    }
+    ctx.restore();
   }
 
   function drawPlant(project,plant,scale,now) {
-    const [sx,sy]=project([plant.x,.016,plant.z]);
+    const ground=plant.y??0;
+    const [sx,sy]=project([plant.x,ground+.016,plant.z]);
     const tall=plantSize(plant)*scale;
     const sprite=artwork.get(['seed','sprout','young','tree','mature'][plant.growth]);
     const spriteWidth=sprite ? Math.min(tall*2,tall*sprite.width/sprite.height) : 0;
     const seedY=.105+(reducedMotion?.matches?0:Math.sin(now*.003+plant.x*2+plant.z)*.038);
-    const [seedX,seedScreenY]=project([plant.x,seedY,plant.z]);
+    const [seedX,seedScreenY]=project([plant.x,ground+seedY,plant.z]);
     ctx.save();ctx.translate(sx,sy);
-    ctx.beginPath();ctx.ellipse(0,0,.12*scale,.055*scale,0,0,Math.PI*2);
+    const soilSize=plant.growth?1:.66;
+    ctx.beginPath();ctx.ellipse(0,0,.12*scale*soilSize,.055*scale*soilSize,0,0,Math.PI*2);
     ctx.fillStyle='#715642';ctx.fill();
     if(!plant.growth){
       ctx.restore();
@@ -412,26 +518,13 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, artwor
       ctx.drawImage(sprite,-spriteWidth/2,-tall,spriteWidth,tall);
       ctx.restore();
     }else{
-      ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(tall*.24,-tall*.5,0,-tall);
-      ctx.strokeStyle='#526837';ctx.lineWidth=Math.max(1.5,scale*.023);ctx.stroke();
-      for(const [side,level,color] of [[1,.65,'#a8ce70'],[-1,.42,'#79a658']]){
-        ctx.beginPath();ctx.ellipse(side*tall*.18,-tall*level,tall*.20,tall*.073,side*-.55,0,Math.PI*2);
-        ctx.fillStyle=color;ctx.fill();
-      }
-      if(plant.growth>=3){
-        for(let petal=0;petal<6;petal++){
-          const a=petal*Math.PI/3;
-          ctx.beginPath();ctx.arc(Math.cos(a)*tall*.105,-tall+Math.sin(a)*tall*.105,tall*.082,0,Math.PI*2);
-          ctx.fillStyle=plant.growth===4?'#ffc2c5':'#aed071';ctx.fill();
-        }
-        ctx.beginPath();ctx.arc(0,-tall,tall*.066,0,Math.PI*2);ctx.fillStyle='#ffe29c';ctx.fill();
-      }
+      drawOak(tall,plant.growth);
       ctx.restore();
     }
     const centerX=plant.growth?sx:seedX;
-    const top=plant.growth?sy-tall*1.2:seedScreenY-clamp(.061*scale,5,24)*1.2;
-    const halfWidth=Math.max(12,plant.growth ? spriteWidth/2 : 0,(plant.growth ? .17 : .078)*scale);
-    if(clearPath(plant.x,plant.growth?plantSize(plant)*.62:seedY,plant.z)){
+    const top=plant.growth?sy-tall*1.19:seedScreenY-clamp(.061*scale,5,24)*1.45;
+    const halfWidth=Math.max(12,plant.growth ? (spriteWidth/2 || tall*.60) : .078*scale);
+    if(!plant.remote && clearPath(plant.x,plant.growth?plantSize(plant)*.62:seedY,plant.z)){
       plantHits.push({id:plant.id,left:centerX-halfWidth,right:centerX+halfWidth,top:top-5,bottom:sy+8});
     }
   }
@@ -441,8 +534,20 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, artwor
       && pz+radius>box.back && pz-radius<box.front;
   }
 
-  function floorAt(px,pz,ceiling){
-    let floor=ceiling>=0&&onIsland(px,pz)?0:-Infinity;
+  function bridgeFloorAt(px,pz,ceiling){
+    let floor=-Infinity;
+    for(const {path,canCross,open} of bridges){
+      if(!open || !canCross)continue;
+      const {distance,offset}=path.locate(px,pz);
+      if(distance<0 || distance>path.length || Math.abs(offset)>bridgeHalfWidth)continue;
+      const height=bridgeSurfaceHeight(path,distance,offset);
+      if(height<=ceiling && height>floor)floor=height;
+    }
+    return floor;
+  }
+
+  function floorAt(px,pz,ceiling,bridgeFloor=bridgeFloorAt(px,pz,ceiling)){
+    let floor=ceiling>=0&&onIsland(px,pz)?Math.max(0,bridgeFloor):bridgeFloor;
     for(const box of colliders){
       if(box.top<=ceiling&&box.top>floor&&overlaps(box,px,pz))floor=box.top;
     }
@@ -450,7 +555,24 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, artwor
   }
 
   function moveTo(px,pz){
-    const step=grounded?Math.max(feet,floorAt(px,pz,feet+maxStep)):feet;
+    if(grounded && !onIsland(px,pz)){
+      for(const {path,canCross,open} of bridges){
+        if(!open || canCross)continue;
+        const {distance,offset}=path.locate(px,pz);
+        if(distance<0 || distance>path.length || Math.abs(offset)>bridgeHalfWidth)continue;
+        if(performance.now()>=nextBridgeNotice){
+          nextBridgeNotice=performance.now()+3000;
+          onBridgeLocked();
+        }
+        return;
+      }
+    }
+    let step=feet;
+    if(grounded){
+      const bridgeFloor=bridgeFloorAt(px,pz,feet+maxStep);
+      const floor=floorAt(px,pz,feet+maxStep,bridgeFloor);
+      step=floor===bridgeFloor&&floor>=feet-maxStep?floor:Math.max(feet,floor);
+    }
     for(const box of colliders){
       if(box.top>step+.001 && box.bottom<step+bodyHeight && overlaps(box,px,pz))return;
     }
@@ -475,12 +597,27 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, artwor
     grounded=nextFeet<=floor;
     if(grounded){feet=floor;verticalSpeed=0;}
     else feet=nextFeet;
-    if(feet < -8){
+    if(feet < fallLimit){
       ({x,z,yaw,pitch}=spawn);
       feet=0;verticalSpeed=0;grounded=true;
       if(throwing)setThrowMode(false);
     }
     eye=feet+eyeHeight;
+    if(grounded){
+      for(const {path,canCross,open} of bridges){
+        if(!open || !canCross)continue;
+        const local=path.endpoints[0].island===currentIsland?0:1;
+        const far=path.endpoints[1-local];
+        const {distance,offset}=path.locate(x,z);
+        const endDistance=local===0?path.length:0;
+        if(Math.abs(distance-endDistance)>.35 || Math.abs(offset)>bridgeHalfWidth)continue;
+        const island=islands.find(entry=>entry.id===far.island);
+        const source=islands.find(entry=>entry.id===currentIsland);
+        onCross(far.island,{x:x-(island.x-source.x)*islandSpacing,
+          z:z-(island.z-source.z)*islandSpacing,feet:feet-(island.y-source.y)*islandSpacing});
+        break;
+      }
+    }
   }
 
   function draw(now){
@@ -510,7 +647,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, artwor
     const screen=([vx,vy,d])=>[width*.5+focal*vx/d,height*.5-focal*vy/d];
     const project=point=>screen(view(point));
     const visible=[];
-    for(const item of [...distantFaces,...faces]){
+    for(const item of [...distantFaces,...faces,...bridgeFaces]){
       if(item.islandId!==undefined&&artwork.has('island-'+item.islandId))continue;
       const [px,py,pz]=item.points[0], [nx,ny,nz]=item.normal;
       if(nx*(x-px)+ny*(eye-py)+nz*(z-pz)<=0)continue;
@@ -545,9 +682,9 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, artwor
         visible.push({label:island.name,point,layer:-.7,depth:anchor[2]});
       }
     }
-    for(const plant of plants){
-      const depth=view([plant.x,.016,plant.z])[2];
-      if(depth>.18)visible.push({plant,depth,layer:2});
+    for(const plant of visiblePlants){
+      const depth=view([plant.x,(plant.y??0)+.016,plant.z])[2];
+      if(depth>.18)visible.push({plant,depth,layer:plant.remote?1.5:2});
     }
     // The camera stays above the island. Paint its continuous walking surface
     // before structures so a large tile cannot cover smaller objects on it.
@@ -663,17 +800,13 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, artwor
       ctx.restore();
       return;
     }
-    const coat=ctx.createLinearGradient(-.65,-.85,.72,.75);
-    coat.addColorStop(0,'#fff0a4');coat.addColorStop(.42,'#e9a24e');coat.addColorStop(1,'#7d4629');
-    ctx.beginPath();ctx.moveTo(0,-1.15);
-    ctx.bezierCurveTo(.42,-.86,.83,-.43,.79,.22);
-    ctx.bezierCurveTo(.75,1.19,-.74,1.2,-.79,.28);
-    ctx.bezierCurveTo(-.83,-.32,-.42,-.83,0,-1.15);
-    ctx.closePath();
-    ctx.fillStyle=coat;ctx.fill();
-    ctx.strokeStyle='#51311d';ctx.lineWidth=.16;ctx.stroke();
-    ctx.beginPath();ctx.moveTo(-.08,-.79);ctx.quadraticCurveTo(-.39,-.12,-.15,.65);
-    ctx.strokeStyle='#fff1b7';ctx.lineWidth=.095;ctx.stroke();
+    plantPolygon([[-.67,-.34],[.66,-.34],[.61,.37],[.38,.77],[0,1.04],[-.40,.73],[-.64,.34]],'#a86b3e');
+    plantPolygon([[-.62,-.28],[-.11,-.33],[.09,.37],[0,1.04],[-.40,.73]],'#d29454');
+    plantPolygon([[-.1,-.33],[.66,-.34],[.61,.37],[.38,.77],[0,1.04],[.14,.32]],'#935634');
+    plantPolygon([[-.77,-.23],[-.71,-.63],[-.43,-.91],[.03,-1.04],[.49,-.94],
+      [.73,-.62],[.78,-.27],[.43,-.15],[-.38,-.14]],'#74543b');
+    plantPolygon([[-.71,-.63],[-.43,-.91],[.03,-1.04],[.49,-.94],[.73,-.62],[.13,-.5],[-.43,-.48]],'#a47c51');
+    plantPolygon([[-.18,-.95],[-.13,-1.27],[.07,-1.32],[.15,-1.20],[.02,-.97]],'#805c42');
     ctx.restore();
   }
 
@@ -785,7 +918,21 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, artwor
   window.addEventListener('blur',resetInput);
   requestAnimationFrame(draw);
   return {
-    update(next,islandId){plants=next;setIsland(islandId);},
+    update(next,islandId,links=[]){plants=next;setIsland(islandId);growBridgeMeshes(links);},
+    arrive(position){
+      ({x,z,feet}=position);
+      verticalSpeed=0;grounded=true;eye=feet+eyeHeight;flight=null;
+      if(throwing)setThrowMode(false);
+    },
+    faceBridge(destination){
+      const bridge=bridges.find(({path})=>path.endpoints.some(end=>end.island===destination));
+      if(!bridge)return false;
+      const [near,far]=bridge.path.endpoints.toSorted((a,b)=>Number(b.island===currentIsland)-Number(a.island===currentIsland));
+      const target=Math.hypot(near.x-x,near.z-z)<1?far:near;
+      yaw=Math.atan2(target.x-x,z-target.z);
+      pitch=target===far?Math.atan2(far.y-near.y,bridge.path.length)*.65-.06:-.12;
+      return true;
+    },
     reset(){
       ({x,z,yaw,pitch}=spawn);
       feet=0;verticalSpeed=0;grounded=true;eye=eyeHeight;flight=null;

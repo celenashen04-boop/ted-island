@@ -18,3 +18,4 @@ export const islands = [
 
 export const islandRim = [[-.55,-.37],[.10,-.64],[.62,-.26],[.65,.32],[.12,.62],[-.57,.39]];
 export const islandLandmarks = [[-.24,.13,.30],[.04,-.12,.54],[.28,.16,.23]];
+export const islandSpacing = 9;

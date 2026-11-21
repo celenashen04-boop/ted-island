@@ -1,0 +1,1742 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CHI Island · Growth and bridges</title>
+<style>
+:root { color-scheme:light; font: 16px/1.5 system-ui,sans-serif; color:#253730; background:#f6f1e4 }
+* { box-sizing:border-box }
+body { margin:0 }
+main { max-width:1120px; margin:auto; padding:clamp(1rem,5vw,4rem) }
+h1,h2,h3,p { margin:0 }
+h1 { font-size:clamp(2.1rem,6vw,4rem); letter-spacing:-.07em; line-height:1.04 }
+h2 { font-size:clamp(1.35rem,3vw,2rem); letter-spacing:-.035em; line-height:1.15 }
+h3 { font-size:1.05rem }
+header p, section > p, figcaption p { color:#4e6258 }
+header p { margin-top:.65rem }
+section { margin-top:2.2rem }
+section > h2 { margin-bottom:.75rem }
+figure { margin:0; overflow:hidden; border:1px solid #cdd4bf; border-radius:1rem; background:#fffdf6 }
+figcaption { padding:.85rem 1rem }
+figcaption p { font-size:.88rem; margin-top:.2rem }
+canvas { display:block; width:100% }
+.growth { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,102px),1fr)); gap:.65rem }
+.growth canvas { height:145px }
+.growth figcaption { padding:.55rem .7rem; font-size:.86rem; font-weight:650 }
+.scene, .map { position:relative }
+.scene canvas { aspect-ratio: 844 / 390; background:#91a7d3 }
+.scene canvas { touch-action:none; cursor:grab }
+.scene canvas:focus-visible { outline:3px solid #fff9eb;outline-offset:-4px }
+.preview-stick {position:absolute;left:1rem;bottom:1rem;width:clamp(48px,10vw,80px);aspect-ratio:1;display:grid;place-items:center;touch-action:none;user-select:none;border:1px solid #fff9ebaa;border-radius:50%;background:#223f3baf}
+.preview-stick span {width:42%;aspect-ratio:1;border-radius:50%;background:#fff9eb;pointer-events:none;transform:translate(var(--stick-x,0px),var(--stick-y,0px))}
+.scene-label {position:absolute;top:.75rem;left:.75rem;margin:0;padding:.2rem .65rem;border-radius:1rem;background:#223f3be8;color:#fff9eb;white-space:nowrap;pointer-events:none;font-size:.8rem}
+.scene [hidden], .controls[hidden] { display:none }
+.bridge-description { color:#4e6258; margin-bottom:.65rem }
+.maps { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr)); gap:.85rem }
+.map canvas { aspect-ratio:1.7; background:#213b49; touch-action:pan-y; cursor:grab }
+.map canvas:active { cursor:grabbing }
+.home-island { position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;min-height:44px;padding:.35rem .45rem;border:1px solid #fff6d5;border-radius:.55rem;background:#e9d6a6;color:#203431;font-size:.875rem;font-weight:700;box-shadow:0 .28rem .7rem #11252f55;pointer-events:none }
+.controls { display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.65rem }
+.controls button { padding:.4rem .65rem;border:1px solid #a2b49d;border-radius:2rem;background:#f5f6eb;color:#253730;font:inherit;font-size:.84rem;cursor:pointer }
+.controls button[aria-pressed=true] { background:#315646;border-color:#315646;color:#fff9e9 }
+button:focus-visible { outline:2px solid #315646;outline-offset:3px }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Growth and bridges</h1>
+    <p>CHI Island · Current prototype with sample data</p>
+  </header>
+  <section aria-labelledby="growth-title">
+    <h2 id="growth-title">Acorn oak growth</h2>
+    <div class="growth" id="growth-stages"></div>
+  </section>
+  <section aria-labelledby="player-title">
+    <h2 id="player-title">Interwoven oak bridge concepts</h2>
+    <p id="bridge-description" class="bridge-description" aria-live="polite">Rounded oak branches intertwine beneath soft patches of moss.</p>
+    <div class="controls bridge-description" id="bridge-designs" role="group" aria-label="Bridge design">
+      <button type="button" data-design="moss" aria-pressed="true">Mossy tangle</button>
+      <button type="button" data-design="braid" aria-pressed="false">Braided boughs</button>
+      <button type="button" data-design="arch" aria-pressed="false">Twin arches</button>
+      <button type="button" data-design="prototype" aria-pressed="false">Prototype walkthrough</button>
+    </div>
+    <figure>
+      <div class="scene">
+        <canvas id="player-reference" tabindex="0" aria-label="Tree bridge design preview"></canvas>
+        <p class="scene-label" id="preview-island"></p>
+        <div id="move-stick" class="preview-stick" aria-hidden="true"><span></span></div>
+      </div>
+      <figcaption>
+        <p id="player-caption" aria-live="polite"></p>
+        <div class="controls" id="bridge-cameras" role="group" aria-label="Preview angle">
+          <button type="button" data-camera="side" aria-pressed="true">Side view</button>
+          <button type="button" data-camera="junction" aria-pressed="false">Junction close-up</button>
+          <button type="button" data-camera="entrance" aria-pressed="false">Player view</button>
+        </div>
+        <div class="controls" id="player-stages" role="group" aria-label="Tree bridge stages">
+          <button type="button" data-stage="0" aria-pressed="false">Seed planted</button>
+          <button type="button" data-stage="1" aria-pressed="false">Sprout</button>
+          <button type="button" data-stage="2" aria-pressed="false">Young plant</button>
+          <button type="button" data-stage="3" aria-pressed="false">Tree</button>
+          <button type="button" data-stage="4" aria-pressed="false">Mature tree</button>
+          <button type="button" data-stage="5" aria-pressed="true">Intertwined</button>
+        </div>
+      </figcaption>
+    </figure>
+  </section>
+  <section aria-labelledby="world-title">
+    <h2 id="world-title">Bridges in World View</h2>
+    <div class="maps">
+      <figure>
+        <div class="map"><canvas id="one-map" aria-label="One bridge between Health and Wellbeing and Sustainability"></canvas><div id="one-home" class="home-island" aria-hidden="true"></div></div>
+        <figcaption>
+          <h3>One bridge between two islands</h3>
+          <p>See the mossy branches reach across the gap, then weave together.</p>
+          <div class="controls" role="group" aria-label="Bridge status">
+            <button type="button" id="open-bridge" aria-pressed="true">Open</button>
+            <button type="button" id="building-bridge" aria-pressed="false">Under construction</button>
+          </div>
+        </figcaption>
+      </figure>
+      <figure>
+        <div class="map"><canvas id="four-map" aria-label="Four shared seeds between Health and Wellbeing and Sustainability"></canvas><div id="four-home" class="home-island" aria-hidden="true"></div></div>
+        <figcaption>
+          <h3>Four connections between two islands</h3>
+          <p id="four-caption" aria-live="polite">Four shared seeds contribute to one bridge for this island pair.</p>
+          <div class="controls" role="group" aria-label="Four-connection comparison">
+            <button type="button" id="current-design" aria-pressed="true">Current design</button>
+            <button type="button" id="four-concept" aria-pressed="false">Four bridges concept</button>
+          </div>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+</main>
+<div hidden><button type="button" id="seed-mode"></button><p id="planting-tip"></p></div>
+<script>
+const islands = [
+  {
+    id: 0, name: 'Health & Wellbeing',
+    description: 'Mental health, stress, wellbeing, social connection',
+    x: -2.1, y: .25, z: .35, color: '#a5b76e'
+  },
+  {
+    id: 1, name: 'Sustainability',
+    description: 'Environment, sustainable behaviors, communities',
+    x: .1, y: .85, z: -1.55, color: '#8ab692'
+  },
+  {
+    id: 2, name: 'Games & Play',
+    description: 'Playful interaction, gamification, collaborative experiences',
+    x: 2.05, y: -.15, z: .95, color: '#bfbb77'
+  }
+];
+
+const islandRim = [[-.55,-.37],[.10,-.64],[.62,-.26],[.65,.32],[.12,.62],[-.57,.39]];
+const islandLandmarks = [[-.24,.13,.30],[.04,-.12,.54],[.28,.16,.23]];
+const islandSpacing = 9;
+
+
+const plots = [
+  [-2.13, 1.7], [-3.10, .55], [-1.08, 2.72], [1.10, 2.72],
+  [2.19, 1.76], [3.11, .55], [-2.12, -2.19], [2.13, -2.19]
+];
+
+const growthStages=['Seed planted','Sprout','Young plant','Tree','Mature tree'];
+
+function plantStage(growth) {
+  return growthStages[growth] ?? growthStages[0];
+}
+
+const tileWidth = .85 * Math.sqrt(3);
+const tileDepth = .74 * Math.sqrt(3);
+
+function onIsland(x, z, margin = 0) {
+  if (!Number.isFinite(x) || !Number.isFinite(z)) return false;
+  const inside = (px, pz) => {
+    const i = Math.abs(Math.round(px / tileWidth));
+    const j = Math.abs(Math.round(pz / tileDepth));
+    return i <= 3 && j <= 3 && i + j < 6;
+  };
+  return inside(x-margin,z-margin) && inside(x-margin,z+margin)
+    && inside(x+margin,z-margin) && inside(x+margin,z+margin);
+}
+
+function inBuilding(x,z,margin=0) {
+  return Math.abs(x) < 1.28+margin && z > -1.3-margin && z < 1.53+margin;
+}
+
+function canPlant(x,z) {
+  return onIsland(x,z,.10) && !inBuilding(x,z,.10)
+    && !(Math.abs(x)<.42 && z>1.43);
+}
+
+const bridgeHalfWidth = .65;
+const boughRadius = .69;
+const boughOval = .86;
+
+function bridgePath(bridge, currentIsland) {
+  if (!bridge.span) return null;
+  const origin = islands.find(island=>island.id===currentIsland);
+  const ends = bridge.span.ends.map(plant=>({...plant, location:islands.find(island=>island.id===plant.island)}));
+  if (!origin || ends.length!==2 || ends.some(end=>!end.location)) return null;
+  const [first,last] = ends.map(end=>end.location);
+  const lengthBetweenIslands = Math.hypot(last.x-first.x,last.z-first.z);
+  if (!lengthBetweenIslands) return null;
+  const dx = (last.x-first.x)/lengthBetweenIslands;
+  const dz = (last.z-first.z)/lengthBetweenIslands;
+  const endpoints = ends.map(({island,x,z,location},index)=>{
+    const sign=index===0?1:-1;
+    let distance=0;
+    while(onIsland((distance+.05)*dx*sign,(distance+.05)*dz*sign,bridgeHalfWidth+.15))distance+=.05;
+    const offsetX=(location.x-origin.x)*islandSpacing;
+    const offsetZ=(location.z-origin.z)*islandSpacing;
+    const y=(location.y-origin.y)*islandSpacing;
+    return {island,x:offsetX+distance*dx*sign,z:offsetZ+distance*dz*sign,y:y+.06,
+      tree:{x:offsetX+x,y,z:offsetZ+z}};
+  });
+  const [start,end] = endpoints;
+  const length = Math.hypot(end.x-start.x,end.z-start.z);
+  return {
+    endpoints,length,
+    point(distance,offset=0) {
+      const t=distance/length;
+      return [start.x+dx*distance-dz*offset,
+        start.y+(end.y-start.y)*t+.35*Math.sin(Math.PI*t),
+        start.z+dz*distance+dx*offset];
+    },
+    locate(x,z) {
+      return {distance:(x-start.x)*dx+(z-start.z)*dz,offset:(z-start.z)*dx-(x-start.x)*dz};
+    }
+  };
+}
+
+function boughCrown(distance, length) {
+  return .24*Math.sin(Math.PI*distance/length);
+}
+
+function bridgeSurfaceHeight(path,distance,offset) {
+  const crossSection = Math.sqrt(Math.max(0,1-(offset/boughRadius)**2));
+  return path.point(distance)[1]+boughCrown(distance,path.length)-boughRadius*boughOval*(1-crossSection);
+}
+
+function traceOakConnection(path,index,growth,joined,drawBough) {
+  if(growth<2)return;
+  const end=path.endpoints[index], sign=index===0?1:-1;
+  const anchor=index===0?0:path.length;
+  const bark=['#977451','#ac885f','#876647','#806047'];
+  const moss=['#aaba70','#b3be79','#92a15e','#819658'];
+  const thickness=[0,0,.062,.145,.34][growth];
+  const strands=growth===2?1:growth===3?2:3;
+  for(let strand=0;strand<strands;strand++){
+    const main=joined && strand===0;
+    const radius=main?boughRadius:thickness*(1-strand*.075);
+    const extent=main?.5:joined?.625:[0,0,0,.095,.41][growth];
+    const curve=t=>{
+      const distance=anchor+sign*t*path.length;
+      if(main){
+        const point=path.point(distance);
+        point[1]+=boughCrown(distance,path.length)-radius*boughOval;
+        return point;
+      }
+      const phase=(t*1.18+strand/3+index*.08)*Math.PI*2;
+      const offset=Math.cos(phase)*(.33+.48*Math.sin(Math.PI*t));
+      const point=path.point(distance,sign*offset);
+      point[1]+=.38*Math.sin(Math.PI*t)+.19*Math.sin(phase)-(joined?.45:.12);
+      return point;
+    };
+    const start=curve(0);
+    const base=[end.tree.x,end.tree.y+[0,0,.23,.38,.52][growth]+strand*.03,end.tree.z];
+    const rootReach=growth===2?.44:1;
+    const root=Array.from({length:9},(_,step)=>{
+      const t=rootReach*step/8;
+      return base.map((value,axis)=>value+(start[axis]-value)*t+(axis===1?.16*Math.sin(Math.PI*t):0));
+    });
+    drawBough(root,t=>radius*(extent?.43+.57*t:.9-.56*t),bark);
+    if(!extent)continue;
+    const segments=Math.ceil(extent*38);
+    const limbs=Array.from({length:segments+1},(_,step)=>curve(extent*step/segments));
+    drawBough(limbs,t=>main?radius:radius*(1-.73*t**5),bark);
+    for(let t=.045+strand*.025;t<extent-.036;t+=.09){
+      const patch=Array.from({length:7},(_,step)=>{
+        const point=curve(t+step*.005);
+        if(main){
+          const distance=anchor+sign*(t+step*.005)*path.length;
+          const edge=path.point(distance,sign*.40);
+          point[0]=edge[0];point[2]=edge[2];point[1]+=radius*.64;
+        }else point[1]+=radius*.64;
+        return point;
+      });
+      drawBough(patch,t=>Math.max(.032,radius*.55*Math.sin(Math.PI*t)**.52),moss);
+    }
+    if(growth!==4 || main)continue;
+    for(const t of [.19+strand*.018,.41+strand*.024]){
+      if(t+.055>extent)continue;
+      const fork=Array.from({length:12},(_,step)=>{
+        const s=step/11;
+        const point=curve(t+s*.055);
+        const curl=Math.sin(s*Math.PI*.76)*.50;
+        point[0]+=sign*curl;point[2]+=sign*curl*.66;
+        point[1]-=Math.sin(s*Math.PI*.62)*.55;
+        return point;
+      });
+      drawBough(fork,t=>.135*(1-.61*t**4),bark);
+    }
+  }
+}
+
+function createScene(canvas, { onPlant, onLanding, onThrowRequest, onCross=()=>{}, onBridgeLocked=()=>{}, artwork = new Map() }) {
+  let plants = [];
+  const keys = new Set();
+  const spawn={x:0,z:3.65,yaw:0,pitch:-.15};
+  let {x,z,yaw,pitch}=spawn;
+  let feet=0, verticalSpeed=0, grounded=true, eye=1.05;
+  let inspecting=false;
+  const eyeHeight=1.05, bodyHeight=1.12, radius=.13, maxStep=.25;
+  const near=.055, slingY=.75;
+  const focalLength=(width,height)=>Math.max(height*.77,width*.48);
+  const colliders=[];
+
+  function collider(x,y,z,w,h,d){
+    colliders.push({
+      left:origin[0]+x-w/2,right:origin[0]+x+w/2,
+      back:origin[2]+z-d/2,front:origin[2]+z+d/2,
+      bottom:origin[1]+y,top:origin[1]+y+h
+    });
+  }
+
+  function solidBox(x,y,z,w,h,d,color,top=color){
+    box(x,y,z,w,h,d,color,top);
+    collider(x,y,z,w,h,d);
+  }
+  let last=0, flight=null, throwing=false, pull=null;
+  let plantHits=[], cursor=null;
+  const reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)');
+  const throwButton=document.getElementById('seed-mode');
+  const plantingTip=document.getElementById('planting-tip');
+  const moveStick=document.getElementById('move-stick');
+  const movement={side:0,ahead:0};
+  let stickId=null;
+  const canvasReady=()=>!inspecting && canvas===document.activeElement && !document.querySelector('dialog[open]');
+  const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
+  const ctx = canvas.getContext('2d');
+  const faces = [];
+  const outline=[
+    [-3.5,-2.5],[-3.5,2.5],[-2.5,2.5],[-2.5,3.5],
+    [2.5,3.5],[2.5,2.5],[3.5,2.5],[3.5,-2.5],
+    [2.5,-2.5],[2.5,-3.5],[-2.5,-3.5],[-2.5,-2.5]
+  ];
+  let currentIsland=null, distantFaces=[], distantLabels=[];
+  let bridges=[], bridgeFaces=[], visiblePlants=[], nextBridgeNotice=0, fallLimit=-8;
+  let origin, seed = 417;
+  const random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
+  const pick = list => list[Math.floor(random()*list.length)];
+  const sand = '#ecc5a6', cream = '#ffdab5', terracotta = '#b97260';
+  const moss = ['#a6ad66','#919c59','#b5b572','#829251'];
+  const rocks = ['#706e7b','#85808a','#a4918d','#8e8180','#9b8b86'];
+  const petals = ['#e89c9e','#ffb8ab','#f5a6a6','#ffc8b3'];
+  function tint(hex, light) {
+    const n = parseInt(hex.slice(1),16);
+    const channel = shift => Math.round(Math.max(0,Math.min(255,((n>>shift)&255)*light)));
+    return 'rgb('+[channel(16),channel(8),channel(0)].join(',')+')';
+  }
+  function face(vertices, color, alpha = 1, decal = null, layer = 2, mesh = faces) {
+    const [a,b,c] = vertices;
+    const u = b.map((v,i)=>v-a[i]), v = c.map((n,i)=>n-a[i]);
+    const normal = [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+    const length = Math.hypot(...normal) || 1;
+    const lighting = .82 + .27*(normal[0]*-.45+normal[1]*.8+normal[2]*.39)/length;
+    mesh.push({points:vertices.map(p=>p.map((n,i)=>n+origin[i])),normal,color:color && tint(color,lighting),alpha,decal,layer});
+  }
+  function box(x,y,z,w,h,d,color,top=color,layer=2,mesh=faces) {
+    const X=x+w/2, Z=z+d/2, Y=y+h; x-=w/2;z-=d/2;
+    const a=[x,y,z], b=[X,y,z], c=[X,y,Z], e=[x,y,Z];
+    const A=[x,Y,z], B=[X,Y,z], C=[X,Y,Z], E=[x,Y,Z];
+    face([a,b,c,e],color,1,null,layer,mesh);face([A,E,C,B],top,1,null,layer,mesh);
+    face([a,A,B,b],color,1,null,layer,mesh);face([b,B,C,c],color,1,null,layer,mesh);
+    face([e,c,C,E],color,1,null,layer,mesh);face([a,e,E,A],color,1,null,layer,mesh);
+  }
+  function arch(x,y,z,r,leg,thickness,depth) {
+    const R=r+thickness, spring=y+leg;
+    for (const side of [-1,1]) solidBox(x+side*(r+thickness/2),y,z,thickness,leg,depth,sand);
+    for(let i=0;i<12;i++){
+      const a=i*Math.PI/12,b=(i+1)*Math.PI/12;
+      const point=(radius,angle,side)=>[x+radius*Math.cos(angle),spring+radius*Math.sin(angle),z+side*depth/2];
+      const [p,q,s,t]=[point(r,a,1),point(R,a,1),point(R,b,1),point(r,b,1)];
+      const [P,Q,S,T]=[point(r,a,-1),point(R,a,-1),point(R,b,-1),point(r,b,-1)];
+      const color=i%3===1?cream:sand;
+      face([p,q,s,t],color);face([P,T,S,Q],color);
+      face([q,Q,S,s],color);face([p,t,T,P],'#ffc68e');
+    }
+  }
+  function crystal(x,y,z,rx,ry,rz,color,sides=7,layer=2) {
+    const ring=Array.from({length:sides},(_,i)=>[x+rx*Math.cos(i*2*Math.PI/sides),y,z+rz*Math.sin(i*2*Math.PI/sides)]);
+    ring.forEach((a,i)=>{
+      const b=ring[(i+1)%sides];
+      face([a,[x,y+ry,z],b],color,1,null,layer);
+      face([a,b,[x,y-ry*.72,z]],color,1,null,layer);
+    });
+  }
+  function branch(a,b,r,color){
+    const points=p=>[[p[0]-r,p[1],p[2]-r],[p[0]+r,p[1],p[2]-r],[p[0]+r,p[1],p[2]+r],[p[0]-r,p[1],p[2]+r]];
+    const A=points(a),B=points(b);
+    for(let i=0;i<4;i++){const j=(i+1)%4;face([A[i],B[i],B[j],A[j]],color);}
+  }
+  function tree(x,z,size) {
+    const fork=[x,.88*size,z];
+    branch([x,0,z],fork,.10*size,'#876052');
+    collider(x,0,z,.20*size,fork[1],.20*size);
+    for(let i=0;i<6;i++){
+      const angle=i*2.4, spread=(.38+random()*.45)*size;
+      const b=[x+Math.cos(angle)*spread,(1.32+random()*.48)*size,z+Math.sin(angle)*spread];
+      branch(fork,b,.046*size,'#8e6054');
+      for(let j=0;j<4;j++) crystal(b[0]+(random()-.5)*size*.65,b[1]+random()*.23*size,b[2]+(random()-.5)*size*.65,(.22+random()*.23)*size,(.15+random()*.15)*size,(.21+random()*.22)*size,pick(petals),6);
+    }
+  }
+  function panel(x,y,z,w,h,paint,color=null,alpha=1){
+    face([[x-w/2,y,z],[x+w/2,y,z],[x+w/2,y+h,z],[x-w/2,y+h,z]],color,alpha,paint);
+  }
+  function glyph(symbol, glass) {
+    return (g,w,h)=>{
+      g.strokeStyle=glass?'#e6edff':'#ffdfbc';g.fillStyle=g.strokeStyle;
+      g.lineWidth=3;g.lineJoin='round';g.lineCap='round';
+      if(glass){
+        const glow=g.createLinearGradient(0,0,w,h);
+        glow.addColorStop(0,'rgba(221,209,255,.72)');glow.addColorStop(1,'rgba(158,162,246,.32)');
+        g.fillStyle=glow;g.fillRect(0,0,w,h);g.strokeRect(1,1,w-2,h-2);g.fillStyle='#f8f1ff';
+      }
+      g.save();g.translate(w/2,h*.52);g.scale(.91,.91);
+      const line=(...pts)=>{g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.stroke();};
+      const ring=(x,y,r,start=0,end=2*Math.PI)=>{g.beginPath();g.arc(x,y,r,start,end);g.stroke();};
+      if(symbol===0){for(const x of [-14,0,14]){ring(x,-8,4);g.beginPath();g.arc(x,10,7,Math.PI,2*Math.PI);g.stroke();}}
+      if(symbol===1){g.strokeRect(-10,-10,20,20);g.strokeRect(-5,-5,10,10);for(let q=-7;q<=7;q+=7){line([q,-11],[q,-16]);line([q,11],[q,16]);line([-11,q],[-16,q]);line([11,q],[16,q]);}}
+      if(symbol===2){ring(-4,-14,3);ring(-5,6,11,.1,4.15);line([-4,-7],[-3,3],[8,3],[15,13],[19,11]);line([-3,-3],[7,-3]);}
+      if(symbol===3){line([-10,14],[9,-13]);g.beginPath();g.moveTo(-3,4);g.quadraticCurveTo(-11,-15,13,-15);g.quadraticCurveTo(16,0,-3,4);g.stroke();g.beginPath();g.moveTo(-6,9);g.quadraticCurveTo(-21,10,-18,-7);g.quadraticCurveTo(-5,-5,-6,9);g.stroke();}
+      if(symbol===4){ring(-3,-9,9,2.95,6.05);line([-4,11],[-6,-8],[-2,-10],[1,3],[5,0],[11,3],[14,12],[7,20],[-2,17],[-12,8],[-10,5],[-4,11]);}
+      if(symbol===5){line([0,-9],[-6,-13],[-17,-13],[-17,10],[-7,10],[0,14],[7,10],[17,10],[17,-13],[6,-13],[0,-9],[0,14]);}
+      g.restore();
+    };
+  }
+  const lawn = ['#a5b76e','#afbe75','#aab974','#a4b56a','#b5c17b'];
+  function terrainTile(i,j,depth,rock,turf,grass){
+    const left=(i-.5)*tileWidth,right=(i+.5)*tileWidth;
+    const back=(j-.5)*tileDepth,front=(j+.5)*tileDepth;
+    const corners=[[left,back],[right,back],[right,front],[left,front]];
+    const at=(index,y)=>[corners[index][0],y,corners[index][1]];
+    face([at(0,-depth),at(1,-depth),at(2,-depth),at(3,-depth)],rock,1,null,0);
+    // Only the grass is exposed above each terrain column.
+    face([at(0,0),at(3,0),at(2,0),at(1,0)],grass,1,null,1);
+    const neighbors=[[i,j-1],[i+1,j],[i,j+1],[i-1,j]];
+    neighbors.forEach(([x,z],side)=>{
+      if(onIsland(x*tileWidth,z*tileDepth))return;
+      const next=(side+1)%4;
+      face([at(side,-depth),at(side,-.16),at(next,-.16),at(next,-depth)],rock,1,null,0);
+      face([at(side,-.16),at(side,0),at(next,0),at(next,-.16)],turf,1,null,0);
+    });
+  }
+  function meadow(x,z) {
+    for(let i=0;i<3;i++){
+      const px=x+(random()-.5)*.57, pz=z+(random()-.5)*.48;
+      const height=.045+random()*.11;
+      crystal(px,.045,pz,.063+random()*.05,height,.056,pick(moss),5);
+      if(random()<.33) crystal(px,height*.58+.055,pz,.047,.032,.047,pick(['#ffe2a0','#f5b9a6','#e4d2f4']),5);
+    }
+  }
+  {
+    const terrain=Math.sqrt(3);
+    origin=[0,0,0];
+    // Fill the whole footprint beneath the tiles so their antialiased edges
+    // cannot reveal rock or sky between them.
+    face(outline.map(([x,z])=>[x*tileWidth,0,z*tileDepth]),lawn[0],1,null,.5);
+    for(let j=-3;j<=3;j++)for(let i=-3;i<=3;i++){
+      const radius=Math.hypot(i,j);
+      if(Math.abs(i)+Math.abs(j)===6) continue;
+      const tx=i*tileWidth,tz=j*tileDepth;
+      const depth=.45+(4-radius)*.30+random()*.31;
+      const color=pick(rocks), turf=pick(lawn);
+      terrainTile(i,j,depth,color,pick(moss),turf);
+      if(radius<3.15){
+        const extra=.28+(3.15-radius)*.25+random()*.31;
+        box(tx+(random()-.5)*.15,-depth-extra,tz+(random()-.5)*.14,(.55+random()*.23)*terrain,extra+.03,(.50+random()*.17)*terrain,pick(rocks),undefined,0);
+      }
+      const edge=Math.abs(i)>=2 || j<=-2;
+      if(edge && random()<.77){
+        meadow(tx-.26,tz+.26);
+        if(random()<.45)meadow(tx+.34,tz-.27);
+      }
+      if(edge && radius>2.8 && random()<.22){
+        solidBox(tx-.12,0,tz,.4,.10+random()*.16,.32,pick(rocks),turf);
+      }
+    }
+    // A narrow path leaves open lawns on either side of the central building.
+    const approach=2.48*terrain;
+    for(let stepZ=1.52;stepZ<approach;stepZ+=.34){
+      solidBox(0,0,stepZ,.72,.055,.23,sand,cream);
+    }
+    for(const side of [-1,1]){
+      const groveX=side*1.46*terrain;
+      tree(groveX,-1.22*terrain,1.02+random()*.33);
+      if(side===-1)tree(groveX,.98*terrain,.80);
+      meadow(groveX,1.57*terrain);
+    }
+    origin=[0,0,.40];
+    solidBox(0,-.05,.48,2.55,.28,1.26,sand,cream);
+    const stairX=0;
+    solidBox(stairX,0,-.91,1.72,.95,1.51,sand,cream);
+    for(let j=0;j<8;j++)solidBox(stairX,.225,-.19+j*.145,1.18,.73-j*.091,.15,sand,cream);
+    arch(stairX,.95,-.87,.59,.83,.25,.58);
+    const flagX=.95, towerY=3.06;
+    solidBox(flagX,0,-1.03,.65,towerY,.64,sand,cream);
+    box(flagX,towerY,-1.03,.77,.15,.73,cream);
+    box(flagX,towerY-.16,-.663,.75,.045,.09,'#ae7f61');
+    const flagTop=towerY-.17, flagBottom=flagTop-1.11;
+    const flagColor=terracotta;
+    box(flagX,flagBottom,-.665,.55,1.11,.027,flagColor);
+    face([[flagX-.275,flagBottom,-.65],[flagX,flagBottom-.19,-.65],[flagX+.275,flagBottom,-.65]],flagColor);
+    panel(flagX,flagBottom+.04,-.647,.54,1.02,glyph(0,false));
+    solidBox(.92,.23,.86,.66,.11,.64,cream);
+    panel(.92,.34,.79,.66,1.02,glyph(0,true));
+    collider(.92,.34,.79,.66,1.02,.03);
+    origin=[0,0,0];
+    for(const sign of [-1,1]){
+      const a=sign*(2.98*terrain+random()*.27), b=(random()-.5)*2, c=-.68-random()*.69;
+      box(a,c,b,.25,.28,.25,pick(rocks),pick(moss),0);
+      crystal(a,c,b,.165,.18,.16,pick(rocks),4,0);
+    }
+  }
+  function setIsland(id){
+    if(currentIsland===id)return;
+    const current=islands.find(island=>island.id===id);
+    if(!current)return;
+    currentIsland=id;
+    distantFaces=[];distantLabels=[];
+    const savedOrigin=origin;
+    const size=6.1;
+    for(const island of islands){
+      if(island.id===id)continue;
+      const firstFace=distantFaces.length;
+      origin=[(island.x-current.x)*islandSpacing,(island.y-current.y)*islandSpacing,(island.z-current.z)*islandSpacing];
+      const rim=[...outline].reverse().map(([x,z])=>[x*tileWidth,0,z*tileDepth]);
+      face([...rim].reverse(),island.color,1,null,-1,distantFaces);
+      for(let i=0;i<rim.length;i++){
+        const corner=rim[i],next=rim[(i+1)%rim.length];
+        const edge=[corner[0]*.85,-.75,corner[2]*.85];
+        const nextEdge=[next[0]*.85,-.75,next[2]*.85];
+        face([corner,next,nextEdge,edge],i%2?'#a5a0a1':'#b2a2a7',1,null,-1,distantFaces);
+        face([edge,nextEdge,[0,-4.1,.35]],i%2?'#88889d':'#a294a0',1,null,-1,distantFaces);
+      }
+      for(const [x,z,y] of islandLandmarks){
+        box(x*size,0,z*size,.82,y*size,.74,'#d3b49e','#f3d5b8',-1,distantFaces);
+        box(x*size,y*size,z*size,.98,.13,.88,'#f3d5b8',undefined,-1,distantFaces);
+      }
+      for(const [x,z] of [[-.33,-.22],[.38,.18]]){
+        box(x*size,0,z*size,.16,.86,.16,'#997b75',undefined,-1,distantFaces);
+        box(x*size,.68,z*size,.84,.38,.75,'#dc9da2','#efb3b0',-1,distantFaces);
+      }
+      for(let i=firstFace;i<distantFaces.length;i++)distantFaces[i].islandId=island.id;
+      distantLabels.push({id:island.id,name:island.name,position:[origin[0],origin[1]+3.85,origin[2]],center:[...origin]});
+    }
+    origin=savedOrigin;
+  }
+
+  function drawBough(points,thickness,colors,rounded=false) {
+    const sides=rounded?9:6;
+    const rings=points.map(([px,py,pz],index)=>{
+      const before=points[Math.max(0,index-1)],after=points[Math.min(index+1,points.length-1)];
+      const [dx,dy,dz]=after.map((value,i)=>value-before[i]);
+      const horizontal=Math.hypot(dx,dz)||1, length=Math.hypot(dx,dy,dz)||1;
+      const across=[-dz/horizontal,0,dx/horizontal];
+      const up=[-dx*dy/(horizontal*length),horizontal/length,-dz*dy/(horizontal*length)];
+      return Array.from({length:sides},(_,side)=>{
+        const angle=(side+.15)*Math.PI*2/sides+index*(rounded?.018:.055);
+        const radius=thickness(index/(points.length-1));
+        const width=Math.cos(angle)*radius, height=Math.sin(angle)*radius*.86;
+        return [px+across[0]*width+up[0]*height,py+up[1]*height,pz+across[2]*width+up[2]*height];
+      });
+    });
+    for(let index=1;index<rings.length;index++){
+      const a=rings[index-1],b=rings[index];
+      for(let side=0;side<sides;side++){
+        const next=(side+1)%sides;
+        face([a[side],b[side],b[next],a[next]],colors[side%colors.length],1,null,1.6,bridgeFaces);
+      }
+    }
+    if(rounded){
+      face(rings[0],colors[0],1,null,1.6,bridgeFaces);
+      face([...rings.at(-1)].reverse(),colors[1],1,null,1.6,bridgeFaces);
+    }
+  }
+
+  function drawOakConnection(path,index,growth,joined,variant){
+    if(!growth)return;
+    const end=path.endpoints[index], sign=index===0?1:-1;
+    const reach=[0,.16,.34,.62,.96][growth], extent=joined?.61:Math.max(0,(reach-.22)*.63);
+    const arch=variant==='arch';
+    const strands=arch?2:3;
+    const bark=['#8f5f42','#ad7e54','#73503c','#5f4537'];
+    const green=['#afba6f','#8d9e57','#748951'];
+    const anchor=index===0?0:path.length;
+    const startHeight=end.tree.y+(growth>=3?.50:.13);
+    const curve=(strand,t)=>{
+      const phase=(t*(arch?.92:1.72)+strand/strands+index*.11)*Math.PI*2;
+      const growthEnvelope=.56+.44*Math.sin(Math.PI*t);
+      const width=arch?.67:.60;
+      const point=path.point(anchor+sign*t*path.length,
+        sign*(width*Math.cos(phase)*growthEnvelope+.14*Math.sin(t*10+index)));
+      const rise=arch?(strand===0?2.8:1.44):.38;
+      point[1]+=rise*Math.sin(Math.PI*t)+(arch?.38:.46)*Math.sin(phase)-.12;
+      return point;
+    };
+    for(let strand=0;strand<strands;strand++){
+      const start=curve(strand,0), attach=Math.min(1,reach*3);
+      const base=[end.tree.x+(strand-1)*.052,startHeight+(strand-1)*.05,end.tree.z];
+      const root=Array.from({length:5},(_,step)=>{
+        const t=step/4*attach;
+        return base.map((value,i)=>value+(start[i]-value)*t+(i===1?.12*Math.sin(t*Math.PI):0));
+      });
+      const body=(arch?.35:.33)*(1-strand*.095);
+      drawBough(root,t=>body*reach*(.63+.37*t),bark);
+      if(!extent)continue;
+      const segments=Math.ceil(extent*34);
+      const branches=Array.from({length:segments+1},(_,step)=>curve(strand,extent*step/segments));
+      drawBough(branches,t=>body*(.78+.22*reach)*(1-.83*t**2.6),bark);
+      for(const t of [.10,.24,.39,.52]){
+        if(t+.025>extent)continue;
+        const p=curve(strand,t),q=curve(strand,t+.055),r=curve(strand,t+.095);
+        const side=(strand%2?1:-1)*sign;
+        q[0]+=side*.27;q[2]+=side*.41;q[1]+=.30;
+        r[0]+=side*.39;r[2]+=side*.85;r[1]+=.47;
+        drawBough([p,q,r],amount=>.09*(1-.91*amount),bark);
+        if(strand===0 && t===.24){
+          const a=[p[0],p[1]+body*.61,p[2]],b=[q[0],q[1]+.13,q[2]];
+          drawBough([a,b],amount=>.16*(1-.7*amount),green);
+        }
+      }
+    }
+  }
+
+  function growBridgeMeshes(next) {
+    bridgeFaces=[];
+    const bridgeTrees=new Map();
+    bridges=next.flatMap(bridge=>{
+      if (!bridge.span?.ends.some(end=>end.island===currentIsland)) return [];
+      const path=bridgePath(bridge,currentIsland);
+      return path?[{...bridge,path}]:[];
+    });
+    fallLimit=Math.min(-8,...bridges.filter(bridge=>bridge.canCross)
+      .map(({path})=>Math.min(...path.endpoints.map(end=>end.y))-8));
+    for (const {span,path,open,concept} of bridges) {
+      for (const [index,end] of path.endpoints.entries()) {
+        if (end.island!==currentIsland || (open && plants.find(plant=>plant.id===span.seed)?.growth!==4)) {
+          bridgeTrees.set(end.island+':'+span.seed,{...end.tree,id:span.seed,growth:span.growth,remote:end.island!==currentIsland});
+        }
+        if(concept && concept!=='moss')drawOakConnection(path,index,span.growth,open,concept);
+        else traceOakConnection(path,index,span.growth,open,(points,radius,colors)=>drawBough(points,radius,colors,true));
+      }
+    }
+    visiblePlants=[...plants.filter(plant=>!bridgeTrees.has(currentIsland+':'+plant.id)),...bridgeTrees.values()];
+  }
+
+  function drawIslandLabel(text,[x,y]){
+    ctx.save();
+    ctx.font='600 13px system-ui';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    const w=Math.min(width-16,ctx.measureText(text).width+18);
+    const left=clamp(x-w/2,8,width-w-8);
+    ctx.beginPath();ctx.roundRect(left,y-11,w,22,6);
+    ctx.fillStyle='#203747d9';ctx.fill();
+    ctx.fillStyle='#fff8e9';ctx.fillText(text,left+w/2,y,w-12);
+    ctx.restore();
+  }
+
+  let width, height;
+  function sky(){
+    const sky=ctx.createLinearGradient(0,0,width*.3,height);
+    sky.addColorStop(0,'#738cbf');sky.addColorStop(.53,'#91a7d3');sky.addColorStop(1,'#bdc9eb');
+    ctx.fillStyle=sky;ctx.fillRect(0,0,width,height);
+    ctx.save();ctx.scale(width,height);
+    for(const [x,y,s] of [[.05,.16,.08],[.85,.12,.082],[.18,.83,.11],[.87,.72,.10],[.59,.95,.13],[.01,.53,.095]]){
+      for(let j=0;j<7;j++){
+        const u=x+(j-3)*s*.22,v=y-Math.sin(j*Math.PI/6)*s*.22,r=s*(.34+.19*Math.sin(j*2.09)**2);
+        const cloud=ctx.createRadialGradient(u,v,0,u,v,r);
+        cloud.addColorStop(0,'rgba(255,237,240,.31)');cloud.addColorStop(.55,'rgba(251,239,248,.20)');cloud.addColorStop(1,'rgba(242,237,255,0)');
+        ctx.fillStyle=cloud;ctx.fillRect(u-r,v-r,2*r,2*r);
+      }
+    }
+    ctx.restore();
+  }
+  function insideSolid(x,y,z){
+    return colliders.some(box=>x>box.left && x<box.right && y>box.bottom && y<box.top
+      && z>box.back && z<box.front);
+  }
+
+  function clearPath(tx,ty,tz){
+    const steps=Math.ceil(Math.hypot(tx-x,tz-z)*20);
+    for(let i=1;i<steps;i++){
+      const fraction=i/steps;
+      if(insideSolid(x+(tx-x)*fraction,eye+(ty-eye)*fraction,z+(tz-z)*fraction))return false;
+    }
+    return true;
+  }
+
+  function plantAt(x,y){
+    return plantHits.findLast(hit=>x>=hit.left&&x<=hit.right&&y>=hit.top&&y<=hit.bottom);
+  }
+
+  function sweepBox(start,end,box,radius){
+    const mins=[box.left,box.bottom,box.back],maxs=[box.right,box.top,box.front];
+    let entry=0,exit=1,normal=[0,1,0];
+    for(let axis=0;axis<3;axis++){
+      const delta=end[axis]-start[axis];
+      const low=mins[axis]-radius,high=maxs[axis]+radius;
+      if(Math.abs(delta)<1e-7){
+        if(start[axis]<low||start[axis]>high)return null;
+        continue;
+      }
+      const first=((delta>0?low:high)-start[axis])/delta;
+      const last=((delta>0?high:low)-start[axis])/delta;
+      if(first>entry){
+        entry=first;
+        normal=[0,0,0];
+        normal[axis]=-Math.sign(delta);
+      }
+      exit=Math.min(exit,last);
+      if(entry>exit)return null;
+    }
+    return {fraction:entry,normal};
+  }
+
+  function trajectory(dx,dy){
+    const pullDistance=Math.max(1,Math.hypot(dx,dy));
+    const strength=clamp((pullDistance-10)/135,0,1)**1.65;
+    const turn=clamp(Math.atan2(-dx,Math.max(dy,pullDistance*.54)),-.87,.87);
+    const heading=yaw+turn;
+    // Keep both the horizontal heading and the initial velocity in front of the camera.
+    const maxForwardPitch=pitch<0
+      ? Math.atan2(Math.cos(turn)*Math.cos(pitch),-Math.sin(pitch))-.04
+      : 1.10;
+    const launchPitch=Math.min(clamp(pitch+.50+.49*dy/pullDistance,.10,1.10),maxForwardPitch);
+    const speed=1.65+strength*11.95;
+    const horizontalSpeed=speed*Math.cos(launchPitch);
+    const lift=speed*Math.sin(launchPitch);
+    const gravity=9.8, seedRadius=.055, launchDistance=.56;
+    const viewport=canvas.getBoundingClientRect();
+    const focal=focalLength(viewport.width,viewport.height);
+    const drop=focal>0 ? (slingY-.5)*viewport.height*launchDistance/focal : 0;
+    const releaseHeight=eye+Math.sin(pitch)*launchDistance-Math.cos(pitch)*drop;
+    const forwardOffset=Math.cos(pitch)*launchDistance+Math.sin(pitch)*drop;
+    const fromX=x+Math.sin(yaw)*forwardOffset,fromZ=z-Math.cos(yaw)*forwardOffset;
+    const vx=Math.sin(heading)*horizontalSpeed,vz=-Math.cos(heading)*horizontalSpeed;
+    const point=t=>[fromX+vx*t,releaseHeight+lift*t-gravity*t*t/2,fromZ+vz*t];
+    const timeToHeight=y=>(lift+Math.sqrt(Math.max(0,lift*lift+2*gravity*(releaseHeight-y))))/gravity;
+    const groundTime=timeToHeight(seedRadius);
+    const [tx,,tz]=point(groundTime);
+    const hitsGround=onIsland(tx,tz);
+    const limit=hitsGround?groundTime:timeToHeight(-3.6);
+
+    // Sweep between consecutive prediction samples so thin features still register a hit.
+    const samples=[{time:0,position:point(0)}];
+    while(samples.at(-1).time<limit){
+      const previous=samples.at(-1);
+      const time=Math.min(limit,previous.time+1/60);
+      const position=point(time);
+      let hit=null;
+      for(const box of colliders){
+        const candidate=sweepBox(previous.position,position,box,seedRadius);
+        if(candidate&&(!hit||candidate.fraction<hit.fraction))hit=candidate;
+      }
+      if(hit){
+        const duration=previous.time+(time-previous.time)*hit.fraction;
+        const center=point(duration);
+        samples.push({time:duration,position:center});
+        const impact=center.map((value,axis)=>value-hit.normal[axis]*seedRadius);
+        return {point,samples,duration,result:'blocked',impact,normal:hit.normal};
+      }
+      samples.push({time,position});
+    }
+    if(!hitsGround)return {point,samples,duration:limit,result:'miss'};
+    const open=canPlant(tx,tz)&&!plants.some(p=>Math.hypot(p.x-tx,p.z-tz)<.4);
+    return {point,samples,duration:limit,result:open?'planted':'blocked',
+      landing:{x:tx,z:tz},impact:[tx,0,tz],normal:[0,1,0]};
+  }
+
+  function setThrowMode(active){
+    throwing=active;
+    pull=null;
+    canvas.parentElement?.classList.toggle('is-throwing',active);
+    throwButton.setAttribute('aria-pressed',String(active));
+    plantingTip.hidden=!active;
+    canvas.focus({preventScroll:true});
+  }
+
+  function toggleThrow(){
+    if(flight || document.querySelector('dialog[open]'))return;
+    if(!throwing&&!onThrowRequest())return;
+    setThrowMode(!throwing);
+  }
+
+  function plantSize(plant){
+    return [.11,.28,.51,.82,1.12][plant.growth] ?? .11;
+  }
+
+  function plantPolygon(points,color){
+    ctx.beginPath();
+    points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
+    ctx.closePath();
+    ctx.fillStyle=color;
+    ctx.fill();
+  }
+
+  function oakLeaf(x,y,size,angle,lobed,color){
+    ctx.save();
+    ctx.translate(x,y);ctx.rotate(angle);ctx.scale(size,size);
+    const edge=lobed?[[0,0],[.24,-.22],[.39,-.19],[.52,-.40],[.69,-.33],[.88,-.35],[1,-.12],
+      [.87,.11],[.65,.18],[.53,.10],[.34,.22],[.19,.13]]
+      :[[0,0],[.22,-.23],[.62,-.32],[1,-.12],[.74,.15],[.37,.22]];
+    plantPolygon(edge,color);
+    plantPolygon([[0,0],[1,-.12],[.65,.18],[.34,.22]],'#71854d');
+    ctx.restore();
+  }
+
+  function drawOak(tall,growth){
+    ctx.save();
+    ctx.scale(tall,tall);
+    if(growth<=2){
+      const young=growth===2;
+      plantPolygon([[-.036,0],[.036,0],[.057,-.66],[.014,-.82],[-.012,-.47]],young?'#8c6244':'#667b46');
+      oakLeaf(.014,-.58,.49,-.53,young,'#a8b76b');
+      oakLeaf(.012,-.42,.45,3.62,young,'#8fa459');
+      if(young){
+        oakLeaf(.028,-.27,.32,-.38,true,'#91a55b');
+        oakLeaf(.022,-.70,.36,-1.29,true,'#bec780');
+      }
+    }else{
+      const mature=growth===4;
+      plantPolygon([[-.17,0],[-.083,-.15],[-.059,-.49],[-.026,-.79],[.061,-.82],
+        [.076,-.47],[.086,-.14],[.16,0]],'#936747');
+      plantPolygon([[-.17,0],[-.083,-.15],[-.059,-.49],[-.026,-.79],[.014,-.71],[.007,-.30],[-.024,0]],'#76533d');
+      plantPolygon([[-.055,-.39],[-.28,-.59],[-.34,-.71],[-.25,-.67],[.01,-.49]],'#856044');
+      plantPolygon([[.044,-.46],[.31,-.71],[.38,-.70],[.24,-.53],[.075,-.34]],'#a77650');
+      const crown=[
+        [-.22,-.7,.24,.19,'#899b55','#acbc69'],
+        [.23,-.69,.24,.20,'#81944f','#a0b060'],
+        [0,-.83,.30,.20,'#9eae5c','#c0c779']
+      ];
+      if(mature) crown.unshift([-.38,-.57,.20,.16,'#829450','#a1b261'],
+        [.39,-.56,.19,.17,'#879950','#a7b968']);
+      for(const [x,y,w,h,shade,light] of crown){
+        const outline=[[-.95,.16],[-.92,-.42],[-.53,-.83],[.05,-1],[.65,-.75],[1,-.18],[.75,.49],[.15,.74],[-.59,.65]];
+        const facet=points=>points.map(([dx,dy])=>[x+dx*w,y+dy*h]);
+        plantPolygon(facet(outline),shade);
+        plantPolygon(facet([outline[1],outline[2],outline[3],outline[4],[.48,-.2],[-.35,.14]]),light);
+        plantPolygon(facet([[-.35,.14],[.48,-.2],outline[5],outline[6],outline[7]]),mature?'#96a65b':'#a0af61');
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawPlant(project,plant,scale,now) {
+    const ground=plant.y??0;
+    const [sx,sy]=project([plant.x,ground+.016,plant.z]);
+    const tall=plantSize(plant)*scale;
+    const sprite=artwork.get(['seed','sprout','young','tree','mature'][plant.growth]);
+    const spriteWidth=sprite ? Math.min(tall*2,tall*sprite.width/sprite.height) : 0;
+    const seedY=.105+(reducedMotion?.matches?0:Math.sin(now*.003+plant.x*2+plant.z)*.038);
+    const [seedX,seedScreenY]=project([plant.x,ground+seedY,plant.z]);
+    ctx.save();ctx.translate(sx,sy);
+    const soilSize=plant.growth?1:.66;
+    ctx.beginPath();ctx.ellipse(0,0,.12*scale*soilSize,.055*scale*soilSize,0,0,Math.PI*2);
+    ctx.fillStyle='#715642';ctx.fill();
+    if(!plant.growth){
+      ctx.restore();
+      drawSeed(seedX,seedScreenY,clamp(.061*scale,5,24),-.45);
+    }else if(sprite){
+      ctx.drawImage(sprite,-spriteWidth/2,-tall,spriteWidth,tall);
+      ctx.restore();
+    }else{
+      drawOak(tall,plant.growth);
+      ctx.restore();
+    }
+    const centerX=plant.growth?sx:seedX;
+    const top=plant.growth?sy-tall*1.19:seedScreenY-clamp(.061*scale,5,24)*1.45;
+    const halfWidth=Math.max(12,plant.growth ? (spriteWidth/2 || tall*.60) : .078*scale);
+    if(!plant.remote && clearPath(plant.x,plant.growth?plantSize(plant)*.62:seedY,plant.z)){
+      plantHits.push({id:plant.id,left:centerX-halfWidth,right:centerX+halfWidth,top:top-5,bottom:sy+8});
+    }
+  }
+
+  function overlaps(box,px,pz){
+    return px+radius>box.left && px-radius<box.right
+      && pz+radius>box.back && pz-radius<box.front;
+  }
+
+  function bridgeFloorAt(px,pz,ceiling){
+    let floor=-Infinity;
+    for(const {path,canCross,open} of bridges){
+      if(!open || !canCross)continue;
+      const {distance,offset}=path.locate(px,pz);
+      if(distance<0 || distance>path.length || Math.abs(offset)>bridgeHalfWidth)continue;
+      const height=bridgeSurfaceHeight(path,distance,offset);
+      if(height<=ceiling && height>floor)floor=height;
+    }
+    return floor;
+  }
+
+  function floorAt(px,pz,ceiling,bridgeFloor=bridgeFloorAt(px,pz,ceiling)){
+    let floor=ceiling>=0&&onIsland(px,pz)?Math.max(0,bridgeFloor):bridgeFloor;
+    for(const box of colliders){
+      if(box.top<=ceiling&&box.top>floor&&overlaps(box,px,pz))floor=box.top;
+    }
+    return floor;
+  }
+
+  function moveTo(px,pz){
+    if(grounded && !onIsland(px,pz)){
+      for(const {path,canCross,open} of bridges){
+        if(!open || canCross)continue;
+        const {distance,offset}=path.locate(px,pz);
+        if(distance<0 || distance>path.length || Math.abs(offset)>bridgeHalfWidth)continue;
+        if(performance.now()>=nextBridgeNotice){
+          nextBridgeNotice=performance.now()+3000;
+          onBridgeLocked();
+        }
+        return;
+      }
+    }
+    let step=feet;
+    if(grounded){
+      const bridgeFloor=bridgeFloorAt(px,pz,feet+maxStep);
+      const floor=floorAt(px,pz,feet+maxStep,bridgeFloor);
+      step=floor===bridgeFloor&&floor>=feet-maxStep?floor:Math.max(feet,floor);
+    }
+    for(const box of colliders){
+      if(box.top>step+.001 && box.bottom<step+bodyHeight && overlaps(box,px,pz))return;
+    }
+    x=px;z=pz;feet=step;
+  }
+
+  function walk(dt){
+    if(canvasReady()){
+      const side=Number(keys.has('KeyD'))-Number(keys.has('KeyA'))+movement.side;
+      const ahead=Number(keys.has('KeyW'))-Number(keys.has('KeyS'))+movement.ahead;
+      yaw+=(Number(keys.has('ArrowRight'))-Number(keys.has('ArrowLeft')))*dt*1.8;
+      pitch=clamp(pitch+(Number(keys.has('ArrowUp'))-Number(keys.has('ArrowDown')))*dt*1.6,-1.33,1.16);
+      if(side||ahead){
+        const speed=dt*2.65/Math.max(1,Math.hypot(side,ahead));
+        moveTo(x+(Math.sin(yaw)*ahead+Math.cos(yaw)*side)*speed,z);
+        moveTo(x,z+(-Math.cos(yaw)*ahead+Math.sin(yaw)*side)*speed);
+      }
+    }
+    verticalSpeed-=9.8*dt;
+    const floor=floorAt(x,z,feet+.001);
+    const nextFeet=feet+verticalSpeed*dt;
+    grounded=nextFeet<=floor;
+    if(grounded){feet=floor;verticalSpeed=0;}
+    else feet=nextFeet;
+    if(feet < fallLimit){
+      ({x,z,yaw,pitch}=spawn);
+      feet=0;verticalSpeed=0;grounded=true;
+      if(throwing)setThrowMode(false);
+    }
+    eye=feet+eyeHeight;
+    if(grounded){
+      for(const {path,canCross,open} of bridges){
+        if(!open || !canCross)continue;
+        const local=path.endpoints[0].island===currentIsland?0:1;
+        const far=path.endpoints[1-local];
+        const {distance,offset}=path.locate(x,z);
+        const endDistance=local===0?path.length:0;
+        if(Math.abs(distance-endDistance)>.35 || Math.abs(offset)>bridgeHalfWidth)continue;
+        const island=islands.find(entry=>entry.id===far.island);
+        const source=islands.find(entry=>entry.id===currentIsland);
+        onCross(far.island,{x:x-(island.x-source.x)*islandSpacing,
+          z:z-(island.z-source.z)*islandSpacing,feet:feet-(island.y-source.y)*islandSpacing});
+        break;
+      }
+    }
+  }
+
+  function draw(now){
+    requestAnimationFrame(draw);
+    if(!inspecting)walk(last?Math.min(.045,(now-last)/1000):0);
+    last=now;
+    if(flight && now>=flight.start+flight.duration*1000){
+      const {result,landing}=flight;
+      flight=null;
+      onLanding(result,landing);
+    }
+    const bounds=canvas.getBoundingClientRect();
+    width=bounds.width;height=bounds.height;
+    if(!width||!height)return;
+    const ratio=Math.min(devicePixelRatio||1,2);
+    const pixelsX=Math.round(width*ratio),pixelsY=Math.round(height*ratio);
+    if(canvas.width!==pixelsX || canvas.height!==pixelsY){canvas.width=pixelsX;canvas.height=pixelsY;}
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+    sky();
+    const cs=Math.cos(yaw),sn=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
+    const focal=focalLength(width,height);
+    function view([wx,wy,wz]){
+      const dx=wx-x,dy=wy-eye,dz=wz-z;
+      const ahead=dx*sn-dz*cs;
+      return [dx*cs+dz*sn,dy*cp-ahead*sp,ahead*cp+dy*sp];
+    }
+    const screen=([vx,vy,d])=>[width*.5+focal*vx/d,height*.5-focal*vy/d];
+    const project=point=>screen(view(point));
+    const visible=[];
+    for(const item of [...distantFaces,...faces,...bridgeFaces]){
+      if(item.islandId!==undefined&&artwork.has('island-'+item.islandId))continue;
+      const [px,py,pz]=item.points[0], [nx,ny,nz]=item.normal;
+      if(nx*(x-px)+ny*(eye-py)+nz*(z-pz)<=0)continue;
+      const points=item.points.map(view), clipped=[];
+      for(let i=0;i<points.length;i++){
+        const a=points[i],b=points[(i+1)%points.length];
+        if(a[2]>=near)clipped.push(a);
+        if((a[2]>=near)!==(b[2]>=near)){
+          const t=(near-a[2])/(b[2]-a[2]);
+          clipped.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,near]);
+        }
+      }
+      if(clipped.length<3)continue;
+      const pixels=clipped.map(screen);
+      if(pixels.every(p=>p[0]<0)||pixels.every(p=>p[0]>width)||pixels.every(p=>p[1]<0)||pixels.every(p=>p[1]>height))continue;
+      visible.push({item,pixels,layer:item.layer,depth:clipped.reduce((sum,p)=>sum+p[2],0)/clipped.length,
+        decal:item.decal&&points.every(p=>p[2]>=near)});
+    }
+    for(const island of distantLabels){
+      const image=artwork.get('island-'+island.id),center=view(island.center);
+      if(image&&center[2]>near){
+        const [x,y]=screen(center);
+        const maxSize=focal*8/center[2];
+        const w=Math.min(maxSize,maxSize*image.width/image.height);
+        const h=w*image.height/image.width;
+        visible.push({image,bounds:[x-w/2,y-h*.35,w,h],layer:-1,depth:center[2]});
+      }
+      const anchor=view(island.position);
+      if(anchor[2]<=near)continue;
+      const point=screen(anchor);
+      if(point[0]>=0 && point[0]<=width && point[1]>=12 && point[1]<=height-12){
+        visible.push({label:island.name,point,layer:-.7,depth:anchor[2]});
+      }
+    }
+    for(const plant of visiblePlants){
+      const depth=view([plant.x,(plant.y??0)+.016,plant.z])[2];
+      if(depth>.18)visible.push({plant,depth,layer:plant.remote?1.5:2});
+    }
+    // The camera stays above the island. Paint its continuous walking surface
+    // before structures so a large tile cannot cover smaller objects on it.
+    visible.sort((a,b)=>a.layer-b.layer || b.depth-a.depth);
+    plantHits=[];
+    for(const {item,pixels,plant,depth,decal,label,point,image,bounds} of visible){
+      if(image){ctx.drawImage(image,...bounds);continue;}
+      if(label){drawIslandLabel(label,point);continue;}
+      if(plant){drawPlant(project,plant,focal/depth,now);continue;}
+      if(item.color){
+        ctx.globalAlpha=item.alpha;ctx.fillStyle=item.color;ctx.beginPath();
+        pixels.forEach(([sx,sy],i)=>i?ctx.lineTo(sx,sy):ctx.moveTo(sx,sy));
+        ctx.closePath();ctx.fill();
+        if(item.alpha===1){ctx.strokeStyle=item.color;ctx.lineWidth=.65;ctx.stroke();}
+        ctx.globalAlpha=1;
+      }
+      if(decal){
+        const [bl,,tr,tl]=pixels;
+        const w=(item.points[1][0]-item.points[0][0])*100;
+        const h=(item.points[3][1]-item.points[0][1])*100;
+        ctx.save();
+        ctx.transform((tr[0]-tl[0])/w,(tr[1]-tl[1])/w,(bl[0]-tl[0])/h,(bl[1]-tl[1])/h,tl[0],tl[1]);
+        item.decal(ctx,w,h);ctx.restore();
+      }
+    }
+    const pulling=pull && Math.hypot(pull.dx,pull.dy)*pull.gain>=10;
+    const arc=pulling?trajectory(pull.dx*pull.gain,pull.dy*pull.gain):flight;
+    if(arc)drawTrajectory(arc,view,screen,Boolean(flight));
+    if(throwing)drawSling();
+    if(flight){
+      const t=clamp((now-flight.start)/1000,0,flight.duration);
+      const position=view(flight.point(t));
+      if(position[2]>near){
+        const [sx,sy]=screen(position);
+        drawSeed(sx,sy,clamp(.085*focal/position[2],6,22),t*10-.64);
+      }
+    }
+    const clickable=!throwing&&!flight&&cursor&&plantAt(cursor.x,cursor.y);
+    canvas.classList?.toggle('over-plant',Boolean(clickable));
+  }
+
+  function drawTrajectory(arc,view,screen,inFlight){
+    const color=arc.result==='planted'?'#b7ff92':arc.result==='miss'?'#d6fca8':'#ffd594';
+    ctx.save();
+    ctx.globalAlpha=inFlight ? .46 : 1;
+    ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.beginPath();
+    let started=false;
+    for(const {position} of arc.samples){
+      const point=view(position);
+      if(point[2]<=near){started=false;continue;}
+      const [sx,sy]=screen(point);
+      if(started)ctx.lineTo(sx,sy);
+      else ctx.moveTo(sx,sy);
+      started=true;
+    }
+    ctx.strokeStyle='#143d2a';ctx.lineWidth=4;ctx.stroke();
+    ctx.strokeStyle='#89ff75';ctx.lineWidth=1.65;ctx.stroke();
+
+    // Sample the same ballistic path the released seed follows.
+    const beadCount=clamp(Math.round(arc.duration*13),9,19);
+    for(let i=1;i<=beadCount;i++){
+      const point=view(arc.point(arc.duration*i/(beadCount+1)));
+      if(point[2]<=near)continue;
+      const [sx,sy]=screen(point);
+      const size=clamp(5.8-point[2]*.63,2.25,5.6);
+      ctx.beginPath();ctx.arc(sx,sy,size,0,Math.PI*2);
+      ctx.fillStyle=color;ctx.fill();
+      ctx.strokeStyle='#143d2a';ctx.lineWidth=1.6;ctx.stroke();
+    }
+    if(arc.impact){
+      const [nx,ny,nz]=arc.normal;
+      const [x,y,z]=arc.impact;
+      const offset=[x+nx*.018,y+ny*.018,z+nz*.018];
+      for(const radius of [.20,.29]){
+        ctx.beginPath();
+        let drawing=false;
+        for(let i=0;i<=24;i++){
+          const a=i*Math.PI/12;
+          const u=Math.cos(a)*radius,v=Math.sin(a)*radius;
+          const point=view([offset[0]+(nx?0:u),offset[1]+(ny?0:nx?u:v),offset[2]+(nz?0:v)]);
+          if(point[2]<=near){drawing=false;continue;}
+          const [sx,sy]=screen(point);
+          if(drawing)ctx.lineTo(sx,sy);
+          else ctx.moveTo(sx,sy);
+          drawing=true;
+        }
+        ctx.strokeStyle='#143d2a';ctx.lineWidth=4;ctx.stroke();
+        ctx.strokeStyle=color;ctx.lineWidth=2;ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawSling(){
+    const centerX=width/2,centerY=height*slingY;
+    const sx=centerX+(pull?.dx??0),sy=centerY+(pull?.dy??0);
+    ctx.save();
+    ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.beginPath();ctx.moveTo(centerX-24,centerY+9);ctx.lineTo(sx,sy);ctx.lineTo(centerX+24,centerY+9);
+    ctx.strokeStyle='#472d20';ctx.lineWidth=9;ctx.stroke();
+    ctx.strokeStyle='#d99a62';ctx.lineWidth=5;ctx.stroke();
+    ctx.restore();
+    drawSeed(sx,sy,14,-.34);
+  }
+
+  function drawSeed(sx,sy,radius,angle){
+    ctx.save();ctx.translate(sx,sy);ctx.rotate(angle);ctx.scale(radius,radius);
+    const sprite=artwork.get('seed');
+    if(sprite){
+      const ratio=sprite.width/sprite.height,w=Math.min(2.2,2.2*ratio),h=w/ratio;
+      ctx.drawImage(sprite,-w/2,-h/2,w,h);
+      ctx.restore();
+      return;
+    }
+    plantPolygon([[-.67,-.34],[.66,-.34],[.61,.37],[.38,.77],[0,1.04],[-.40,.73],[-.64,.34]],'#a86b3e');
+    plantPolygon([[-.62,-.28],[-.11,-.33],[.09,.37],[0,1.04],[-.40,.73]],'#d29454');
+    plantPolygon([[-.1,-.33],[.66,-.34],[.61,.37],[.38,.77],[0,1.04],[.14,.32]],'#935634');
+    plantPolygon([[-.77,-.23],[-.71,-.63],[-.43,-.91],[.03,-1.04],[.49,-.94],
+      [.73,-.62],[.78,-.27],[.43,-.15],[-.38,-.14]],'#74543b');
+    plantPolygon([[-.71,-.63],[-.43,-.91],[.03,-1.04],[.49,-.94],[.73,-.62],[.13,-.5],[-.43,-.48]],'#a47c51');
+    plantPolygon([[-.18,-.95],[-.13,-1.27],[.07,-1.32],[.15,-1.20],[.02,-.97]],'#805c42');
+    ctx.restore();
+  }
+
+  function look(dx,dy){
+    yaw+=dx*.0035;
+    pitch=clamp(pitch-dy*.0035,-1.33,1.16);
+  }
+  let pointer=null, traveled=0, lastPointer=null;
+  canvas.addEventListener('pointerdown',event=>{
+    if(event.button!==0 && event.pointerType!=='touch')return;
+    canvas.focus();
+    if(throwing){
+      const rect=canvas.getBoundingClientRect();
+      const centerX=rect.left+rect.width/2,centerY=rect.top+rect.height*slingY;
+      if(!pull&&Math.hypot(event.clientX-centerX,event.clientY-centerY)<=30){
+        const gain=event.pointerType==='touch' ? Math.max(1,145/Math.max(45,rect.height*(1-slingY)-14)) : 1;
+        pull={id:event.pointerId,centerX,centerY,dx:0,dy:0,gain};
+        canvas.setPointerCapture(event.pointerId);
+        return;
+      }
+    }
+    if(pointer!==null || pull)return;
+    pointer=event.pointerId;traveled=0;lastPointer=cursor=pointerPosition(event);
+    canvas.setPointerCapture(pointer);
+  });
+  canvas.addEventListener('pointermove',event=>{
+    if(pull?.id===event.pointerId){
+      pull.dx=clamp(event.clientX-pull.centerX,-175,175);
+      pull.dy=clamp(event.clientY-pull.centerY,-175,175);
+      return;
+    }
+    cursor=pointerPosition(event);
+    if(event.pointerId!==pointer)return;
+    const dx=event.pointerType==='touch'?cursor.x-lastPointer.x:event.movementX;
+    const dy=event.pointerType==='touch'?cursor.y-lastPointer.y:event.movementY;
+    lastPointer=cursor;
+    traveled+=Math.abs(dx)+Math.abs(dy);
+    if(traveled>4)look(dx,dy);
+  });
+  canvas.addEventListener('pointerup',event=>{
+    if(pull?.id===event.pointerId){
+      const dx=clamp(event.clientX-pull.centerX,-175,175)*pull.gain;
+      const dy=clamp(event.clientY-pull.centerY,-175,175)*pull.gain;
+      pull=null;
+      if(Math.hypot(dx,dy)<10)return;
+      flight={...trajectory(dx,dy),start:performance.now()};
+      setThrowMode(false);
+      return;
+    }
+    if(event.pointerId!==pointer)return;
+    pointer=null;
+    if(traveled>4 || throwing || flight)return;
+    const {x,y}=pointerPosition(event);
+    const plant=plantAt(x,y);
+    if(plant)onPlant(plant.id);
+  });
+  function pointerPosition(event){
+    const rect=canvas.getBoundingClientRect();
+    return {x:event.clientX-rect.left,y:event.clientY-rect.top};
+  }
+  canvas.addEventListener('pointerleave',()=>{cursor=null;});
+  canvas.addEventListener('lostpointercapture',event=>{
+    if(pointer===event.pointerId)pointer=null;
+    if(pull?.id===event.pointerId)pull=null;
+  });
+  function updateStick(event){
+    const rect=moveStick.getBoundingClientRect();
+    const reach=rect.width*.31;
+    const dx=(event.clientX-rect.left-rect.width/2)/reach;
+    const dy=(event.clientY-rect.top-rect.height/2)/reach;
+    const magnitude=Math.hypot(dx,dy);
+    const value=clamp((magnitude-.10)/.90,0,1)/Math.max(magnitude,.001);
+    movement.side=dx*value;movement.ahead=-dy*value;
+    moveStick.style.setProperty('--stick-x',movement.side*reach+'px');
+    moveStick.style.setProperty('--stick-y',-movement.ahead*reach+'px');
+  }
+  function resetStick(){
+    stickId=null;movement.side=0;movement.ahead=0;
+    moveStick?.style.removeProperty('--stick-x');
+    moveStick?.style.removeProperty('--stick-y');
+  }
+  moveStick?.addEventListener('pointerdown',event=>{
+    if(stickId!==null || event.button!==0)return;
+    event.preventDefault();
+    canvas.focus({preventScroll:true});
+    stickId=event.pointerId;
+    moveStick.setPointerCapture(stickId);
+    updateStick(event);
+  });
+  moveStick?.addEventListener('pointermove',event=>{
+    if(stickId===event.pointerId)updateStick(event);
+  });
+  for(const type of ['pointerup','pointercancel','lostpointercapture']){
+    moveStick?.addEventListener(type,event=>{
+      if(stickId===event.pointerId)resetStick();
+    });
+  }
+  throwButton.addEventListener('click',toggleThrow);
+  window.addEventListener('keydown',event=>{
+    if(!canvasReady() || event.ctrlKey || event.metaKey || event.altKey)return;
+    if(event.code==='KeyQ'&&!event.repeat){event.preventDefault();toggleThrow();return;}
+    if(event.code==='Escape'&&throwing){setThrowMode(false);return;}
+    if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.code))event.preventDefault();
+    keys.add(event.code);
+  });
+  window.addEventListener('keyup',event=>keys.delete(event.code));
+  const resetInput=()=>{keys.clear();resetStick();};
+  canvas.addEventListener('blur',resetInput);
+  window.addEventListener('blur',resetInput);
+  requestAnimationFrame(draw);
+  return {
+    update(next,islandId,links=[]){plants=next;setIsland(islandId);growBridgeMeshes(links);},
+    inspect(position,target){
+      inspecting=true;
+      [x,eye,z]=position;
+      const [tx,ty,tz]=target;
+      yaw=Math.atan2(tx-x,z-tz);
+      pitch=Math.atan2(ty-eye,Math.hypot(tx-x,tz-z));
+    },
+    arrive(position){
+      ({x,z,feet}=position);
+      verticalSpeed=0;grounded=true;eye=feet+eyeHeight;flight=null;
+      if(throwing)setThrowMode(false);
+    },
+    faceBridge(destination){
+      const bridge=bridges.find(({path})=>path.endpoints.some(end=>end.island===destination));
+      if(!bridge)return false;
+      const [near,far]=bridge.path.endpoints.toSorted((a,b)=>Number(b.island===currentIsland)-Number(a.island===currentIsland));
+      const target=Math.hypot(near.x-x,near.z-z)<1?far:near;
+      yaw=Math.atan2(target.x-x,z-target.z);
+      pitch=target===far?Math.atan2(far.y-near.y,bridge.path.length)*.65-.06:-.12;
+      return true;
+    },
+    reset(){
+      inspecting=false;
+      ({x,z,yaw,pitch}=spawn);
+      feet=0;verticalSpeed=0;grounded=true;eye=eyeHeight;flight=null;
+      if(throwing)setThrowMode(false);
+      resetInput();
+    }
+  };
+}
+function createWorld(canvas, artwork, homeButton, enterHome) {
+  const ctx=canvas.getContext('2d');
+  let islands=[],bridges=[],home=0,yaw=.25,pitch=.55,drag=null,targets=[];
+
+  function draw(){
+    const width=canvas.clientWidth,height=canvas.clientHeight;
+    if(!width||!height)return;
+    targets=[];
+    const ratio=Math.min(devicePixelRatio||1,2);
+    canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+    const sky=ctx.createLinearGradient(0,0,width,height);
+    sky.addColorStop(0,'#182d3c');sky.addColorStop(1,'#355964');
+    ctx.fillStyle=sky;ctx.fillRect(0,0,width,height);
+    const scale=Math.min(width/5.45,height/4.1);
+    const rotate=({x,y,z})=>({x:x*Math.cos(yaw)-z*Math.sin(yaw),y,z:x*Math.sin(yaw)+z*Math.cos(yaw)});
+    const items=islands.map(island=>({...island,position:rotate(island)})).sort((a,b)=>a.position.z-b.position.z);
+    const center=items.reduce((mid,{position})=>({
+      x:mid.x+position.x/items.length,y:mid.y+position.y/items.length,z:mid.z+position.z/items.length
+    }),{x:0,y:0,z:0});
+    const project=({x,y,z})=>[width/2+(x-center.x)*scale,
+      height*.48+((z-center.z)*Math.sin(pitch)-(y-center.y)*Math.cos(pitch))*scale];
+    const path=(points,color)=>{
+      ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
+      ctx.closePath();ctx.fillStyle=color;ctx.fill();
+    };
+    const oaks=new Map();
+    for(const bridge of bridges){
+      const start=items.find(item=>item.id===home),end=items.find(item=>item.id===bridge.destination);
+      if(!start||!end)continue;
+      const route=bridgePath(bridge,home);
+      if(!route)continue;
+      const [ax,ay]=project(start.position),[bx,by]=project(end.position);
+      const length=Math.hypot(bx-ax,by-ay)||1;
+      const lane=bridge.lane??0;
+      const mapPoint=([x,y,z])=>{
+        const [px,py]=project(rotate({
+          x:start.x+x/islandSpacing,y:start.y+y/islandSpacing,z:start.z+z/islandSpacing
+        }));
+        const along=route.locate(x,z).distance/route.length;
+        const separation=lane*Math.sin(Math.PI*Math.max(0,Math.min(1,along)));
+        return [px-(by-ay)/length*separation,py+(bx-ax)/length*separation];
+      };
+      const mapBough=(points,thickness,colors)=>{
+        const projected=points.map(mapPoint);
+        const stroke=(color,weight,raise=0)=>{
+          ctx.strokeStyle=color;
+          ctx.lineCap='round';
+          for(let i=1;i<projected.length;i++){
+            const [x1,y1]=projected[i-1], [x2,y2]=projected[i];
+            ctx.lineWidth=Math.max(.55,thickness((i-.5)/(projected.length-1))*scale/islandSpacing*weight);
+            ctx.beginPath();ctx.moveTo(x1,y1-raise);ctx.lineTo(x2,y2-raise);ctx.stroke();
+          }
+        };
+        stroke(colors[2],3);
+        stroke(colors[1],1.55,.7);
+      };
+      for(const [index,{island,tree}] of route.endpoints.entries()){
+        traceOakConnection(route,index,bridge.span.growth,bridge.open,mapBough);
+        if(bridge.span.growth>=3)oaks.set(island,mapPoint([tree.x,tree.y,tree.z]));
+      }
+    }
+    for(const island of items){
+      const image=artwork.get('island-'+island.id);
+      if(image){
+        const [x,y]=project(island.position);
+        const w=Math.min(scale*1.65,scale*1.9*image.width/image.height);
+        const h=w*image.height/image.width;
+        ctx.drawImage(image,x-w/2,y-h*.35,w,h);
+        targets.push({id:island.id,polygons:[[[x-w/2,y-h*.35],[x+w/2,y-h*.35],[x+w/2,y+h*.65],[x-w/2,y+h*.65]]]});
+        continue;
+      }
+      const tile=(x,z,y)=>project(rotate({x:island.x+x,y:island.y+y,z:island.z+z}));
+      const edge=islandRim.map(([x,z])=>tile(x,z,0));
+      const bottom=tile(0,0,-1.0);
+      const sides=edge.map((point,index)=>[point,edge[(index+1)%edge.length],bottom]);
+      sides.forEach((side,index)=>path(side,index%2?'#70605e':'#8b7470'));
+      path(edge,island.color);
+      const polygons=[...sides,edge];
+      targets.push({id:island.id,polygons});
+      for(const [x,z,y] of islandLandmarks){
+        const base=tile(x,z,0),top=tile(x,z,y);
+        ctx.strokeStyle='#e4ceb0';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(...base);ctx.lineTo(...top);ctx.stroke();
+        polygons.push([[top[0]-4,top[1]-3],[top[0]+4,top[1]-3],[base[0]+4,base[1]+3],[base[0]-4,base[1]+3]]);
+      }
+      const oak=oaks.get(island.id);
+      if(oak){
+        const [x,y]=oak;
+        ctx.strokeStyle='#846448';ctx.lineWidth=4;ctx.lineCap='round';
+        ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y-13);ctx.stroke();
+        for(const [dx,dy,w,h,color] of [[-6,-14,7,4,'#8da25a'],[6,-13,7,4,'#97ab64'],[0,-17,9,6,'#bac67b']]){
+          ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x+dx,y+dy,w,h,0,0,Math.PI*2);ctx.fill();
+        }
+      }
+    }
+    const labels=[];
+    const homeEntry=items.find(island=>island.id===home);
+    homeButton.hidden=!homeEntry;
+    for(const island of items){
+      const [x,y]=project({...island.position,y:island.position.y+1.02});
+      ctx.font='600 14px system-ui';
+      const isHome=island.id===home;
+      const h=isHome?44:23;
+      const w=Math.min(width-16,ctx.measureText(island.name).width+(isHome?52:18));
+      const left=Math.max(8,Math.min(width-w-8,x-w/2));
+      let top=Math.max(8,Math.min(height-h-8,y-20));
+      while(labels.some(label=>left<label.left+label.w+4&&left+w+4>label.left&&top<label.top+label.h+4&&top+h+4>label.top))top+=h+4;
+      labels.push({left,top,w,h});
+      if(isHome){
+        homeButton.textContent=island.name;
+        homeButton.setAttribute('aria-label','Enter '+island.name+', your home island');
+        homeButton.style.left=left+'px';
+        homeButton.style.top=top+'px';
+        homeButton.style.width=w+'px';
+        continue;
+      }
+      ctx.fillStyle='#162c37';
+      ctx.beginPath();ctx.roundRect(left,top,w,h,6);ctx.fill();
+      ctx.fillStyle='#a2b3b4';
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(island.name,left+w/2,top+12,w-10);
+    }
+  }
+
+  function contains(point,polygon){
+    const [x,y]=point;
+    let inside=false;
+    for(let i=0,j=polygon.length-1;i<polygon.length;j=i++){
+      const [ax,ay]=polygon[i], [bx,by]=polygon[j];
+      if((ay>y)!==(by>y)&&x<(bx-ax)*(y-ay)/(by-ay)+ax)inside=!inside;
+    }
+    return inside;
+  }
+
+  function homeAt(event){
+    const rect=canvas.getBoundingClientRect();
+    const point=[event.clientX-rect.left,event.clientY-rect.top];
+    return targets.findLast(target=>target.polygons.some(polygon=>contains(point,polygon)))?.id===home;
+  }
+
+  homeButton.addEventListener('click',enterHome);
+  canvas.addEventListener('pointerdown',event=>{
+    if(drag || event.button!==0)return;
+    drag={id:event.pointerId,x:event.clientX,y:event.clientY,travel:0};
+    canvas.setPointerCapture(event.pointerId);
+  });
+  canvas.addEventListener('pointermove',event=>{
+    if(!drag){canvas.style.cursor=homeAt(event)?'pointer':'';return;}
+    if(event.pointerId!==drag.id)return;
+    const dx=event.clientX-drag.x, dy=event.clientY-drag.y;
+    drag.travel+=Math.hypot(dx,dy);
+    drag.x=event.clientX;drag.y=event.clientY;
+    if(drag.travel<6)return;
+    canvas.style.cursor='grabbing';
+    yaw+=dx*.012;
+    pitch=Math.max(.22,Math.min(1.20,pitch+dy*.008));
+    draw();
+  });
+  canvas.addEventListener('pointerup',event=>{
+    if(event.pointerId!==drag?.id)return;
+    const enter=drag.travel<6&&homeAt(event);
+    drag=null;
+    canvas.style.cursor='';
+    if(enter)enterHome();
+  });
+  canvas.addEventListener('lostpointercapture',event=>{
+    if(event.pointerId===drag?.id)drag=null;
+    canvas.style.cursor='';
+  });
+  new ResizeObserver(draw).observe(canvas);
+  return {
+    update(state){({islands,bridges,home}=state);draw();},
+    draw
+  };
+}
+const byId = id => document.getElementById(id);
+const artwork = new Map();
+const clamp = (value,min,max) => Math.max(min,Math.min(max,value));
+const reducedMotion = {matches:true};
+const clearPath = () => false;
+
+function renderGrowth(canvas,growth) {
+  const width = canvas.clientWidth, height = canvas.clientHeight;
+  if (!width || !height) return;
+  const ratio = Math.min(devicePixelRatio || 1,2);
+  canvas.width = Math.round(width*ratio);
+  canvas.height = Math.round(height*ratio);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(ratio,0,0,ratio,0,0);
+  const sky = ctx.createLinearGradient(0,0,0,height);
+  sky.addColorStop(0,'#e9edda');
+  sky.addColorStop(1,'#c2cd94');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0,0,width,height);
+  function drawSeed(sx,sy,radius,angle){
+    ctx.save();ctx.translate(sx,sy);ctx.rotate(angle);ctx.scale(radius,radius);
+    const sprite=artwork.get('seed');
+    if(sprite){
+      const ratio=sprite.width/sprite.height,w=Math.min(2.2,2.2*ratio),h=w/ratio;
+      ctx.drawImage(sprite,-w/2,-h/2,w,h);
+      ctx.restore();
+      return;
+    }
+    plantPolygon([[-.67,-.34],[.66,-.34],[.61,.37],[.38,.77],[0,1.04],[-.40,.73],[-.64,.34]],'#a86b3e');
+    plantPolygon([[-.62,-.28],[-.11,-.33],[.09,.37],[0,1.04],[-.40,.73]],'#d29454');
+    plantPolygon([[-.1,-.33],[.66,-.34],[.61,.37],[.38,.77],[0,1.04],[.14,.32]],'#935634');
+    plantPolygon([[-.77,-.23],[-.71,-.63],[-.43,-.91],[.03,-1.04],[.49,-.94],
+      [.73,-.62],[.78,-.27],[.43,-.15],[-.38,-.14]],'#74543b');
+    plantPolygon([[-.71,-.63],[-.43,-.91],[.03,-1.04],[.49,-.94],[.73,-.62],[.13,-.5],[-.43,-.48]],'#a47c51');
+    plantPolygon([[-.18,-.95],[-.13,-1.27],[.07,-1.32],[.15,-1.20],[.02,-.97]],'#805c42');
+    ctx.restore();
+  }
+
+  function plantSize(plant){
+    return [.11,.28,.51,.82,1.12][plant.growth] ?? .11;
+  }
+
+  function plantPolygon(points,color){
+    ctx.beginPath();
+    points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
+    ctx.closePath();
+    ctx.fillStyle=color;
+    ctx.fill();
+  }
+
+  function oakLeaf(x,y,size,angle,lobed,color){
+    ctx.save();
+    ctx.translate(x,y);ctx.rotate(angle);ctx.scale(size,size);
+    const edge=lobed?[[0,0],[.24,-.22],[.39,-.19],[.52,-.40],[.69,-.33],[.88,-.35],[1,-.12],
+      [.87,.11],[.65,.18],[.53,.10],[.34,.22],[.19,.13]]
+      :[[0,0],[.22,-.23],[.62,-.32],[1,-.12],[.74,.15],[.37,.22]];
+    plantPolygon(edge,color);
+    plantPolygon([[0,0],[1,-.12],[.65,.18],[.34,.22]],'#71854d');
+    ctx.restore();
+  }
+
+  function drawOak(tall,growth){
+    ctx.save();
+    ctx.scale(tall,tall);
+    if(growth<=2){
+      const young=growth===2;
+      plantPolygon([[-.036,0],[.036,0],[.057,-.66],[.014,-.82],[-.012,-.47]],young?'#8c6244':'#667b46');
+      oakLeaf(.014,-.58,.49,-.53,young,'#a8b76b');
+      oakLeaf(.012,-.42,.45,3.62,young,'#8fa459');
+      if(young){
+        oakLeaf(.028,-.27,.32,-.38,true,'#91a55b');
+        oakLeaf(.022,-.70,.36,-1.29,true,'#bec780');
+      }
+    }else{
+      const mature=growth===4;
+      plantPolygon([[-.17,0],[-.083,-.15],[-.059,-.49],[-.026,-.79],[.061,-.82],
+        [.076,-.47],[.086,-.14],[.16,0]],'#936747');
+      plantPolygon([[-.17,0],[-.083,-.15],[-.059,-.49],[-.026,-.79],[.014,-.71],[.007,-.30],[-.024,0]],'#76533d');
+      plantPolygon([[-.055,-.39],[-.28,-.59],[-.34,-.71],[-.25,-.67],[.01,-.49]],'#856044');
+      plantPolygon([[.044,-.46],[.31,-.71],[.38,-.70],[.24,-.53],[.075,-.34]],'#a77650');
+      const crown=[
+        [-.22,-.7,.24,.19,'#899b55','#acbc69'],
+        [.23,-.69,.24,.20,'#81944f','#a0b060'],
+        [0,-.83,.30,.20,'#9eae5c','#c0c779']
+      ];
+      if(mature) crown.unshift([-.38,-.57,.20,.16,'#829450','#a1b261'],
+        [.39,-.56,.19,.17,'#879950','#a7b968']);
+      for(const [x,y,w,h,shade,light] of crown){
+        const outline=[[-.95,.16],[-.92,-.42],[-.53,-.83],[.05,-1],[.65,-.75],[1,-.18],[.75,.49],[.15,.74],[-.59,.65]];
+        const facet=points=>points.map(([dx,dy])=>[x+dx*w,y+dy*h]);
+        plantPolygon(facet(outline),shade);
+        plantPolygon(facet([outline[1],outline[2],outline[3],outline[4],[.48,-.2],[-.35,.14]]),light);
+        plantPolygon(facet([[-.35,.14],[.48,-.2],outline[5],outline[6],outline[7]]),mature?'#96a65b':'#a0af61');
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawPlant(project,plant,scale,now) {
+    const ground=plant.y??0;
+    const [sx,sy]=project([plant.x,ground+.016,plant.z]);
+    const tall=plantSize(plant)*scale;
+    const sprite=artwork.get(['seed','sprout','young','tree','mature'][plant.growth]);
+    const spriteWidth=sprite ? Math.min(tall*2,tall*sprite.width/sprite.height) : 0;
+    const seedY=.105+(reducedMotion?.matches?0:Math.sin(now*.003+plant.x*2+plant.z)*.038);
+    const [seedX,seedScreenY]=project([plant.x,ground+seedY,plant.z]);
+    ctx.save();ctx.translate(sx,sy);
+    const soilSize=plant.growth?1:.66;
+    ctx.beginPath();ctx.ellipse(0,0,.12*scale*soilSize,.055*scale*soilSize,0,0,Math.PI*2);
+    ctx.fillStyle='#715642';ctx.fill();
+    if(!plant.growth){
+      ctx.restore();
+      drawSeed(seedX,seedScreenY,clamp(.061*scale,5,24),-.45);
+    }else if(sprite){
+      ctx.drawImage(sprite,-spriteWidth/2,-tall,spriteWidth,tall);
+      ctx.restore();
+    }else{
+      drawOak(tall,plant.growth);
+      ctx.restore();
+    }
+    const centerX=plant.growth?sx:seedX;
+    const top=plant.growth?sy-tall*1.19:seedScreenY-clamp(.061*scale,5,24)*1.45;
+    const halfWidth=Math.max(12,plant.growth ? (spriteWidth/2 || tall*.60) : .078*scale);
+    if(!plant.remote && clearPath(plant.x,plant.growth?plantSize(plant)*.62:seedY,plant.z)){
+      plantHits.push({id:plant.id,left:centerX-halfWidth,right:centerX+halfWidth,top:top-5,bottom:sy+8});
+    }
+  }
+
+  const scale = Math.min(95,width*.70);
+  drawPlant(([,y]) => [width/2,height-15-y*scale],{x:0,z:0,growth},scale,0);
+}
+
+const growthGrid = byId('growth-stages');
+for (let growth=0;growth<5;growth++) {
+  const card = document.createElement('figure');
+  const canvas = document.createElement('canvas');
+  const label = document.createElement('figcaption');
+  label.textContent = plantStage(growth);
+  canvas.setAttribute('aria-label', label.textContent);
+  card.append(canvas,label);
+  growthGrid.append(card);
+  new ResizeObserver(() => renderGrowth(canvas,growth)).observe(canvas);
+}
+
+const pair = islands.slice(0,2);
+const bridge = {destination:1,open:true,canCross:true,progress:100,
+  span:{seed:'shared-idea',title:'Shared idea',growth:4,
+    ends:[{island:0,x:3,z:-3},{island:1,x:-3,z:3}]}};
+const fromOriginal = bridgePath(bridge,0);
+const fromAdopted = bridgePath(bridge,1);
+for (let index=0;index<2;index++) {
+  const path = index===0 ? fromOriginal : fromAdopted;
+  const [x,,z] = path.point(index===0?.46:path.length-.46,index===0?.54:-.54);
+  Object.assign(bridge.span.ends[index],{x,z});
+}
+let playerIsland=0;
+let previewBridge=bridge;
+let selectedDesign='moss', selectedCamera='side', selectedStage=5;
+const bridgeDesignNotes={
+  braid:'Three oak limbs twist over and under one another, narrowing where they meet.',
+  arch:'Two sweeping branches curve across the gap at different heights and cross near the middle.',
+  moss:'Rounded oak branches intertwine beneath soft patches of moss.',
+  prototype:'Try walking across the Mossy Tangle span used in the prototype.'
+};
+const mossStageNotes=[
+  'A planted acorn rests on each island.',
+  'Two leaves emerge on each island.',
+  'Short shoots appear on both saplings.',
+  'The young oaks begin to reach toward each other.',
+  'The mature oaks send thicker, moss-covered branches farther across the gap.',
+  'The thick branches meet and weave together into a continuous span.'
+];
+const canvas=byId('player-reference');
+const player = createScene(canvas,{
+  onPlant(){}, onLanding(){}, onThrowRequest(){return false;},
+  onCross(island,position){
+    playerIsland=island;
+    drawPlayerStage();
+    player.arrive(position);
+    byId('player-caption').textContent = 'You walked to '+islands[island].name+'. Turn around to walk back.';
+  }
+});
+function drawPlayerStage() {
+  const seed = previewBridge.span.ends.find(end=>end.island===playerIsland);
+  player.update([{...seed,id:previewBridge.span.seed,growth:previewBridge.span.growth}],playerIsland,[previewBridge]);
+  byId('preview-island').textContent=islands[playerIsland].name;
+}
+function setPlayerStage(stage,focus=false) {
+  selectedStage=stage;
+  playerIsland=0;
+  const open=stage===5;
+  const prototype=selectedDesign==='prototype';
+  previewBridge={...bridge,open,canCross:open&&prototype,concept:prototype?null:selectedDesign,
+    progress:open?100:50,span:{...bridge.span,growth:Math.min(4,stage)}};
+  for (const button of byId('player-stages').querySelectorAll('button')) {
+    button.setAttribute('aria-pressed',String(Number(button.dataset.stage)===stage));
+    if(button.dataset.stage==='5')button.textContent=prototype?'Joined and walkable':'Intertwined';
+  }
+  for (const button of byId('bridge-designs').querySelectorAll('button')) {
+    button.setAttribute('aria-pressed',String(button.dataset.design===selectedDesign));
+  }
+  for (const button of byId('bridge-cameras').querySelectorAll('button')) {
+    button.setAttribute('aria-pressed',String(button.dataset.camera===selectedCamera));
+    if(button.dataset.camera==='junction')button.textContent=stage<=2?'Oak close-up':'Junction close-up';
+  }
+  byId('bridge-description').textContent=bridgeDesignNotes[selectedDesign];
+  byId('bridge-cameras').hidden=prototype;
+  byId('move-stick').hidden=!prototype;
+  drawPlayerStage();
+  player.reset();
+  const path=bridgePath(previewBridge,0);
+  if(prototype){
+    const [x,,z]=path.point(-.18);
+    player.arrive({x,z,feet:0});
+    player.faceBridge(1);
+    byId('player-caption').textContent=open
+      ? 'Drag the joystick forward or click the scene and hold W to walk across.'
+      : 'The original and adopted trees grow toward each other before the span is walkable.';
+    if (focus) canvas.focus({preventScroll:true});
+  }else{
+    const to=path.point(path.length*.52);
+    const from=selectedCamera==='side'?path.point(path.length*.34,path.length*.91)
+      :selectedCamera==='junction'?path.point(path.length*.39,5.9):path.point(-.20,-.28);
+    from[1]+=selectedCamera==='side'?6.2:selectedCamera==='junction'?3.25:1.1;
+    if(selectedCamera!=='side')to[1]+=.85;
+    if(selectedCamera==='junction' && stage<=2){
+      const {x,y,z}=path.endpoints[0].tree;
+      from.splice(0,3,x+1.04,y+.68,z+1.64);
+      to.splice(0,3,x,y+.24,z);
+    }
+    player.inspect(from,to);
+    byId('player-caption').textContent=selectedDesign==='moss'?mossStageNotes[stage]
+      :open?'The two oaks’ branches meet and intertwine.': 'The paired plants grow together before the branches join.';
+  }
+}
+byId('player-stages').addEventListener('click',event=>{
+  if (event.target.matches('button')) setPlayerStage(Number(event.target.dataset.stage),true);
+});
+byId('bridge-designs').addEventListener('click',event=>{
+  const design=event.target.dataset.design;
+  if(!design)return;
+  selectedDesign=design;
+  setPlayerStage(selectedStage,true);
+});
+byId('bridge-cameras').addEventListener('click',event=>{
+  const camera=event.target.dataset.camera;
+  if(!camera)return;
+  selectedCamera=camera;
+  setPlayerStage(selectedStage);
+});
+setPlayerStage(5);
+const noop = () => {};
+const one = createWorld(byId('one-map'),artwork,byId('one-home'),noop);
+const four = createWorld(byId('four-map'),artwork,byId('four-home'),noop);
+const updateMap = (map,bridges) => map.update({islands:pair,bridges,home:0});
+
+function setOne(open) {
+  byId('open-bridge').setAttribute('aria-pressed',String(open));
+  byId('building-bridge').setAttribute('aria-pressed',String(!open));
+  updateMap(one,[{...bridge,open,progress:open?100:50}]);
+}
+function setFour(concept) {
+  byId('current-design').setAttribute('aria-pressed',String(!concept));
+  byId('four-concept').setAttribute('aria-pressed',String(concept));
+  byId('four-caption').textContent = concept
+    ? 'Concept only. Four separate spans between the same two islands.'
+    : 'Four shared seeds contribute to one bridge for this island pair.';
+  updateMap(four,concept?[-35,-12,12,35].map(lane=>({...bridge,lane})):[bridge]);
+}
+byId('open-bridge').addEventListener('click',()=>setOne(true));
+byId('building-bridge').addEventListener('click',()=>setOne(false));
+byId('current-design').addEventListener('click',()=>setFour(false));
+byId('four-concept').addEventListener('click',()=>setFour(true));
+setOne(true);
+setFour(false);
+</script>
+</body>
+</html>
