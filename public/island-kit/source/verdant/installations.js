@@ -18,6 +18,6 @@ export function createInstallations(scene,walkables){const g=new THREE.Group();g
   beam(g,[wheelX,wheelY,wheelZ-.53],[wheelX,wheelY,wheelZ+.53],.075,copper,10);
   for(const zz of [wheelZ-.52,wheelZ+.52])beam(g,[wheelX,waterGroundHeight(wheelX,zz)-.025,zz],[wheelX,wheelY,zz],.055,wood);
   // A pair of small three-blade wind indicators sit in the cultivated zone.
-  const rotors=[];for(const [wx,wz,h] of [[4.98,.2,1.7],[.65,3.0,1.38]]){const gy=ground(wx,wz);beam(g,[wx,gy,wz],[wx,gy+h,wz],.04,copper,8);const rotor=new THREE.Group();rotor.position.set(wx,gy+h,wz);g.add(rotor);for(let i=0;i<3;i++){const a=i*2*Math.PI/3;const blade=add(new THREE.BoxGeometry(.1,.53,.025),material(C.cream,{side:THREE.DoubleSide}),rotor,[Math.sin(a)*.37,Math.cos(a)*.37,0]);blade.rotation.z=-a}ball(rotor,[0,0,.02],[.1,.1,.1],copper,1);rotors.push(rotor)}
+  const rotors=[];for(const [wx,wz,h] of [[4.98,.2,1.7],[1.55,3.74,1.38]]){const gy=ground(wx,wz);beam(g,[wx,gy,wz],[wx,gy+h,wz],.04,copper,8);const rotor=new THREE.Group();rotor.position.set(wx,gy+h,wz);g.add(rotor);for(let i=0;i<3;i++){const a=i*2*Math.PI/3;const blade=add(new THREE.BoxGeometry(.1,.53,.025),material(C.cream,{side:THREE.DoubleSide}),rotor,[Math.sin(a)*.37,Math.cos(a)*.37,0]);blade.rotation.z=-a}ball(rotor,[0,0,.02],[.1,.1,.1],copper,1);rotors.push(rotor)}
   return {group:g,update(dt){wheel.rotation.z-=dt*.38;for(const r of rotors)r.rotation.z+=dt*.42}}
 }

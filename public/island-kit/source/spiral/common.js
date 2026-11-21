@@ -1,6 +1,6 @@
 import * as THREE from '../../three.module.min.js';
 
-export const palette={grass:0xbfdc7c,grassLight:0xd2e693,grassDark:0xa4cb72,rock:0xbab3a1,rockLight:0xd2cabb,rockDark:0x938f81,ivory:0xfff7e7,sand:0xf4dfb2,pink:0xf4a8bb,pinkLight:0xffc9d2,leaf:0x83bd79,leafLight:0xaed88e,water:0x9edbd8,wood:0xbb8a69};
+export const palette={grass:0xb6d475,grassLight:0xc7dd87,grassDark:0x9cc36b,rock:0xbab3a1,rockLight:0xd2cabb,rockDark:0x938f81,ivory:0xfff7e7,sand:0xebd6aa,pink:0xf4a8bb,pinkLight:0xffc9d2,leaf:0x83bd79,leafLight:0xaed88e,water:0x92d2cf,wood:0xbb8a69};
 export const mat=(color,roughness=1,extra={})=>new THREE.MeshStandardMaterial({color,roughness,...extra});
 export const groundHeight=(x,z)=>.09+.17*Math.exp(-((x+1.4)**2+(z-.5)**2)/7)+.08*Math.sin(x*1.25+z*.45)+.045*Math.cos(z*2.1-x*.5);
 export function islandRadius(a){return 1+.065*Math.sin(3*a+.4)+.045*Math.sin(5*a-1.1)+.028*Math.cos(9*a+.3)}

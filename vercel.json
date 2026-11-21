@@ -7,6 +7,9 @@
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/garden.mjs?__garden_route=$1" },
     { "src": "/design-kit/?", "dest": "/public/design-kit.html" },
+    { "src": "/studios/?", "dest": "/public/studios/index.html" },
+    { "src": "/studios/(spiral|verdant|pinwheel)/?", "dest": "/public/studios/$1.html" },
+    { "src": "/studios/(studio\\.(css|mjs))", "dest": "/public/studios/$1" },
     { "src": "/island-kit/(.*)", "dest": "/public/island-kit/$1" },
     { "src": "/", "dest": "/public/index.html" },
     { "src": "/(style\\.css|scene\\.mjs|app\\.mjs|islands\\.mjs|world\\.mjs|plots\\.mjs|design-kit\\.(css|mjs)|design-assets\\.mjs)", "dest": "/public/$1" }

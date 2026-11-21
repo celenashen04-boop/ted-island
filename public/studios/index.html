@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Island Studio · TED Island</title>
+  <link rel="stylesheet" href="/studios/studio.css">
+  <style>
+    body{min-height:100dvh;background:linear-gradient(#738cbf,#bdc9eb)}
+    .index{width:min(55rem,calc(100% - 2rem));margin:0 auto;padding:clamp(2rem,8vh,6rem) 0}
+    .index h1{font-size:clamp(2rem,5vw,3rem);margin:.3rem 0;color:#203a34}
+    .index p{font-size:1rem;line-height:1.5;color:#284539}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:1rem;margin-top:2rem}
+    .cards a{display:flex;flex-direction:column;gap:.4rem;min-height:10rem;padding:1.2rem;border:1px solid #eef3e3cc;border-radius:1rem;background:#f8f9ebee;text-decoration:none;box-shadow:0 .2rem .75rem #29474b25}
+    .cards strong{font-size:1.35rem}.cards span{line-height:1.4}
+  </style>
+</head>
+<body>
+  <main class="index">
+    <a href="https://ted-island.vercel.app/">TED Island</a>
+    <h1>Island Studio</h1>
+    <p>Explore each island on its own in orbit view or on foot.</p>
+    <div class="cards">
+      <a href="/studios/spiral"><strong>Spiral Harbor</strong><span>Health, Wellbeing &amp; Accessibility</span></a>
+      <a href="/studios/verdant"><strong>Verdant Springs</strong><span>Sustainability &amp; Environmental HCI</span></a>
+      <a href="/studios/pinwheel"><strong>Pinwheel Island</strong><span>Games, Play &amp; Children’s Technology</span></a>
+    </div>
+  </main>
+</body>
+</html>

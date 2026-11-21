@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Explore Pinwheel Island, the Games and Play island from TED Island.">
+  <title>Pinwheel Island · Island Studio</title>
+  <link rel="stylesheet" href="/studios/studio.css">
+</head>
+<body data-island="pinwheel">
+  <main class="studio">
+    <canvas id="scene" tabindex="0" aria-label="Interactive 3D view of Pinwheel Island"></canvas>
+    <header class="topbar">
+      <a class="back" href="/studios">Island Studio</a>
+      <div class="heading"><span>Island studio</span><h1>Pinwheel Island</h1><p>Games, Play &amp; Children’s Technology</p></div>
+      <nav class="islands" aria-label="Island studios"><a href="/studios/spiral">Spiral</a><a href="/studios/verdant">Verdant</a><a aria-current="page" href="/studios/pinwheel">Pinwheel</a></nav>
+    </header>
+    <div class="controls"><button id="orbit" type="button" aria-pressed="true">Orbit view</button><button id="explore" type="button" aria-pressed="false">Explore on foot</button><button id="reset" type="button">Reset view</button><button id="navigation" type="button">Navigation data</button></div>
+    <p id="hint" class="hint" role="status">Drag to orbit · Scroll to zoom</p>
+    <div id="joystick" class="joystick" aria-label="Move joystick"><span></span></div>
+    <p id="error" class="error" role="alert" hidden></p>
+  </main>
+  <script type="module" src="/studios/studio.mjs"></script>
+</body>
+</html>

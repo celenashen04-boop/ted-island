@@ -2,7 +2,7 @@ import * as THREE from '../../three.module.min.js';
 
 // A low-poly underside with uneven ledges and broad, nonuniform rock volumes.
 // `outline(angle, scale)` returns [x,z] and must match the island's top rim at scale 1.
-export function createGeology(parent,{outline,topHeight,segments,colors,phase=0,outcrops=[],satellite=null}){
+export function createGeology(parent,{outline,topHeight,segments,colors,phase=0,outcrops=[],satellite=null,topRim=null}){
   const levels=[
     {s:1,y:0},{s:.98,y:-.22},{s:.90,y:-.68},{s:.82,y:-1.18},
     {s:.72,y:-1.75},{s:.68,y:-2.22},{s:.55,y:-2.85},
@@ -16,7 +16,7 @@ export function createGeology(parent,{outline,topHeight,segments,colors,phase=0,
   }
   function point(i,j){
     const angle=i*2*Math.PI/segments,level=levels[j];
-    if(j===0){const [x,z]=outline(angle,1);return [x,topHeight(x,z),z]}
+    if(j===0){if(topRim)return topRim[i*4];const [x,z]=outline(angle,1);return [x,topHeight(x,z),z]}
     const amplitude=.035+.016*j;
     const ripple=1+amplitude*(.63*Math.sin(3*angle+phase+j*.47)+.42*Math.sin(5*angle-phase*.7-j*.68)+.24*Math.cos(7*angle+j*.31));
     const shelf=j>=3&&j<=7?.065*Math.sin(2*angle+phase+j*.8):0;
@@ -28,7 +28,10 @@ export function createGeology(parent,{outline,topHeight,segments,colors,phase=0,
   for(let j=0;j<levels.length-1;j++)for(let i=0;i<segments;i++){
     const a=point(i,j),b=point((i+1)%segments,j),c=point(i,j+1),d=point((i+1)%segments,j+1);
     const tone=Math.floor(i/3)+Math.floor(j/2)+(Math.sin(i*1.7+j*2.3)> .68?1:0);
-    triangle(a,c,b,tone);triangle(b,c,d,tone+(((i+j)%5===0)?1:0));
+    if(j===0&&topRim){
+      for(let k=0;k<4;k++)triangle(topRim[i*4+k],c,topRim[(i*4+k+1)%topRim.length],tone);
+    }else triangle(a,c,b,tone);
+    triangle(b,c,d,tone+(((i+j)%5===0)?1:0));
   }
   const center=[.085*(levels.length-1),-4.32,.045*(levels.length-1)];
   for(let i=0;i<segments;i++)triangle(point(i,levels.length-1),center,point((i+1)%segments,levels.length-1),Math.floor(i/3)+3);

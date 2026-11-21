@@ -13,7 +13,7 @@ export const routes=[
 export function createArchitecture(scene,walkables){const g=new THREE.Group();g.name='Branching play paths, towers and tunnels';scene.add(g);const ivory=mat(P.cream),sand=mat(P.sand),wood=mat(P.timber),woodLight=mat(0xd5aa88),sky=mat(P.sky),coral=mat(P.coral),lav=mat(P.lavender),metal=mat(P.metal,{metalness:.4,roughness:.52});
   const terrain=walkables[0],ray=new THREE.Raycaster();terrain.updateWorldMatrix(true,false);
   const groundAt=(x,z)=>{ray.set(new THREE.Vector3(x,5,z),new THREE.Vector3(0,-1,0));return ray.intersectObject(terrain,false)[0]?.point.y??terrainHeight(x,z)};
-  const plazaY=height(0,0)+.08;const plaza=mesh(new THREE.CylinderGeometry(1.22,1.28,.15,32),sand,g,[0,plazaY-.055,0]);walkables.push(plaza);const rim=mesh(new THREE.TorusGeometry(1.17,.035,8,48),woodLight,g,[0,plazaY+.03,0]);rim.rotation.x=Math.PI/2;
+  const plazaY=height(0,0)+.08;const plaza=mesh(new THREE.CylinderGeometry(1.22,1.28,.15,32),sand,g,[0,plazaY-.055,0]);walkables.push(plaza);const rim=mesh(new THREE.TorusGeometry(1.17,.035,8,48),woodLight,g,[0,plazaY+.03,0]);rim.rotation.x=Math.PI/2;rim.userData.walkableTrim=true;
   const pathCurves=[];for(const [index,route] of routes.entries()){
     const pts=route.map(([x,z],i)=>[x,groundAt(x,z)+.012+([0,1].includes(index)?i/Math.max(1,route.length-1)*.54:0),z]);
     const o=strip(g,pts,index===4?.66:.76,index===4?woodLight:ivory,64);walkables.push(o);pathCurves.push(o.userData.curve);

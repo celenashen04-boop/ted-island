@@ -1,5 +1,5 @@
 import * as THREE from '../../three.module.min.js';
-export const C={grass:0xb4d86e,grassLight:0xd0e595,grassDark:0x93bb64,moss:0x719966,rock:0xb8ad91,rockDark:0x827f6e,terracotta:0xc4896e,timber:0xa87852,timberLight:0xd1a479,copper:0x9b8067,water:0x7dd4cf,glass:0xbdece0,cream:0xf6ead4,soil:0xa17b5e,flower:0xf3b7a6};
+export const C={grass:0xb0d469,grassLight:0xc8df8c,grassDark:0x93bb64,moss:0x719966,rock:0xb8ad91,rockDark:0x827f6e,terracotta:0xc4896e,timber:0xa87852,timberLight:0xd1a479,copper:0x9b8067,water:0x7dd4cf,glass:0xbdece0,cream:0xf6ead4,soil:0xa17b5e,flower:0xf3b7a6};
 export const material=(color,extra={})=>new THREE.MeshStandardMaterial({color,roughness:.9,...extra});
 export const ground=(x,z)=>.07+.07*Math.sin(x*.9+z*.6)+.05*Math.cos(z*1.6-x*.3);
 export const boundary=a=>1+.085*Math.sin(3*a-.4)+.065*Math.sin(6*a+1.5)+.027*Math.cos(11*a);

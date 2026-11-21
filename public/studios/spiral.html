@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Explore Spiral Harbor, the Health and Wellbeing island from TED Island.">
+  <title>Spiral Harbor · Island Studio</title>
+  <link rel="stylesheet" href="/studios/studio.css">
+</head>
+<body data-island="spiral">
+  <main class="studio">
+    <canvas id="scene" tabindex="0" aria-label="Interactive 3D view of Spiral Harbor"></canvas>
+    <header class="topbar">
+      <a class="back" href="/studios">Island Studio</a>
+      <div class="heading"><span>Island studio</span><h1>Spiral Harbor</h1><p>Health, Wellbeing &amp; Accessibility</p></div>
+      <nav class="islands" aria-label="Island studios"><a aria-current="page" href="/studios/spiral">Spiral</a><a href="/studios/verdant">Verdant</a><a href="/studios/pinwheel">Pinwheel</a></nav>
+    </header>
+    <div class="controls"><button id="orbit" type="button" aria-pressed="true">Orbit view</button><button id="explore" type="button" aria-pressed="false">Explore on foot</button><button id="reset" type="button">Reset view</button><button id="navigation" type="button">Navigation data</button></div>
+    <p id="hint" class="hint" role="status">Drag to orbit · Scroll to zoom</p>
+    <div id="joystick" class="joystick" aria-label="Move joystick"><span></span></div>
+    <p id="error" class="error" role="alert" hidden></p>
+  </main>
+  <script type="module" src="/studios/studio.mjs"></script>
+</body>
+</html>

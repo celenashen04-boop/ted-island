@@ -1,25 +1,31 @@
 import * as THREE from '../../three.module.min.js';
 import {C,material,add,ball,smoothBall,beam,inside,seeded} from './common.js';
-import {inWater} from './water.js';
+import {inWater,waterField} from './water.js';
+import {nearGreenhouseApproach} from './greenhouse-access.js';
+import {containsPoint} from '../meadow.js';
 
 export const trunks=[];
 const random=seeded(2707);
 
-export function createVegetation(scene,surface){
-  const g=new THREE.Group();g.name='Willow grove, fern banks and cultivated beds';scene.add(g);
+export function createVegetation(scene,surface,outline){
+  const g=new THREE.Group();g.name='Willow grove, fern banks and cultivated beds';g.userData.nonBlockingVegetation=true;scene.add(g);
   const ray=new THREE.Raycaster(),down=new THREE.Vector3(0,-1,0);
   function groundAt(x,z){ray.set(new THREE.Vector3(x,10,z),down);const hit=ray.intersectObject(surface,false)[0];return hit?hit.point.y:null}
-  function anchoredRoot(x,z){for(let i=0;i<=30;i++){const f=1-i*.018,px=x*f,pz=z*f,y=groundAt(px,pz);if(y!==null&&inside(px,pz,.38))return [px,pz,y]}return null}
   const bark=material(0x8d7862),willow=[material(0x8db577),material(0xa6cc83),material(0x79a86d)],fern=material(0x719e65,{side:THREE.DoubleSide}),moss=material(C.moss),flower=[material(0xf3b4a8),material(0xffd39e),material(0xe6c5cf)];
 
-  function willowTree(x,z,s){
-    const root=anchoredRoot(x,z);if(!root)return;[x,z]=root;
-    const y=root[2],h=1.05+1.42*s;trunks.push({x,z,r:.12*s});
-    beam(g,[x,y-.015,z],[x-.06*s,y+h,z+.03*s],.095*s,bark,9);
+  function willowTree(x,z,s,name){
+    const y=groundAt(x,z);
+    if(y===null||waterField(x,z)<.53+.12*s||!containsPoint(outline,x,z,1.08*s+.04))return;
+    const h=1.05+1.42*s;
+    trunks.push({x,z,r:.12*s});
+    const tree=new THREE.Group();
+    tree.name=name;
+    g.add(tree);
+    beam(tree,[x,y-.015,z],[x-.06*s,y+h,z+.03*s],.095*s,bark,9);
     for(let j=0;j<7;j++){
       const a=j*2*Math.PI/7+.3,rx=Math.cos(a),rz=Math.sin(a),e=[x+rx*.66*s,y+h+.2*s,z+rz*.57*s];
-      beam(g,[x,y+h*.75,z],e,.042*s,bark,7);
-      smoothBall(g,[e[0],e[1]+.02*s,e[2]],[.42*s,.31*s,.38*s],willow[j%3]);
+      beam(tree,[x,y+h*.75,z],e,.042*s,bark,7);
+      smoothBall(tree,[e[0],e[1]+.02*s,e[2]],[.42*s,.31*s,.38*s],willow[j%3]);
       for(let k=0;k<3;k++){
         const da=(k-1)*.18,px=e[0]+rx*da*s,pz=e[2]+rz*da*s;
         const curve=new THREE.CatmullRomCurve3([
@@ -27,12 +33,19 @@ export function createVegetation(scene,surface){
           new THREE.Vector3(px+rx*.12*s,e[1]-.24*s,pz+rz*.1*s),
           new THREE.Vector3(px+rx*.18*s,e[1]-.62*s,pz+rz*.15*s)
         ]);
-        add(new THREE.TubeGeometry(curve,7,.012*s,4,false),willow[(j+k+3)%3],g);
+        add(new THREE.TubeGeometry(curve,7,.012*s,4,false),willow[(j+k+3)%3],tree);
       }
     }
-    smoothBall(g,[x,y+h+.23*s,z],[.58*s,.28*s,.5*s],willow[1]);
+    smoothBall(tree,[x,y+h+.23*s,z],[.58*s,.28*s,.5*s],willow[1]);
   }
-  for(const t of [[-4.69,2.3,1.06],[-3.1,3.16,.86],[-1.48,3.04,.82],[4.8,3.06,.88],[5.1,-3.08,.75]])willowTree(...t);
+  const willows=[
+    [-4.69,2.3,1.06,'West landing willow'],
+    [-3.1,3.16,.86,'West meadow willow'],
+    [-1.58,3.63,.82,'Greenhouse approach willow'],
+    [4.64,3.85,.88,'Rain pavilion meadow willow'],
+    [4.08,-3.36,.75,'Upper pond meadow willow']
+  ];
+  for(const tree of willows)willowTree(...tree);
 
   function fernClump(x,z,s){
     const y=groundAt(x,z);if(y===null)return;
@@ -65,19 +78,51 @@ export function createVegetation(scene,surface){
     const x=-5.25+random()*10.4,z=2.28+random()*1.75;
     if(!inside(x,z,.44)||trunks.some(t=>Math.hypot(x-t.x,z-t.z)<.6)||x>2.7&&x<4.7)continue;
     const y=groundAt(x,z);if(y===null)continue;const r=.09+random()*.16;
+    if(nearGreenhouseApproach(x,z))continue;
     ball(g,[x,y+.09,z],[r,.12,r*.9],i%3?moss:material(C.grassDark),1);
   }
 
-  const soil=material(C.soil),rim=material(C.terracotta);
-  for(const [x,z,rx,rz,planted] of [[-1.22,-.28,.73,.48,false],[2.07,2.57,.69,.43,false],[2.9,3.0,.8,.4,true]]){
-    const terrainY=groundAt(x,z);if(terrainY===null)continue;const y=terrainY+.01;
-    const bed=add(new THREE.CylinderGeometry(1,1,.05,24),soil,g,[x,y,z]);bed.scale.set(rx,1,rz);
-    const edge=add(new THREE.TorusGeometry(1,.037,7,28),rim,g,[x,y+.035,z]);edge.rotation.x=Math.PI/2;edge.scale.set(rx,rz,1);
-    if(planted)for(let i=0;i<6;i++){
-      const px=x+(i-2.5)*.23;
-      beam(g,[px,y+.025,z],[px,y+.32,z],.013,moss,5);
-      ball(g,[px,y+.35,z],[.075,.1,.07],flower[i%3],1);
-    }
+  // A single planted bed sits in the open meadow south of the pavilion.
+  const planter=new THREE.Group();
+  planter.name='Meadow flower bed';
+  g.add(planter);
+  const x=3.1,z=4.05,rx=.66,rz=.32,segments=36;
+  const edgeGround=Array.from({length:segments},(_,i)=>{
+    const a=i*2*Math.PI/segments,px=x+Math.cos(a)*rx,pz=z+Math.sin(a)*rz;
+    return [px,groundAt(px,pz),pz];
+  });
+  const soilY=Math.max(groundAt(x,z),...edgeGround.map(([,y])=>y))+.045;
+  const bed=add(new THREE.CircleGeometry(1,segments),material(C.soil),planter,[x,soilY,z]);
+  bed.rotation.x=-Math.PI/2;
+  bed.scale.set(rx,rz,1);
+  bed.userData.navSurface='planting_bed';
+
+  const clay=material(C.terracotta,{side:THREE.DoubleSide});
+  const wall=[],indices=[];
+  for(const [i,[px,py,pz]] of edgeGround.entries()){
+    wall.push(px,py-.025,pz,px,soilY,pz);
+    const j=i*2,next=(j+2)%(segments*2);
+    indices.push(j,j+1,next,j+1,next+1,next);
+  }
+  const wallGeometry=new THREE.BufferGeometry();
+  wallGeometry.setAttribute('position',new THREE.Float32BufferAttribute(wall,3));
+  wallGeometry.setIndex(indices);
+  wallGeometry.computeVertexNormals();
+  add(wallGeometry,clay,planter);
+  const lip=add(new THREE.TorusGeometry(1,.035,8,segments),clay,planter,[x,soilY,z]);
+  lip.rotation.x=Math.PI/2;
+  lip.scale.set(rx,rz,.54);
+
+  const flowers=[[-.43,.025,.15,0],[-.23,-.115,.23,1],[-.155,.14,.13,0],
+    [.015,-.017,.28,2],[.23,.11,.19,1],[.42,-.07,.22,0]];
+  for(const [i,[dx,dz,height,color]] of flowers.entries()){
+    const px=x+dx,pz=z+dz,lean=i%2?.024:-.023;
+    const tip=[px+lean,soilY+height,pz+.012];
+    beam(planter,[px,soilY-.009,pz],tip,.011,moss,6);
+    const leaf=ball(planter,[px-lean,soilY+height*.43,pz+.018],[.054,.025,.034],moss,1);
+    leaf.rotation.z=i%2?-.49:.52;
+    const r=.049+.008*(i%3);
+    ball(planter,[tip[0],tip[1]+.028,tip[2]],[r,r*1.13,r*.9],flower[color],1);
   }
 
   // Vines are attached to the greenhouse walls, with their roots at its raised base.

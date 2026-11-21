@@ -1,21 +1,23 @@
 import * as THREE from '../three.module.min.js';
-import {createTerrain as spiralTerrain} from './spiral/terrain.js';
+import {createTerrain as spiralTerrain,spiralRim} from './spiral/terrain.js';
 import {createArchitecture as spiralArchitecture,pavilion} from './spiral/architecture.js';
 import {createWater as spiralWater,pondRadius,pondTerrainHeight,waterSurfaceY as spiralWaterY} from './spiral/water.js';
 import {createVegetation as spiralVegetation,treeColliders} from './spiral/vegetation.js';
-import {insideIsland,islandPolygonPoint,groundHeight} from './spiral/common.js';
-import {createTerrain as verdantTerrain} from './verdant/terrain.js';
+import {islandPolygonPoint} from './spiral/common.js';
+import {createTerrain as verdantTerrain,verdantRim} from './verdant/terrain.js';
 import {createArchitecture as verdantArchitecture} from './verdant/architecture.js';
 import {createWater as verdantWater,inWater as inVerdantWater,waterY as verdantWaterY} from './verdant/water.js';
 import {createVegetation as verdantVegetation,trunks} from './verdant/vegetation.js';
 import {createInstallations as verdantInstallations} from './verdant/installations.js';
-import {inside as insideVerdant,perimeter,ground as verdantGround} from './verdant/common.js';
-import {createTerrain as pinwheelTerrain,terrainHeight} from './pinwheel/terrain.js';
+import {ground as verdantGround,perimeter} from './verdant/common.js';
+import {createTerrain as pinwheelTerrain,terrainHeight,pinwheelRim} from './pinwheel/terrain.js';
 import {createArchitecture as pinwheelArchitecture} from './pinwheel/architecture.js';
 import {createWater as pinwheelWater,inWater as inPinwheelWater,pools as pinwheelPools,poolRadius as pinwheelPoolRadius,waterLevel as pinwheelWaterLevel} from './pinwheel/water.js';
 import {createVegetation as pinwheelVegetation,colliders} from './pinwheel/vegetation.js';
 import {createInstallations as pinwheelInstallations} from './pinwheel/installations.js';
-import {inside as insidePinwheel,edge} from './pinwheel/common.js';
+import {edge} from './pinwheel/common.js';
+import {containsPoint} from './meadow.js';
+import {addMeadowPlants} from './meadow-plants.js';
 
 export const ISLANDS={
   spiral:{name:'Spiral Harbor',theme:'Health, Wellbeing & Accessibility'},
@@ -29,6 +31,12 @@ const landings={
   pinwheel:[[-4.75,-.05,-1,.96],[4.55,.05,1,.96]]
 };
 
+const rims={
+  spiral:[spiralRim,120,angle=>islandPolygonPoint(angle).toArray()],
+  verdant:[verdantRim,36,perimeter],
+  pinwheel:[pinwheelRim,48,edge]
+};
+
 function tag(mesh,kind){mesh.userData.navSurface=kind}
 
 /**
@@ -40,14 +48,21 @@ export function createIsland(id,{position=[0,0,0],rotationY=0,scale=1}={}){
   if(!ISLANDS[id])throw new Error(`Unknown island: ${id}`);
   if(!(scale>0))throw new Error('Island scale must be positive');
   const group=new THREE.Group();group.name=`CHI 2027 / ${ISLANDS[id].name}`;
-  const walkables=[];let water,kinetic,inside,wet,waterHeight,baseHeight,obstacles=[],architecture;
+  const walkables=[];let water,kinetic,wet,waterHeight,baseHeight,obstacles=[],architecture,vegetation;
+  const [rim,rimSegments,originalRim]=rims[id];
+  const outline=Array.from({length:rimSegments},(_,i)=>rim(i*2*Math.PI/rimSegments));
 
   if(id==='spiral'){
     treeColliders.length=0;
     const terrain=spiralTerrain(group);walkables.push(terrain.userData.surface);
-    architecture=spiralArchitecture(group);walkables.push(...architecture.walkables);
-    water=spiralWater(group);walkables.push(...water.walkables);spiralVegetation(group,terrain.userData.surface);
-    inside=insideIsland;wet=(x,z,pad)=>pondRadius(x,z)<1.035+pad/1.36;
+    architecture=spiralArchitecture(group,terrain.userData.surface);walkables.push(...architecture.walkables);
+    water=spiralWater(group,terrain.userData.surface);walkables.push(...water.walkables);
+    // Keep edge planting on the same ground it used before the meadow extension.
+    const groundMesh=terrain.userData.surface;
+    groundMesh.geometry.setDrawRange(0,terrain.userData.originalTerrainIndexCount);
+    vegetation=spiralVegetation(group,groundMesh);
+    groundMesh.geometry.setDrawRange(0,Infinity);
+    wet=(x,z,pad)=>pondRadius(x,z)<1.035+pad/1.36;
     waterHeight=()=>spiralWaterY;baseHeight=pondTerrainHeight;
     obstacles=treeColliders.map(o=>({type:'circle',kind:'tree',x:o.x,z:o.z,r:o.r}));
     tag(walkables[0],'terrain',id);tag(walkables[1],'pavilion_floor',id);tag(walkables[2],'ramp',id);
@@ -58,23 +73,19 @@ export function createIsland(id,{position=[0,0,0],rotationY=0,scale=1}={}){
   }else if(id==='verdant'){
     trunks.length=0;
     const terrain=verdantTerrain(group,walkables);architecture=verdantArchitecture(group,walkables);
-    water=verdantWater(group);verdantVegetation(group,terrain.userData.surface);
+    water=verdantWater(group,terrain.userData.surface);vegetation=verdantVegetation(group,terrain.userData.surface,outline);
     kinetic=verdantInstallations(group,walkables);
-    inside=insideVerdant;wet=(x,z,pad)=>inVerdantWater(x,z,pad);
-    waterHeight=()=>verdantWaterY+.018;baseHeight=verdantGround;
+    wet=(x,z,pad)=>inVerdantWater(x,z,pad);
+    waterHeight=()=>verdantWaterY;baseHeight=verdantGround;
     obstacles=trunks.map(o=>({type:'circle',kind:'tree',x:o.x,z:o.z,r:o.r}));
     obstacles.push({type:'greenhouse_walls',x:.4,z:.55,halfWidth:1.66,halfDepth:1.39,doorHalfWidth:.48});
-    tag(walkables[0],'terrain',id);tag(walkables[1],'terrace',id);tag(walkables[2],'terrace',id);
-    tag(walkables[3],'greenhouse_floor',id);
-    for(let i=4;i<7;i++)tag(walkables[i],'raised_walkway',id);
-    for(let i=7;i<9;i++)tag(walkables[i],'bridge_landing',id);
-    tag(walkables[9],'pavilion_deck',id);
+    tag(walkables.at(-1),'pavilion_deck',id);
   }else{
     colliders.length=0;
     const terrain=pinwheelTerrain(group,walkables);architecture=pinwheelArchitecture(group,walkables);
-    water=pinwheelWater(group);pinwheelVegetation(group,terrain.userData.surface);
+    water=pinwheelWater(group,terrain.userData.surface);vegetation=pinwheelVegetation(group,terrain.userData.surface);
     kinetic=pinwheelInstallations(group);
-    inside=insidePinwheel;wet=(x,z,pad)=>inPinwheelWater(x,z,pad);
+    wet=(x,z,pad)=>inPinwheelWater(x,z,pad);
     waterHeight=(x,z)=>pinwheelWaterLevel(pinwheelPools.reduce((best,p)=>pinwheelPoolRadius(p,x,z)<pinwheelPoolRadius(best,x,z)?p:best));baseHeight=terrainHeight;
     obstacles=colliders.map(o=>({type:'circle',kind:'tree',x:o.x,z:o.z,r:o.r}));
     obstacles.push({type:'circle',kind:'pinwheel_mast',x:0,z:0,r:.38});
@@ -84,8 +95,14 @@ export function createIsland(id,{position=[0,0,0],rotationY=0,scale=1}={}){
     for(let i=11;i<13;i++)tag(walkables[i],'bridge_landing',id);
   }
 
+  // Append low planting surfaces after the indexed route tags above.
+  for (const part of [architecture?.group, vegetation]) part?.traverse(object => {
+    if (object.isMesh && object.userData.navSurface && !walkables.includes(object)) walkables.push(object);
+  });
   // Stable names let a GLB loader match navigation JSON regardless of creation order.
   walkables.forEach((object,index)=>{object.name=`NAV_${id}_${object.userData.navSurface}_${index}`});
+  const innerOutline=Array.from({length:rimSegments},(_,i)=>originalRim(i*2*Math.PI/rimSegments));
+  addMeadowPlants(id,group,walkables[0],innerOutline,outline,wet);
   group.position.set(...position);group.rotation.y=rotationY;group.scale.setScalar(scale);
   group.updateMatrixWorld(true);
   const ray=new THREE.Raycaster();
@@ -104,13 +121,13 @@ export function createIsland(id,{position=[0,0,0],rotationY=0,scale=1}={}){
       surfaceType:hit.object.userData.navSurface||'terrain',mesh:hit.object};
   }
   function blockedReason(x,z,radius=.22){
-    if(!inside(x,z,radius))return 'island_boundary';
+    if(!containsPoint(outline,x,z,radius))return 'island_boundary';
     for(const o of obstacles){
       if(o.type==='circle'&&Math.hypot(x-o.x,z-o.z)<o.r+radius)return o.kind;
       if(o.type==='greenhouse_walls'){
         const dx=Math.abs(x-o.x),dz=Math.abs(z-o.z);
         if(dx>1.35-radius&&dx<1.73+radius&&dz<1.31+radius)return 'greenhouse_wall';
-        if(dz>1.29-radius&&dz<1.53+radius&&dx>.48-radius&&dx<1.67+radius)return 'greenhouse_wall';
+        if(dz>1.37-radius&&dz<1.41+radius&&dx>.48-radius&&dx<1.67+radius)return 'greenhouse_wall';
       }
     }
     return null;
@@ -131,12 +148,11 @@ export function createIsland(id,{position=[0,0,0],rotationY=0,scale=1}={}){
     const q=query(x,z,{radius:0});const p=toWorld(x,q.height,z),d=new THREE.Vector3(out,0,0).transformDirection(group.matrixWorld);
     return {id:`${id}-${i?'east':'west'}`,local:[x,q.height,z],world:p.toArray(),outward:d.toArray(),width:width*scale};
   })}
-  function boundary(){const n=id==='spiral'?120:id==='verdant'?36:48;return Array.from({length:n},(_,i)=>{
-    const a=i*2*Math.PI/n,p=id==='spiral'?islandPolygonPoint(a):id==='verdant'?perimeter(a):edge(a);
-    return id==='spiral'?[p.x,p.y]:p;
-  })}
+  function boundary(){return outline.map(point=>point.slice())}
   function navigationManifest({cellSize=.16}={}){
-    const extent={minX:-7,maxX:7,minZ:-5.5,maxZ:5.5};
+    const xs=outline.map(([x])=>x),zs=outline.map(([,z])=>z);
+    const extent={minX:Math.floor(Math.min(-7,...xs)),maxX:Math.ceil(Math.max(7,...xs)),
+      minZ:Math.floor(Math.min(-5.5,...zs)),maxZ:Math.ceil(Math.max(5.5,...zs))};
     const width=Math.floor((extent.maxX-extent.minX)/cellSize)+1,depth=Math.floor((extent.maxZ-extent.minZ)/cellSize)+1;
     const waterMask=[];for(let j=0;j<depth;j++){let row='';for(let i=0;i<width;i++)row+=wet(extent.minX+i*cellSize,extent.minZ+j*cellSize,0)?'1':'0';waterMask.push(row)}
     return {id,name:ISLANDS[id].name,units:'Three.js units',upAxis:'Y',boundaryXZ:boundary(),

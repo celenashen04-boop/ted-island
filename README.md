@@ -31,6 +31,12 @@ Island GLB files can be attached to the kit for handoff. Optional 2D thumbnails 
 
 Both views use the animated, procedural models from the [CHI 2027 island kit](https://github.com/RayZiruiLiu/chi-2027-code-native-islands/tree/3445ee91011e588c3980329eb25573a6505b84f6). Spiral Harbor is Health & Wellbeing, Verdant Springs is Sustainability, and Pinwheel Island is Games & Play. The models' navigation data sets walkable surfaces, planting ground, and bridge landings. The model renderer requires WebGL 2.
 
+The production site and studio now build the islands from the same reviewed source under `public/island-kit/source/`. See the [integration notes and change history](docs/island-integration.md) for what was brought back from the Studio and where it connects to the game.
+
+## Island Studio
+
+Open [Island Studio](https://ted-island.vercel.app/studios) to inspect one island at a time in orbit or on foot. For local source editing, run `node studio-server.mjs` and open [the standalone studio](http://127.0.0.1:4174/studios). See the [Island Studio editing guide](docs/island-studio.md).
+
 ## Design references
 
 - [Growth and bridges](docs/growth-and-bridges.html) shows the five acorn oak stages, bridge design studies, and an interactive crossing. Open the HTML in a browser.

@@ -1,22 +1,19 @@
 import * as THREE from '../../three.module.min.js';
 import {P,mat,mesh} from './common.js';
+import {shorelineVertices} from '../shoreline.js';
 export const pools=[{x:1.26,z:-3.14,rx:.88,rz:.58},{x:-3.75,z:-.67,rx:.58,rz:.46}];
 export function inWater(x,z,pad=.03){return pools.some(p=>poolRadius(p,x,z)<1.09+pad/Math.min(p.rx,p.rz))}
 // Both the pond mesh and its basin use the same irregular boundary.
 export function poolRadius(p,x,z){const dx=(x-p.x)/p.rx,dz=(z-p.z)/p.rz,a=Math.atan2(dz,dx);return Math.hypot(dx,dz)/(1+.065*Math.sin(5*a+.5))}
 // Set each waterline below the lowest natural meadow height along its shore.
 export function waterLevel(p){return p.x>0?.095:.18}
-export function createWater(scene){
+export function createWater(scene,terrain){
   const g=new THREE.Group();g.name='Shallow playful pools';scene.add(g);
   const water=mat(P.water,{roughness:.13,metalness:.03,transparent:true,opacity:.91,side:THREE.DoubleSide,depthWrite:false});
   for(const p of pools){
-    const N=96,v=[p.x,waterLevel(p),p.z],ix=[];
-    for(let i=0;i<N;i++){
-      const a=i*2*Math.PI/N,r=1.2*(1+.065*Math.sin(5*a+.5));
-      v.push(p.x+Math.cos(a)*p.rx*r,waterLevel(p),p.z+Math.sin(a)*p.rz*r);
-      ix.push(0,i+1,(i+1)%N+1);
-    }
-    const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(v,3));geo.setIndex(ix);geo.computeVertexNormals();
+    const v=shorelineVertices(terrain,waterLevel(p),(x,z)=>poolRadius(p,x,z)-1.22);
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.Float32BufferAttribute(v,3));geo.computeVertexNormals();
     mesh(geo,water,g).userData.isWater=true;
     if(p.x>0){
       // A small, grounded pebble trail makes the shallow pond a place to play.

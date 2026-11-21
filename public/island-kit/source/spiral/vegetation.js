@@ -6,7 +6,7 @@ import {pavilion} from './architecture.js';
 export const treeColliders=[];
 const rand=seeded(2027);
 export function createVegetation(scene,surface){
-  const g=new THREE.Group();g.name='Flowering and green gardens';scene.add(g);
+  const g=new THREE.Group();g.name='Flowering and green gardens';g.userData.nonBlockingVegetation=true;scene.add(g);
   const ray=new THREE.Raycaster(),down=new THREE.Vector3(0,-1,0);
   function groundAt(x,z){ray.set(new THREE.Vector3(x,10,z),down);const hit=ray.intersectObject(surface,false)[0];return hit?hit.point.y:null}
   function anchoredRoot(x,z){for(let i=0;i<=30;i++){const factor=1-i*.018,px=x*factor,pz=z*factor,y=groundAt(px,pz);if(y!==null&&insideIsland(px,pz,.36))return [px,pz,y]}return null}
@@ -36,7 +36,7 @@ export function createVegetation(scene,surface){
   // Two open research planting beds: subtle soil fields with tiny edge markers.
   const soil=mat(0xb9aa85),rim=mat(0xe6d7ad);
   for(const [x,z,rx,rz] of [[-.05,-1.55,.68,.42],[1.34,1.15,.66,.44]]){
-    const terrainY=groundAt(x,z);if(terrainY===null)continue;const y=terrainY+.01;const bed=mesh(new THREE.CylinderGeometry(1,1,.045,24),soil,g,[x,y,z]);bed.scale.set(rx,1,rz);
+    const terrainY=groundAt(x,z);if(terrainY===null)continue;const y=terrainY+.01;const bed=mesh(new THREE.CylinderGeometry(1,1,.045,24),soil,g,[x,y,z]);bed.scale.set(rx,1,rz);bed.userData.navSurface='planting_bed';
     const edge=mesh(new THREE.TorusGeometry(1,.025,6,28),rim,g,[x,y+.035,z]);edge.rotation.x=Math.PI/2;edge.scale.set(rx,rz,1);
     for(const a of [.5,2.7,4.8]){const fx=x+Math.cos(a)*rx*.72,fz=z+Math.sin(a)*rz*.72;cylinderBetween([fx,y+.022,fz],[fx,y+.2,fz],.014,green[0],g,5);sphere(fx,y+.22,fz,.045,.045,.045,flower[1],g,7)}
   }

@@ -2,6 +2,10 @@ import * as THREE from '../../three.module.min.js';
 import {P,mat,mesh,edge,height} from './common.js';
 import {createGeology} from './geology.js';
 import {pools,poolRadius,waterLevel} from './water.js';
+import {meadowOutline,meadowRows,meadowSample} from '../meadow.js';
+import {refineShoreline} from '../shoreline.js';
+
+export const pinwheelRim=meadowOutline(edge);
 
 export function terrainHeight(x,z){
   let y=height(x,z);
@@ -30,27 +34,32 @@ function sandBlend(x,z){
 export function createTerrain(scene,walkables){
   const g=new THREE.Group();g.name='Four headlands and hanging geology';scene.add(g);
   const N=192,R=32,v=[],ix=[],colors=[];
-  for(let j=0;j<=R;j++)for(let i=0;i<N;i++){
+  for(let j=0;j<=R+meadowRows;j++)for(let i=0;i<N;i++){
     const sector=Math.floor(i/4),t=(i%4)/4;
-    const p0=edge(sector*2*Math.PI/48,j/R),p1=edge((sector+1)*2*Math.PI/48,j/R);
+    const sample=angle=>j<=R?edge(angle,j/R):meadowSample(angle,j-R,edge,pinwheelRim);
+    const p0=sample(sector*2*Math.PI/48),p1=sample((sector+1)*2*Math.PI/48);
     const x=p0[0]*(1-t)+p1[0]*t,z=p0[1]*(1-t)+p1[1]*t;
-    const y=j===R?terrainHeight(p0[0],p0[1])*(1-t)+terrainHeight(p1[0],p1[1])*t:terrainHeight(x,z);
+    const y=j>=R?terrainHeight(p0[0],p0[1])*(1-t)+terrainHeight(p1[0],p1[1])*t:terrainHeight(x,z);
     v.push(x,y,z);
-    const c=new THREE.Color(P.mintLight).lerp(new THREE.Color(P.mint),j/R*.78);
+    const c=new THREE.Color(P.mintLight).lerp(new THREE.Color(P.mint),Math.min(j/R,1)*.78);
     c.multiplyScalar(.99+.025*Math.sin(i*.18+j*.41));
     c.lerp(new THREE.Color(P.sand),sandBlend(x,z));colors.push(c.r,c.g,c.b);
   }
-  for(let j=0;j<R;j++)for(let i=0;i<N;i++){
+  for(let j=0;j<R+meadowRows;j++)for(let i=0;i<N;i++){
     const a=j*N+i,b=j*N+(i+1)%N,c=(j+1)*N+i,d=(j+1)*N+(i+1)%N;
     ix.push(a,c,d,a,d,b);
   }
+  const rim=Array.from({length:N},(_,i)=>(R+meadowRows)*N+i);
+  const nearPool=(x,z)=>Math.min(...pools.map(pool=>
+    Math.abs(poolRadius(pool,x,z)-1.073)*Math.min(pool.rx,pool.rz)));
+  const triangles=refineShoreline(v,colors,ix,rim,terrainHeight,nearPool,{maxEdge:.032,reach:.050,passes:4});
   const top=new THREE.BufferGeometry();top.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
-  top.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));top.setIndex(ix);top.computeVertexNormals();
+  top.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));top.setIndex(triangles);top.computeVertexNormals();
   const surface=mesh(top,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide}),g);
   walkables.push(surface);g.userData.surface=surface;
 
   createGeology(g,{
-    outline:edge,topHeight:terrainHeight,segments:48,phase:2.28,
+    outline:pinwheelRim,topHeight:terrainHeight,segments:48,phase:2.28,
     colors:[P.rock,0xcbc1af,0xb0b2a6,0xa2a99d,0xb9b1a4],
     outcrops:[[5.52,.72,-1.48,.81,.56,.66,1],[.25,.69,-1.8,.71,.48,.6,2],[3.11,.54,-2.73,.79,.51,.65,4]],
     satellite:[5.95,1.12,-1.55,.31,2]
