@@ -317,6 +317,14 @@ Celena's agent is rewriting `index.html`, `app.mjs`, and `style.css` for the v2 
 - **Celena:** the Island Access panel (`public/ui/access-panel.mjs`) needs, for the signed-in player, one record per island: `{ islandId, isHome, expiresAt (ms or null if never opened), maturity: { mature, total } }`. It computes hours, labels, and the 120 h ring itself, and re-renders every 30 s while open. `onVisit(id)` should turn the view toward that bridge; `onUnlock(id)` should open the catalog filtered to that island. (Added Nov 22, Phase 3.)
 - **Team (Cassius raising it):** "Not open yet" is new copy for an island the player has never unlocked (Island Access card and row). (Added Nov 22.)
 - **Team:** the confirmed ID reveal copy contains an em dash ("Save this ID — you'll need it"). Cassius may want "Save this ID. You'll need it to log back in." Raise it in the chat; don't change it on your own.
+- **Celena:** the notification panel (`public/ui/notifications.mjs`) needs a list of `{ id, type: 'reply' | 'comment' | 'access' | 'thirsty', island, at (ms), unread, plant?, quote?, hoursLeft?, idleDays? }` and whether the player has an email. `update(items)` returns the unread count for `bell.setUnread()`. `onSelect(item)` should open the plant, or Island Access for `access`. Marking an item read on the server is hers. (Added Nov 22, Phase 5.)
+- **Celena:** `public/ui/email-notification.html` is the email template, with `{{placeholders}}` listed in its header comment. Every value must be HTML-escaped on the server. (Added Nov 22, Phase 5.)
+- **Celena:** in-world pieces in `public/ui/world-feedback.mjs` (View idea pill, dormant label, landing markers, edge and locked prompts, water and nourish feedback) are DOM elements. The game positions them over the canvas from projected world positions. (Added Nov 22, Phase 5.)
+- **Team (Cassius to check):** new Phase 5 copy that is not in Figma:
+  - "New comment on your seed": the fourth notification type.
+  - "+1 nourish · {island} access until {time}".
+  - The comment and access email subjects and leads, listed in the template's header comment.
+  (Added Nov 22, Phase 5.)
 
 ---
 

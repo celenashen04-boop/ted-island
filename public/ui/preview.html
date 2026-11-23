@@ -163,6 +163,8 @@
       <li><a href="#access">Island Access</a></li>
       <li><a href="#onboarding">Onboarding</a></li>
       <li><a href="#tutorial">Tutorial</a></li>
+      <li><a href="#notifications">Notifications</a></li>
+      <li><a href="#world">In-world feedback</a></li>
       <li><a href="#motion">Motion</a></li>
     </ul>
   </header>
@@ -708,6 +710,90 @@
       </div>
       <p class="g-note">Fix against Figma: in steps 4 and 6 the card runs past the bottom of the 390 px screen. The code keeps every card at least 16 px inside the edges. Step 1 says "Drag the left pad"; on desktop, where movement is W A S D, that copy may need a keyboard variant.</p>
       <p class="g-note">Other differences: the Figma tutorial frames show the menu button black (the Active variant), while Player View Default (20:3) shows it white; the code keeps the Player View button. Card placement follows each frame: steps 1 to 3 sit beside their control, step 4 is top-aligned to the right of the landing spot, step 5 sits up and to the left of the plant with the stage strip under it, and step 6 sits below and to the right of the bridge.</p>
+    </section>
+
+    <!-- Phase 5 · Notifications -->
+    <section id="notifications" aria-labelledby="notes-title">
+      <header><h2 id="notes-title" class="t-heading-l">Notifications</h2><span class="t-label-s">Phase 5 · notifications.mjs · email-notification.html</span></header>
+      <p>The bell opens a right-side list (21:996). Unread rows have a black tab and a hidden "Unread" label; selecting a row marks it read and hands the item to the game, which opens the plant or Island Access. The bell's count follows the list.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Live · tap the bell</span>
+        <div class="g-hud-controls">
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-notes="list"><span class="ui-btn__label">List</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-notes="empty"><span class="ui-btn__label">Empty, no email</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-notes="empty-email"><span class="ui-btn__label">Empty, has email</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-notes="arrive"><span class="ui-btn__label">New notification</span></button>
+          <span class="t-label-s" id="notes-log" aria-live="polite"></span>
+        </div>
+        <div class="g-hud-scroll">
+          <div class="g-hud" id="notes-frame">
+            <div class="g-hud-tl">
+              <button type="button" class="ui-icon-btn" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+              <div class="ui-island-chip ui-island-health">
+                <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+                <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+                <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
+              </div>
+            </div>
+            <div class="g-joystick" aria-hidden="true"><i></i></div>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus g-hud-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
+          </div>
+        </div>
+      </div>
+      <div class="g-compare" style="margin-top:16px">
+        <div class="g-panel"><span class="t-label-s">Figma · List 21:1107</span><div class="g-ref"><img src="figma-ref/notif-list.png" alt="Figma notification list panel." width="440" height="390"></div></div>
+        <div class="g-panel"><span class="t-label-s">Figma · Empty 21:1277</span><div class="g-ref"><img src="figma-ref/notif-empty.png" alt="Figma empty notifications panel." width="440" height="390"></div></div>
+      </div>
+      <p class="g-note">Figma shows three row types (Reply, Access ending, Thirsty tree). The fourth type from the v2 docs, a comment on your seed, has no Figma variant: it uses the nourish icon (a comment nourishes a plant) and new copy, "New comment on your seed". When the player already has an email, the empty state drops "Add an email to get them after CHI too." and the Add email button. Rows fill the panel width; Figma draws them 10 px short of the header rule.</p>
+
+      <h3 class="t-heading-m" style="margin:32px 0 8px">Email</h3>
+      <p class="g-sub">21:1302. Table layout with inline styles, no images or scripts, so it holds up in Gmail, Apple Mail and Outlook. Placeholders are listed at the top of the file; here they are filled with the Figma sample.</p>
+      <div class="g-compare">
+        <div class="g-panel"><span class="t-label-s">Code · email-notification.html</span><div class="g-ref"><iframe id="email-frame" title="Notification email preview" style="display:block;width:600px;max-width:100%;height:560px;border:0;background:#F4F4F1"></iframe></div></div>
+        <div class="g-panel"><span class="t-label-s">Figma · Email body 21:1303</span><div class="g-ref"><img src="figma-ref/email.png" alt="Figma notification email." width="520" height="458" style="max-width:100%;height:auto"></div></div>
+      </div>
+      <p class="g-note">Differences from Figma: Figma's rule accent is Health red and its quote bar is Sustainability green on a Health plant; the template uses the plant's island hue for both. Unsubscribe and Email preferences are underlined so they read as links without relying on color. Subjects and leads for the comment and access emails are proposed in the file's header comment and need Cassius's check.</p>
+    </section>
+
+    <!-- Phase 5 · In-world feedback -->
+    <section id="world" aria-labelledby="world-title">
+      <header><h2 id="world-title" class="t-heading-l">In-world prompts and feedback</h2><span class="t-label-s">Phase 5 · world-feedback.mjs · Player View 20:437 to 20:1355</span></header>
+      <p>Pieces the game places over the 3D scene at a projected position. Pick a state; the Figma frame below switches to match.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Live</span>
+        <div class="g-hud-controls">
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-world="view"><span class="ui-btn__label">View idea</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-world="valid"><span class="ui-btn__label">Landing valid</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-world="invalid"><span class="ui-btn__label">Landing invalid</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-world="failed"><span class="ui-btn__label">Failed throw</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-world="edge"><span class="ui-btn__label">Edge</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-world="locked"><span class="ui-btn__label">Locked bridge</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-world="water"><span class="ui-btn__label">Water</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-world="nourish"><span class="ui-btn__label">Nourish</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-world="dormant"><span class="ui-btn__label">Dormant</span></button>
+          <span class="t-label-s" id="world-log" aria-live="polite"></span>
+        </div>
+        <div class="g-hud-scroll">
+          <div class="g-hud" id="world-frame">
+            <div class="g-hud-tl">
+              <button type="button" class="ui-icon-btn" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+              <div class="ui-island-chip ui-island-health">
+                <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+                <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+                <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
+              </div>
+            </div>
+            <div class="g-joystick" aria-hidden="true"><i></i></div>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus g-hud-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
+            <img class="g-hud-reticle" id="world-reticle" src="icons/reticle.svg" alt="" width="28" height="28">
+          </div>
+        </div>
+      </div>
+      <div class="g-panel" style="margin-top:16px">
+        <span class="t-label-s" id="world-ref-label">Figma</span>
+        <div class="g-ref"><img id="world-ref" src="figma-ref/player-default.png" alt="Figma Player View frame for comparison." width="844" height="390" style="max-width:100%;height:auto"></div>
+      </div>
+      <p class="g-note">Copy: water feedback uses the confirmed "+1 water · Sustainability access until Tue 3 p.m."; nourish follows the same pattern ("+1 nourish · ...") as new copy. The locked prompt keeps the confirmed copy without the final period that Figma adds. The failed-throw marker is a button (tap or Enter retries); the other markers are status messages for screen readers.</p>
     </section>
 
     <!-- Motion -->
@@ -1341,6 +1427,98 @@
     frame.append(tut.element);
     document.querySelector('[data-tut="start"]').addEventListener('click', () => tut.start());
     document.querySelectorAll('[data-tut]:not([data-tut="start"])').forEach(b => b.addEventListener('click', () => tut.start(Number(b.dataset.tut))));
+  </script>
+  <script type="module">
+    // Phase 5: notifications, email, in-world feedback.
+    import { createNotificationPanel } from './notifications.mjs';
+    import { createTopRight } from './hud.mjs';
+    import { toastRegion, accessToast } from './toast.mjs';
+    import { createViewIdeaPill, createLandingMarker, createEdgePrompt, createLockedPrompt, createActionFeedback } from './world-feedback.mjs';
+
+    const min = 60000, hour = 60 * min;
+    const sample = () => [
+      { id: 'n1', type: 'reply', island: 0, plant: 'Haptics for calm breathing', quote: 'Could this work for group breathing?', at: Date.now() - 2 * min, unread: true },
+      { id: 'n2', type: 'access', island: 1, hoursLeft: 6, at: Date.now() - 5 * hour, unread: true },
+      { id: 'n3', type: 'thirsty', island: 2, plant: 'Play as research', idleDays: 12, at: Date.now() - 26 * hour, unread: false },
+    ];
+
+    // Notifications over a live HUD
+    const nframe = document.getElementById('notes-frame');
+    const nlog = document.getElementById('notes-log');
+    let hasEmail = false;
+    const notes = createNotificationPanel({
+      contained: true,
+      items: sample(),
+      onSelect: item => { nlog.textContent = item.type === 'access' ? 'Open Island Access' : `Open plant: ${item.plant}`; hud.bell.setUnread(notes.unread); },
+      onAddEmail: () => { nlog.textContent = 'Open menu: Email and reminders'; },
+    });
+    const hud = createTopRight({ playerId: 'Mossy-Fern-4821', unread: notes.unread, onNotifications: () => notes.open() });
+    nframe.append(hud.element, notes.layer);
+    const setItems = (items, email = hasEmail) => { hasEmail = email; hud.bell.setUnread(notes.update(items, { email })); };
+    document.querySelectorAll('[data-notes]').forEach(b => b.addEventListener('click', () => {
+      const k = b.dataset.notes;
+      if (k === 'list') setItems(sample(), false);
+      if (k === 'empty') setItems([], false);
+      if (k === 'empty-email') setItems([], true);
+      if (k === 'arrive') {
+        const items = [{ id: `n${Date.now()}`, type: 'comment', island: 0, plant: 'Haptics for calm breathing', quote: 'We tried this with a vibrating wristband.', at: Date.now(), unread: true }, ...sample()];
+        hud.bell.setUnread(notes.update(items), { pulse: true });
+        nlog.textContent = 'New comment: the bell dot pulses';
+        return;
+      }
+      notes.open();
+    }));
+
+    // Email preview with the Figma sample
+    const fill = { subject: 'TIDAL-OAK-0193 replied to you', lead: 'TIDAL-OAK-0193 replied to your comment on Haptics for calm breathing.',
+      quote: 'We ran something similar with paced audio. Happy to compare notes.', island_hex: '#F05A3C', action_url: '#', action_label: 'Open the plant',
+      note: 'Replying keeps the conversation, and the plant, growing.', player_id: 'MOSSY-FERN-4821', unsubscribe_url: '#', preferences_url: '#' };
+    fetch('email-notification.html').then(r => r.text()).then(html => {
+      document.getElementById('email-frame').srcdoc = html.replace(/\{\{(\w+)\}\}/g, (m, k) => fill[k] ?? m);
+    });
+
+    // In-world states at the Figma positions
+    const wframe = document.getElementById('world-frame');
+    const wlog = document.getElementById('world-log');
+    const reticle = document.getElementById('world-reticle');
+    const region = toastRegion(wframe);
+    region.classList.add('ui-toast-region--contained');
+    wframe.append(createTopRight({ playerId: 'Mossy-Fern-4821', unread: 1 }).element);
+    const layer = document.createElement('div');
+    wframe.append(layer);
+    const place = (node, x, y) => { node.style.cssText += `;position:absolute;left:${x}px;top:${y}px`; layer.append(node); return node; };
+    const tue3pm = (() => { const d = new Date(); d.setDate(d.getDate() + ((9 - d.getDay()) % 7 || 7)); d.setHours(15, 0, 0, 0); return d; })();
+    const refs = {
+      view: ['player-default', 'Default 20:3'], valid: ['pv-landing-valid', 'Landing valid 20:437'], invalid: ['pv-landing-invalid', 'Landing invalid 20:555'],
+      failed: ['pv-failed', 'Failed throw 20:673'], edge: ['pv-edge', 'Edge prompt 20:962'], locked: ['pv-locked', 'Locked bridge 20:1086'],
+      water: ['pv-water', 'Water feedback 20:1223'], nourish: ['pv-water', 'Water feedback 20:1223 (nourish has no frame)'], dormant: ['pv-dormant', 'Dormant plant 20:1355'],
+    };
+    const pill = createViewIdeaPill({ onOpen: () => { wlog.textContent = 'Open plant'; } });
+    const marker = createLandingMarker('valid', { onRetry: () => { wlog.textContent = 'Retry: pick the acorn back up'; } });
+    function show(k) {
+      layer.replaceChildren();
+      wlog.textContent = '';
+      reticle.hidden = !['view', 'water', 'nourish', 'dormant'].includes(k);
+      if (k === 'view' || k === 'dormant') {
+        pill.hide();
+        pill.set(k === 'view' ? { stage: 'young', island: 0, title: 'Haptics for calm breathing' } : { dormant: true, island: 0, title: 'Play as research method' });
+        place(pill.element, 198, 198);
+      }
+      // Positions from each Figma frame (marker and label are centered on each other).
+      const at = { valid: [386, 251], invalid: [370, 151], failed: [340, 264] };
+      if (at[k]) { marker.set(k); place(marker.element, ...at[k]); }
+      if (k === 'edge') place(createEdgePrompt().element, 305, 240);
+      if (k === 'locked') place(createLockedPrompt({ island: 2, onUnlock: () => { wlog.textContent = 'Open Seed Catalog filtered to Games & Play'; } }).element, 276, 121);
+      if (k === 'water' || k === 'nourish') {
+        place(createActionFeedback({ kind: k, island: 1, until: tue3pm }).element, 249, 250);
+        accessToast(region, { island: 1, addedHours: 24, hoursLeft: 76 });
+      }
+      const [file, label] = refs[k];
+      document.getElementById('world-ref').src = `figma-ref/${file}.png`;
+      document.getElementById('world-ref-label').textContent = `Figma · ${label}`;
+    }
+    document.querySelectorAll('[data-world]').forEach(b => b.addEventListener('click', () => show(b.dataset.world)));
+    show('view');
   </script>
 </body>
 </html>

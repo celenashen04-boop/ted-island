@@ -18,7 +18,7 @@
 | 2 · HUD: menu, ID label, bell, toasts, tip | Done | `hud.mjs`, `menu.mjs`, `id-label.mjs`, `bell.mjs`, `toast.mjs`, `islands-ui.mjs` |
 | 3 · Island Access panel | Done | `access-ring.mjs`, `access-panel.mjs` (styles in `components.css`) |
 | 4 · Onboarding, rotate prompt, tutorial | Done and verified (Nov 22) | `onboarding.css`, `onboarding.mjs`, `fields.mjs`, `rotate-prompt.mjs`, `tutorial.mjs` |
-| 5 · Notifications and in-world feedback | In progress | |
+| 5 · Notifications and in-world feedback | Built and checked against Figma (Nov 22). Waiting on Cassius's review | `notifications.mjs`, `world-feedback.mjs`, `email-notification.html` (styles in `components.css`, `motion.css`) |
 | 6 · Restyle existing panels | Not started | |
 | 7 · Rendering mood | Not started (needs Cassius's approval and Ray) | |
 | 8 · Handoff doc `docs/ui-handoff.md` | Not started | |
@@ -35,6 +35,18 @@
   - The arrow keys, Escape, Replay and focus on each card title all work.
   - Reduced motion: no highlight draw-in, and the card only fades.
 - At 390 px there is no horizontal page scroll. Every control a player touches has a 44 px hit area; the small buttons get theirs from a pseudo-element.
+
+## Phase 5: what was built and checked
+
+- **Notification list and empty state** (21:996, 21:1166): live in the gallery at `#notifications`.
+  - The bell opens the panel, and selecting a row marks it read and updates the bell.
+  - The empty state drops the email line when the player already has an email.
+  - Checked: keyboard (Tab, Enter, Escape), focus on the selected row after it is rebuilt, and 83 px rows.
+- **Email** (21:1302): `email-notification.html`, built with tables and inline styles. The gallery fills it with the Figma sample.
+- **In-world pieces** (20:437 to 20:1355): live at `#world`, each state compared with its Figma frame.
+  - View idea pill, dormant label, valid, invalid and failed landing, edge prompt, locked bridge with Unlock access, water and nourish feedback with the access toast.
+  - The failed-throw marker is a button that retries.
+- **Not built:** scene effects (water ripple, nourish pulse) stay with Celena; they are in the Motion section.
 
 ## Decisions Cassius has made (keep them)
 

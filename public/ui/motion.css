@@ -293,6 +293,13 @@
   animation: ui-rise-in var(--motion-duration-base) var(--motion-ease-out) var(--motion-duration-grow) both;
 }
 
+/* ---------- In-world prompts and the View idea pill: rise in ----------
+   world-feedback.mjs replays these when a prompt or pill appears.
+   Under reduced motion the shift token is 0, so they only fade. */
+
+.ui-world-prompt.is-playing,
+.ui-pill.is-playing { animation: ui-rise-in var(--motion-duration-base) var(--motion-ease-out) both; }
+
 /* ---------- Reduced motion ----------
    Travel tokens are already 0 in tokens.css, so panels, menu, toasts and the
    tutorial card become plain fades. Here: no rotation, no decorative effects,

@@ -1,10 +1,11 @@
 // Island identity for UI components. Ids match public/islands.mjs.
 // Kept separate from islands.mjs so the UI kit has no game imports.
+// short is the one-word form used in small labels ("Young plant · Health").
 
 export const ISLAND_UI = [
-  { id: 0, key: 'health', name: 'Health & Wellbeing' },
-  { id: 1, key: 'sustainability', name: 'Sustainability' },
-  { id: 2, key: 'games', name: 'Games & Play' },
+  { id: 0, key: 'health', name: 'Health & Wellbeing', short: 'Health' },
+  { id: 1, key: 'sustainability', name: 'Sustainability', short: 'Sustainability' },
+  { id: 2, key: 'games', name: 'Games & Play', short: 'Games' },
 ];
 
 /** Island record by id, or the muted placeholder if unknown. */
