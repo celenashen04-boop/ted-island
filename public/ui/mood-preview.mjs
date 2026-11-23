@@ -177,7 +177,7 @@ function frame(now) {
   elapsed += delta;
   for (const model of models) model.update(delta, elapsed);
   renderer.render(scene, aim(width, height));
-  if (fpsOut && now - shownAt > 500) {
+  if (fpsOut && frames.length >= 30 && now - shownAt > 500) {
     shownAt = now;
     const recent = frames.slice(-60);
     const avg = recent.reduce((a, b) => a + b, 0) / (recent.length || 1);
