@@ -59,11 +59,11 @@ export function numeralText(state) {
   return String(state.hours).padStart(2, '0') + 'H';
 }
 
-/** "4 of 12 ideas mature · 33%" (card) or "4 of 12 mature · 33%" (row). Never 0%. */
-export function maturityText({ mature = 0, total = 0 } = {}, { compact = false } = {}) {
+/** Confirmed copy: "4 of 12 ideas mature (33%)", or "No ideas yet" (never 0%). Same on cards and rows. */
+export function maturityText({ mature = 0, total = 0 } = {}) {
   if (!total) return 'No ideas yet';
   const pct = Math.round((mature / total) * 100);
-  return `${mature} of ${total} ${compact ? '' : 'ideas '}mature · ${pct}%`;
+  return `${mature} of ${total} ideas mature (${pct}%)`;
 }
 
 /** "Nov 24 at 3:30 p.m." */
@@ -185,7 +185,7 @@ function build(data, { onVisit, onUnlock, onSelect }, size) {
 
     timeText.textContent = timeLabel(state);
     time.classList.toggle('is-alert', state.kind === 'alert');
-    maturity.textContent = maturityText(current.maturity, { compact: size === 'row' });
+    maturity.textContent = maturityText(current.maturity);
     homeNote.hidden = state.kind !== 'home' || size === 'row';
     visit.hidden = !active;
     unlock.hidden = !(state.kind === 'expired' || state.kind === 'never');

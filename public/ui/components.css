@@ -560,6 +560,8 @@
 .ui-access__rows { display: grid; gap: var(--space-8); }
 .ui-panel--access:not(.is-compact) .ui-access__rows,
 .ui-panel--access.is-compact .ui-access__cards,
+/* Phone panel leaves out the body line: with it the panel is 410 px on a
+   390 px screen (442 px with a row selected). Checked Nov 22. */
 .ui-panel--access.is-compact .ui-access__intro,
 .ui-panel--access.is-compact .ui-access__note { display: none; }
 .ui-access__empty { display: none; justify-items: start; gap: var(--space-12); }
