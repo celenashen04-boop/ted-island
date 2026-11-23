@@ -23,7 +23,9 @@ const server = createServer(async (request, response) => {
   let path = normalize(decodeURIComponent(new URL(request.url, 'http://localhost').pathname));
   if (path === '/' || path === '/ui' || path === '/ui/') path = '/ui/preview.html';
   const type = types[extname(path)];
-  if (request.method !== 'GET' || !path.startsWith('/ui/') || path.includes('..') || !type) {
+  // The mood preview (/ui/mood-preview.html) also reads Ray's island models, read-only.
+  const allowed = path.startsWith('/ui/') || path.startsWith('/island-kit/') || path === '/islands.mjs';
+  if (request.method !== 'GET' || !allowed || path.includes('..') || !type) {
     response.writeHead(404).end('Not found');
     return;
   }

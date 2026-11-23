@@ -327,6 +327,7 @@ Celena's agent is rewriting `index.html`, `app.mjs`, and `style.css` for the v2 
   - `world-labels.mjs` adds the island labels and legend over the World View map. The game positions them.
   (Added Nov 23, Phase 6.)
 - **Team (Cassius flagging it):** the comment and access email subjects and opening lines in `email-notification.html` are placeholders. Cassius approved them on Nov 23 and is checking them with the team. Nourish feedback is "+1 nutrient · {island} access until {time}" to match the Nutrients stat. (Added Nov 22, Phase 5; updated Nov 23.)
+- **Ray:** Phase 7 rendering mood. Three options (sky, fog, island tint, blob contact shadows) are in `public/ui/mood-preview.html`, with screenshots and frame cost in `docs/ui/phase7-mood/mood-options.png`. Cassius picks with Ray; nothing in `render.mjs` changes until then. Adopting one means `render.mjs` calls `createMood()` from `public/ui/mood.mjs` once, behind a flag. Also: the islands render at about 2,050 draw calls in Player View and 2,500 in World View before any mood is added, which is the main phone cost. Merging meshes per material, or instancing the repeated plants, would help more than any mood setting. Please test the preview on a real phone. (Added Nov 23, Phase 7.)
 
 ---
 
