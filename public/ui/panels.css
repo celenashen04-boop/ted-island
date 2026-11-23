@@ -233,3 +233,65 @@
 .ui-world-legend__open { width: 24px; height: 4px; flex: none; background: var(--color-island-sustainability); }
 .ui-world-legend__locked { display: block; flex: none; }
 .ui-world-legend__hint { color: var(--color-text-secondary); }
+
+/* ---------- Plant Row (30:273) · Followed plants (31:486) · Island plants (31:1150) ---------- */
+
+.ui-panel.ui-panel--followed, .ui-panel.ui-panel--email { width: min(440px, 100%); }
+.ui-panel.ui-panel--island-plants { width: min(560px, 100%); }
+.ui-panel--followed .ui-panel__body, .ui-panel--island-plants .ui-panel__body { gap: 10px; }
+
+.ui-plant-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.ui-plant-row {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ui-plant-row:hover { background: var(--color-bg-canvas); }
+.ui-plant-row:focus-visible { outline: 2px solid var(--color-border-default); outline-offset: 2px; }
+.ui-plant-row__tab { flex: none; width: 6px; }
+.ui-plant-row--new .ui-plant-row__tab { background: var(--color-bg-inverse); }
+.ui-plant-row__stage { flex: none; width: 48px; height: 48px; margin: var(--space-12) 0 var(--space-12) var(--space-12); align-self: center; }
+.ui-plant-row__text { display: grid; gap: 3px; flex: 1; min-width: 0; padding: var(--space-12); }
+.ui-plant-row__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 400 9px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.ui-plant-row__swatch { width: 8px; height: 8px; flex: none; background: var(--island); }
+.ui-plant-row__title, .ui-plant-row__status { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ui-plant-row__title { font: 600 15px/1.25 var(--font-sans); letter-spacing: -0.01em; }
+.ui-plant-row__status { font: 400 13px/1.45 var(--font-sans); color: var(--color-text-secondary); }
+.ui-plant-row--new .ui-plant-row__status { color: var(--color-text-primary); }
+.ui-plant-row > .ui-icon { --icon-size: 18px; flex: none; align-self: center; margin-right: var(--space-12); }
+
+.ui-plant-empty { display: grid; justify-items: start; gap: var(--space-12); }
+.ui-plant-empty__title { margin: 0; font: 700 20px/1.2 var(--font-sans); letter-spacing: -0.02em; }
+.ui-plant-empty__body { margin: 0; max-width: 392px; font: 400 13px/1.45 var(--font-sans); color: var(--color-text-secondary); }
+
+.ui-filter:disabled { cursor: default; color: var(--color-text-secondary); }
+
+/* Island chip as the Island plants entry point (it is a button in the game). */
+button.ui-island-chip { margin: 0; font: inherit; text-align: left; cursor: pointer; }
+button.ui-island-chip:hover { background: var(--color-bg-surface); }
+button.ui-island-chip:focus-visible { outline: 2px solid var(--color-border-default); outline-offset: 2px; }
+
+/* ---------- Email and reminders (31:834, saved 31:995) ---------- */
+
+.ui-email { display: grid; gap: 10px; }
+.ui-email .ui-field { max-width: none; }
+.ui-email__actions { display: flex; align-items: center; gap: var(--space-8); }
+.ui-email__remove { margin-left: auto; }
+.ui-email__error:empty { display: none; }
+.ui-email__error { margin: 0; font: 400 13px/1.45 var(--font-sans); color: var(--color-status-alert); }

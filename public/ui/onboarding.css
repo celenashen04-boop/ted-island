@@ -65,7 +65,7 @@
   gap: var(--space-12);
   min-height: var(--size-touch);
   max-width: 320px;
-  padding-top: var(--space-12);
+  padding: var(--space-12) 0; /* both sides, so a two-line label keeps its own height */
   margin-top: calc(var(--space-12) * -1);
   margin-bottom: calc(var(--space-12) * -1); /* 44 px hit area without extra visual space */
   font: 400 13px/1.45 var(--font-sans);

@@ -16,19 +16,18 @@ All UI and look work from visualrequirement.md v2, built as standalone modules u
 - Login and onboarding: enter, ID reveal, password and email, sign in, Login as Judge, choose home island, rotate prompt, 6-step tutorial
 - Notifications list and email template
 - In-world prompts: edge, locked bridge, landing states, failed throw, water and nourish feedback, dormant label
-- Panels: Seed Catalog, new seed form, plant detail with discussion
+- Panels: Seed Catalog, new seed form, plant detail with discussion, Followed plants, Island plants (from the island chip, replaces #browse-plants), Email and reminders
 - World View labels and legend
 - Rendering mood B (Clear noon) wired behind an off-by-default flag (?mood=noon); all options in docs/ui/phase7-mood
 
 ### Not included / needs an owner
-- No design yet: Followed plants panel, Email and reminders panel, Island plants list (#browse-plants)
 - Rendering mood: Ray to sign off before the flag goes on by default; plant shadows wait for plants moving into the 3D scene
 - vercel.json needs a /ui/ route for previews (exact line in the handoff doc)
 - Island icons, 3D plant stages and island color sign-off (Ray)
 - New copy to confirm with the team (listed in the handoff doc)
 
 ### For Celena
-Wiring checklist and account callbacks in docs/ui-handoff.md (§5). Data contracts for Island Access and notifications in UI-CONTEXT §11.
+Wiring checklist and account callbacks in docs/ui-handoff.md (§5). Data contracts for Island Access, notifications, the plant lists and email settings in UI-CONTEXT §11.
 
 ### For Ray
 Mood flag in docs/ui-handoff.md §10; island colors, icons and the draw-call note (about 2,000 to 2,500 per frame) in §12 and §13.

@@ -45,8 +45,12 @@ export function replay(element, className = 'is-playing') {
 
 /* ---------- Panels ---------- */
 
-/** Open a .ui-layer (backdrop plus panel). Focus moves into the panel. */
+const openers = new WeakMap();
+
+/** Open a .ui-layer (backdrop plus panel). Focus moves into the panel and returns to the opener on close. */
 export function openPanel(layer) {
+  const active = document.activeElement;
+  if (active && active !== document.body && !layer.contains(active)) openers.set(layer, active);
   layer.dataset.state = 'open';
   const panel = layer.querySelector('.ui-panel');
   panel?.setAttribute('tabindex', '-1');
@@ -57,6 +61,10 @@ export function openPanel(layer) {
 export async function closePanel(layer) {
   if (layer.dataset.state !== 'open') return;
   layer.dataset.state = 'closing';
+  // Return focus only if it is still inside the panel (or lost), never steal it from elsewhere.
+  const opener = openers.get(layer);
+  const active = document.activeElement;
+  if (opener?.isConnected && (!active || active === document.body || layer.contains(active))) opener.focus({ preventScroll: true });
   await animationDone(layer.querySelector('.ui-panel'), 'ui-panel-out');
   if (layer.dataset.state === 'closing') layer.dataset.state = 'closed';
 }

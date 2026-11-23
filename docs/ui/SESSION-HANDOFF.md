@@ -22,6 +22,7 @@
 | 6 · Restyle existing panels | Done. Approved by Cassius (Nov 23) | `catalog.mjs`, `seed-form.mjs`, `plant-detail.mjs`, `world-labels.mjs`, `panel.mjs`, `panels.css` |
 | 7 · Rendering mood | Option B (Clear noon) picked by Cassius, wired in `render.mjs` behind a flag that is off by default (`?mood=noon` to try). Waiting on Ray's sign-off before it goes on by default | `island-kit/mood.mjs`, `island-kit/render.mjs`, `mood-preview.html`, `mood-preview.mjs`, `docs/ui/phase7-mood/` |
 | 8 · Handoff doc `docs/ui-handoff.md` | Written (Nov 23) | `docs/ui-handoff.md` |
+| Extra · Followed plants, Island plants, Email and reminders | Built from Figma 30:273, 31:486, 31:693, 31:834, 31:995, 31:1150 (Nov 23). Gallery `#lists` | `plant-row.mjs`, `followed-plants.mjs`, `island-plants.mjs`, `email-settings.mjs`, `panels.css` |
 
 ## Phase 4: verification (done)
 
@@ -96,6 +97,13 @@
 - Tutorial step 1 says "Drag the left pad". A desktop (W A S D) variant may be needed.
 - The toast copy format question is open with the team (UI-CONTEXT §11).
 - The em dash in the confirmed ID reveal copy is still flagged (UI-CONTEXT §11).
+
+## Plant lists and email (after Phase 8)
+
+- Island plants opens from the island chip (Figma 31:1150 marks it as the entry point), so the chip is now a `button.ui-island-chip`.
+- Panels now return focus to whatever opened them (`motion.mjs` `openPanel`/`closePanel`). This was missing for every panel before.
+- Checkboxes pad 12 px top and bottom (`onboarding.css`), so a two-line label no longer runs into the next row. Single-line checkboxes keep the same footprint.
+- The Figma menu (14:68) now shows the 5th row; it already matched the code, so only `figma-ref/menu.png` changed.
 
 ## Phase 7 · Rendering mood (options only)
 

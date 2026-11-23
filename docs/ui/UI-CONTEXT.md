@@ -327,6 +327,11 @@ Celena's agent is rewriting `index.html`, `app.mjs`, and `style.css` for the v2 
   - `world-labels.mjs` adds the island labels and legend over the World View map. The game positions them.
   (Added Nov 23, Phase 6.)
 - **Team (Cassius flagging it):** the comment and access email subjects and opening lines in `email-notification.html` are placeholders. Cassius approved them on Nov 23 and is checking them with the team. Nourish feedback is "+1 nutrient · {island} access until {time}" to match the Nutrients stat. (Added Nov 22, Phase 5; updated Nov 23.)
+- **Celena:** the three panels added on Nov 23 (Figma 30:273, 31:486, 31:834, 31:995, 31:1150) need, all in the Plant Row shape `{ id, island (origin), title, stage, dormant, at (last activity ms), newReplies, contributors }`:
+  - **Followed plants** (`followed-plants.mjs`, menu 03): the player's followed plants, with `newReplies` counted since they last opened each one, and a way to mark them seen when opened.
+  - **Island plants** (`island-plants.mjs`): every plant on a given island, adopted ones with their origin island. It opens from the island chip, which becomes a button, and replaces `#browse-plants` and `#island-plants`.
+  - **Email and reminders** (`email-settings.mjs`, menu 05): load `{ email, remindAccess, remindReplies }`, save them (`onSave`), and remove the email (`onRemove`). `remindReplies` is new (email on replies and comments on the player's plants); `remindAccess` is the onboarding `remind` checkbox.
+  Details in `docs/ui-handoff.md` §8. (Added Nov 23.)
 - **Ray:** Phase 7 rendering mood. Cassius picked option B (Clear noon) on Nov 23. It is wired into `render.mjs` behind a flag that is **off by default** (`MOOD_DEFAULT = null`); try it with `?mood=noon`. **Ray needs to sign off before the flag is turned on by default.** Code: `public/island-kit/mood.mjs`. Measured frame time in `?preview=mobile-game` shows no difference from the flag off (details in `docs/ui-handoff.md` §10); please test on a real phone. Separately, the islands render at about 2,050 draw calls in Player View and 2,500 in World View, which is the main phone cost; merging meshes per material or instancing repeated plants would help more than any mood setting. (Added Nov 23, Phase 7; updated Nov 23.)
 
 ---

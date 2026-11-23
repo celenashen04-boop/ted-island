@@ -167,6 +167,7 @@
       <li><a href="#notifications">Notifications</a></li>
       <li><a href="#world">In-world feedback</a></li>
       <li><a href="#panels">Panels</a></li>
+      <li><a href="#lists">Plant lists and email</a></li>
       <li><a href="#world-view">World View</a></li>
       <li><a href="#motion">Motion</a></li>
     </ul>
@@ -520,7 +521,7 @@
         <div class="g-panel">
           <span class="t-label-s">Figma</span>
           <div class="g-ref" style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
-            <img src="figma-ref/menu.png" alt="Figma menu: Seed Catalog, Island Access selected, Followed plants, How to play, ID and Log out." width="260" height="276">
+            <img src="figma-ref/menu.png" alt="Figma menu: Seed Catalog, Island Access selected, Followed plants, How to play, Email and reminders, ID and Log out." width="260" height="334">
             <img class="fit" src="figma-ref/menu-item.png" alt="Figma menu item, default and selected." width="586" height="108" style="max-width:min(586px,100%)">
           </div>
         </div>
@@ -835,6 +836,47 @@
       </div>
       <p class="g-note">Kept from the current app because Figma does not draw them: the adopted-seed confirmation ("Plant “…” here to begin connecting the islands."), the idea's short description on Plant detail (shown in grey above the open question; Figma shows only the question), and "Cancel reply". New copy for states Figma does not cover: "Add a title.", "Add an open question.", "Add a short description.", "Write a comment first.", "No comments yet. A comment nourishes this plant.", "Reply to {ID} · nourish", "Following", "No seeds from other islands yet." and "No {island} seeds yet."</p>
       <p class="g-note">Choices against Figma: the Water bar uses the plant's island hue (Figma draws Sustainability green on a Health plant, as in the email); the three stat bars stay full length as drawn, so the numbers carry the progress. The Panel Header accent is the home island on the catalog and the landing island on the new seed form. On screens taller than a phone, Plant detail keeps its two columns centered at up to 560 px tall so the discussion has room.</p>
+    </section>
+
+    <!-- Plant lists and email -->
+    <section id="lists" aria-labelledby="lists-title">
+      <header><h2 id="lists-title" class="t-heading-l">Plant lists and email</h2><span class="t-label-s">plant-row.mjs · followed-plants.mjs · island-plants.mjs · email-settings.mjs</span></header>
+      <p>Followed plants (menu 03), Email and reminders (menu 05) and Island plants, which opens from the island chip as marked in Figma 31:1150 and replaces <code>#browse-plants</code>. In the live frame the chip and the menu open them too. Pick a state; the Figma frame below switches to match.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Live</span>
+        <div class="g-hud-controls">
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ls="followed"><span class="ui-btn__label">Followed plants</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ls="followed-empty"><span class="ui-btn__label">Followed, empty</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ls="email"><span class="ui-btn__label">Email, not set up</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ls="email-saved"><span class="ui-btn__label">Email, saved</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ls="island"><span class="ui-btn__label">Island plants</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ls="island-empty"><span class="ui-btn__label">Island plants, empty</span></button>
+          <span class="t-label-s" id="ls-log" aria-live="polite"></span>
+        </div>
+        <div class="g-hud-scroll">
+          <div class="g-hud" id="ls-frame">
+            <div class="g-hud-tl">
+              <button type="button" class="ui-icon-btn" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+              <button type="button" class="ui-island-chip ui-island-health" id="ls-chip" aria-haspopup="dialog" aria-label="Health &amp; Wellbeing, home island. Show island plants">
+                <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+                <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+                <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
+              </button>
+            </div>
+            <div class="g-joystick" aria-hidden="true"><i></i></div>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus g-hud-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
+          </div>
+        </div>
+      </div>
+      <div class="g-panel" style="margin-top:16px">
+        <span class="t-label-s" id="ls-ref-label">Figma</span>
+        <div class="g-ref"><img id="ls-ref" src="figma-ref/pv-followed.png" alt="Figma frame for comparison." width="844" height="390" style="max-width:100%;height:auto"></div>
+      </div>
+      <div class="g-compare" style="margin-top:16px">
+        <div class="g-panel"><span class="t-label-s">Code · createPlantRow(): New activity, Up to date, Dormant</span><div class="g-stage g-stage--canvas" id="ls-rows" style="display:grid;gap:10px;justify-items:stretch;max-width:440px"></div></div>
+        <div class="g-panel"><span class="t-label-s">Figma · Plant Row 30:273</span><div class="g-ref"><img src="figma-ref/plant-row.png" alt="Figma plant rows: new activity, up to date, dormant." width="442" height="320"></div></div>
+      </div>
+      <p class="g-note">New copy for states Figma does not draw: "Up to date" (Followed plants subtitle when nothing is new), "1 new reply" and "1 contributor" (singulars), "No plants here yet. Plant the first idea with +." (Island plants empty), "Email removed." (announced to screen readers), and the menu meta lines "Reminders on" and "Reminders off". Island plants with no ideas says "No ideas yet", never 0%. A filter with no plants is disabled rather than showing an empty list.</p>
     </section>
 
     <!-- Phase 6 · World View -->
@@ -1660,6 +1702,73 @@
     place(createWorldLabel({ island: 1, access: 'open', maturity: { mature: 4, total: 12 }, hoursLeft: 76 }).element, 290, 22);
     place(createWorldLabel({ island: 2, access: 'locked', maturity: { mature: 0, total: 0 } }).element, 560, 140);
     place(createWorldLegend().element, 20, 340);
+  </script>
+  <script type="module">
+    // Plant lists and email
+    import { createFollowedPlants, followedMenuMeta } from './followed-plants.mjs';
+    import { createIslandPlants } from './island-plants.mjs';
+    import { createEmailSettings, emailMenuMeta } from './email-settings.mjs';
+    import { createPlantRow } from './plant-row.mjs';
+    import { createTopRight } from './hud.mjs';
+
+    const frame = document.getElementById('ls-frame');
+    const log = document.getElementById('ls-log');
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const now = Date.now(), hour = 3600000, day = 24 * hour;
+    const sample = [
+      { id: 'p1', island: 0, title: 'Haptics for calm breathing', stage: 'young', at: now - 2 * hour, newReplies: 2, contributors: 3 },
+      { id: 'p2', island: 2, title: 'Play as research method', stage: 'mature', at: now - day, newReplies: 0, contributors: 7 },
+      { id: 'p3', island: 1, title: 'Soil sensors for campus gardens', stage: 'young', dormant: true, at: now - 16 * day, contributors: 2 },
+    ];
+    const islandSample = [
+      ...sample,
+      { id: 'p4', island: 0, title: 'Walking meetings for focus', stage: 'sprout', at: now - 3 * hour, contributors: 2 },
+      { id: 'p5', island: 0, title: 'Sleep diaries by voice', stage: 'mature', at: now - 2 * day, contributors: 5 },
+      { id: 'p6', island: 0, title: 'Peer check-ins for first-years', stage: 'seed', at: now - 5 * hour, contributors: 1 },
+      { id: 'p7', island: 1, title: 'Repair cafés as design studios', stage: 'mature', at: now - 4 * day, contributors: 6 },
+      { id: 'p8', island: 0, title: 'Calm corners in libraries', stage: 'young', at: now - 6 * day, contributors: 3 },
+      { id: 'p9', island: 0, title: 'Breathing apps for exam weeks', stage: 'sprout', at: now - 8 * day, contributors: 2 },
+    ];
+    const onOpen = p => { log.textContent = `Open plant: ${p.title}`; };
+
+    let emailState = { email: '', remindAccess: true, remindReplies: true };
+    const islandPlants = createIslandPlants({ contained: true, island: 0, plants: islandSample, onOpen, now });
+    const followed = createFollowedPlants({ contained: true, plants: sample, onOpen, now,
+      onBrowse: () => { followed.layer.dataset.state = 'closed'; islandPlants.open(); log.textContent = 'Browse island plants'; } });
+    const email = createEmailSettings({ contained: true, settings: emailState,
+      onSave: async next => { await wait(300); emailState = next; hud.menu.setMeta('settings', emailMenuMeta(next)); log.textContent = `Saved ${next.email}`; return { ok: true }; },
+      onRemove: async () => { await wait(200); emailState = { email: '' }; hud.menu.setMeta('settings', emailMenuMeta(emailState)); log.textContent = 'Email removed'; return { ok: true }; } });
+    const panels = [followed, islandPlants, email];
+    const closeAll = () => { for (const p of panels) p.layer.dataset.state = 'closed'; };
+
+    const hud = createTopRight({ playerId: 'Mossy-Fern-4821', unread: 1,
+      onSelect: id => { closeAll(); if (id === 'followed') followed.open(); if (id === 'settings') email.open(); } });
+    hud.menu.setMeta('followed', followedMenuMeta(sample));
+    frame.append(hud.element, ...panels.map(p => p.layer));
+    document.getElementById('ls-chip').addEventListener('click', () => { closeAll(); islandPlants.open(); });
+
+    const refs = {
+      followed: ['pv-followed', 'Followed plants 31:486'], 'followed-empty': ['pv-followed-empty', 'Followed plants, empty 31:693'],
+      email: ['pv-email', 'Email and reminders 31:834'], 'email-saved': ['pv-email-saved', 'Email and reminders, saved 31:995'],
+      island: ['pv-island-plants', 'Island plants 31:1150'], 'island-empty': ['pv-island-plants', 'Island plants 31:1150 (empty is not drawn)'],
+    };
+    function show(k) {
+      closeAll();
+      log.textContent = '';
+      if (k === 'followed') { followed.update(sample); followed.open(); }
+      if (k === 'followed-empty') { followed.update([]); followed.open(); }
+      if (k === 'email') { email.update({ email: '', remindAccess: true, remindReplies: true }); email.open(); }
+      if (k === 'email-saved') { email.update({ email: 'you@university.edu', remindAccess: true, remindReplies: false }); email.open(); }
+      if (k === 'island') islandPlants.open({ island: 0, plants: islandSample });
+      if (k === 'island-empty') islandPlants.open({ island: 2, plants: [] });
+      const [file, label] = refs[k];
+      document.getElementById('ls-ref').src = `figma-ref/${file}.png`;
+      document.getElementById('ls-ref-label').textContent = `Figma · ${label}`;
+    }
+    document.querySelectorAll('[data-ls]').forEach(b => b.addEventListener('click', () => show(b.dataset.ls)));
+    show('followed');
+
+    document.getElementById('ls-rows').append(...sample.map(p => createPlantRow(p, { onOpen, now })));
   </script>
 </body>
 </html>

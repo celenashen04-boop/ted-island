@@ -12,7 +12,7 @@ Contents:
 5. [Login, onboarding, rotate prompt, tutorial](#5-login-onboarding-rotate-prompt-tutorial)
 6. [Notifications and email](#6-notifications-and-email)
 7. [In-world prompts and feedback](#7-in-world-prompts-and-feedback)
-8. [Panels: Seed Catalog, New seed, Plant detail](#8-panels-seed-catalog-new-seed-plant-detail)
+8. [Panels: Seed Catalog, New seed, Plant detail, Followed plants, Island plants, Email and reminders](#8-panels)
 9. [World View labels](#9-world-view-labels)
 10. [Rendering mood (option B, behind a flag)](#10-rendering-mood-option-b-behind-a-flag)
 11. [Element ID map](#11-element-id-map)
@@ -49,7 +49,7 @@ Load them after `style.css` so they win where they overlap. Every class starts w
 
 **Modules.** Each `.mjs` file exports a `create...()` function. It takes plain data and callbacks and returns DOM (usually `{ element }` or `{ layer, open, close, update }`). There are no globals and no network calls: anything that talks to the server is a callback you pass in. All copy lives at the top of each module.
 
-**Panels** (catalog, new seed, plant detail, Island Access, notifications) return a `layer`: a full-screen `.ui-layer` with a backdrop. Append it to `document.body` once, then call `open()` and `close()`. Escape, the backdrop and the × close it, focus moves into the panel and returns to the opener, and `motion.mjs` runs the slide. `contained: true` is only for the gallery; leave it off in the game.
+**Panels** (catalog, new seed, plant detail, followed plants, island plants, email and reminders, Island Access, notifications) return a `layer`: a full-screen `.ui-layer` with a backdrop. Append it to `document.body` once, then call `open()` and `close()`. Escape, the backdrop and the × close it, focus moves into the panel and returns to the opener, and `motion.mjs` runs the slide. `contained: true` is only for the gallery; leave it off in the game.
 
 **Shared helpers.**
 
@@ -89,14 +89,14 @@ document.querySelector('.world').append(hud.element);
 | Bell | `bell.mjs` `createBell({ unread, onOpen })` | `.ui-icon-btn` with dot | No dot, unread dot. `setUnread(n, { pulse })`. The label carries the count |
 | Menu | `menu.mjs` `createMenu({ items, playerId, onSelect, onLogout })` | `.ui-menu-anchor`, `.ui-menu` | Closed, open, selected item. `setMeta(id, text)` updates a line, e.g. `setMeta('access', '2 islands open · 1d left')`. Arrow keys, Home, End, Escape |
 
-Menu items (option C): **Seed Catalog**, **Island Access**, **Followed plants**, **How to play** (replays the tutorial), **Email and reminders** (the optional email, the expiry reminder checkbox and unsubscribe). Footer: the player ID and **Log out**. `Followed plants` and `Email and reminders` have no panel yet; `onSelect` receives their ids.
+Menu items (option C): **Seed Catalog**, **Island Access**, **Followed plants**, **How to play** (replays the tutorial), **Email and reminders** (the optional email, the expiry reminder checkbox and unsubscribe). Footer: the player ID and **Log out**. `onSelect` receives the item id: open Followed plants for `'followed'` and Email and reminders for `'settings'` ([§8](#8-panels)). Keep the meta lines live with `followedMenuMeta()` and `emailMenuMeta()`.
 
 **Top left and bottom right: markup patterns (CSS only, no module).** Copy from the gallery's `#hud` section:
 
 | Piece | Classes | Notes |
 |---|---|---|
 | World View button | `.ui-icon-btn` + `icon('globe')` | `aria-label="World View"` |
-| Home island chip | `.ui-island-chip` + `islandClass(id)`, `__context`, `__name` | "Home island" over the island name. Visiting another island: change the context line |
+| Island chip | `button.ui-island-chip` + `islandClass(id)`, `__context`, `__name` | "Home island" over the island name. Visiting another island: change the context line. **It is a button:** tapping it opens Island plants (Figma 31:1150). Give it `aria-haspopup="dialog"` and an `aria-label` such as "Health & Wellbeing, home island. Show island plants" |
 | Plant button (+) | `.ui-icon-btn.ui-icon-btn--l.ui-icon-btn--active.ui-plus` | Call `setPlusReady(button, ready)` from `motion.mjs`: it sets `aria-pressed` and swaps the label between "Plant a seed" and "Cancel throw" |
 | Throw hint | `.ui-hint` | "Tap to throw" while the acorn is ready |
 | Tip (frosted) | `.ui-tip`, `__eyebrow`, `__body` + a secondary button | Replaces the `instruction-glass` tips. Example copy in the gallery is a placeholder |
@@ -264,9 +264,9 @@ Figma 21:1302. Tables and inline styles, safe for mail clients. `{{placeholders}
 
 Classes `.ui-pill`, `.ui-landing`, `.ui-prompt`, `.ui-world-prompt`. Pair water and nourish with an `accessToast()`. The scene effects themselves (water ripple, nourish pulse, in the plant's island hue) belong to the canvas and are specified in the gallery's Motion section.
 
-## 8. Panels: Seed Catalog, New seed, Plant detail
+## 8. Panels
 
-All three use `panel.mjs` and `panels.css`. Gallery: `#panels`.
+All of them use `panel.mjs` and `panels.css`. Gallery: `#panels` (Seed Catalog, New seed, Plant detail) and `#lists` (Followed plants, Island plants, Email and reminders).
 
 ### Seed Catalog: `catalog.mjs` → `createSeedCatalog()`
 
@@ -324,6 +324,67 @@ detail.update(plant, comments);
 
 States: plant stage, dormant ("One like or comment revives it"), Follow / Following, Water disabled on your own plant ("You can’t water your own plant"), Paper link hidden without `paperUrl`, no comments ("No comments yet. A comment nourishes this plant."), replying ("Reply to {ID} · nourish", Cancel reply), empty post ("Write a comment first."), post error. Classes `.ui-panel--plant`, `.ui-plant-detail`, `.ui-comment`, `.ui-composer`, `.ui-stat`.
 
+### Plant Row: `plant-row.mjs` → `createPlantRow()`
+
+Figma 30:273. Shared by Followed plants and Island plants. The whole row is one button that opens the plant.
+
+**plant:** `{ id, island (origin), title, stage: 'seed' | 'sprout' | 'young' | 'mature', dormant, at (last activity, ms), newReplies, contributors }`.
+
+| State | When | Status line |
+|---|---|---|
+| New activity (black tab, dark status) | `newReplies > 0` | "Young plant · 2 new replies" |
+| Up to date | no new replies | "Mature · 7 contributors" |
+| Dormant | `dormant: true` (wins over new activity) | "Dormant · one like or comment revives it" |
+
+The meta line is the origin island and the time since the last activity ("Health & Wellbeing · 2h"). Lists sort new activity first, then most recent, dormant last (`sortPlants()`). Classes `.ui-plant-row`, `--new`, `--current`, `--dormant`.
+
+### Followed plants: `followed-plants.mjs` → `createFollowedPlants()`
+
+Figma 31:486, empty 31:693. Menu 03. Replaces `#follow-updates`.
+
+```js
+const followed = createFollowedPlants({
+  plants,                                   // the plants this player follows, Plant Row shape
+  onOpen: plant => detail.open(...),
+  onBrowse: () => islandPlants.open(),      // empty state button
+});
+document.body.append(followed.layer);
+followed.open();
+const fresh = followed.update(plants);      // returns how many have new activity
+hud.menu.setMeta('followed', followedMenuMeta(plants));   // "2 new replies", or nothing
+```
+
+States: list (subtitle "{n} with new activity", or "Up to date"), empty ("You’re not following any plants yet", Browse island plants). Marking replies as seen when a plant is opened is Celena's (server). Class `.ui-panel--followed`.
+
+### Island plants: `island-plants.mjs` → `createIslandPlants()`
+
+Figma 31:1150. **Opens from the island chip** (marked as the entry point in the frame). Replaces `#browse-plants` and `#island-plants`.
+
+```js
+const islandPlants = createIslandPlants({ island: 0, plants, onOpen: plant => detail.open(...) });
+document.body.append(islandPlants.layer);
+chip.addEventListener('click', () => islandPlants.open({ island: currentIsland, plants }));
+```
+
+**plants:** every plant growing on that island, Plant Row shape, `island` being each plant's origin (adopted plants show theirs). Subtitle: "{island} · 9 ideas · 3 mature (33%)", or "{island} · No ideas yet" (never 0%). Filters: All, Growing (seed to young), Mature, Dormant, each with its count; a filter with no plants is disabled. Empty: "No plants here yet. Plant the first idea with +." Header accent is the island shown. Class `.ui-panel--island-plants` (560 px).
+
+### Email and reminders: `email-settings.mjs` → `createEmailSettings()`
+
+Figma: no email 31:834, saved 31:995. Menu 05.
+
+```js
+const email = createEmailSettings({
+  settings: { email: '', remindAccess: true, remindReplies: true },
+  onSave: async ({ email, remindAccess, remindReplies }) => ({ ok: true }),   // or { ok: false, error }
+  onRemove: async () => ({ ok: true }),
+});
+document.body.append(email.layer);
+email.open();
+hud.menu.setMeta('settings', emailMenuMeta(settings));   // "Not set up", "Reminders on", "Reminders off"
+```
+
+States: **not set up** (empty field, both boxes checked, "Without an email, a forgotten password can’t be recovered.", Save with the mail icon) and **saved** ("Saved. Used only for reminders and password reset.", Save changes, Remove email). An invalid address shows "Check the email address." (same as onboarding). Saving announces "Saved."; removing announces "Email removed." and returns to not set up. The onboarding `remind` checkbox maps to `remindAccess`. Class `.ui-panel--email`.
+
 ## 9. World View labels
 
 `world-labels.mjs`. Figma 23:3, World Island Label 16:416, legend 23:126. Gallery: `#world-view`. Replaces the island labels drawn on `#world-map` and the World View tip.
@@ -372,11 +433,11 @@ What each current element in `index.html` becomes.
 | `#seed-mode` | Plant button (`.ui-plus`) with `setPlusReady()` |
 | `#planting-tip` | Throw hint (`.ui-hint`) and landing markers |
 | `#open-catalog` | Seed Catalog in the menu |
-| `#browse-plants`, `#island-plants` | Not rebuilt. Followed plants in the menu is the nearest match (no panel yet) |
+| `#browse-plants`, `#island-plants` | `createIslandPlants()`, opened from the island chip |
 | `#movement-tip`, `#world-tip` | Tutorial steps 1 and the World View legend; `.ui-tip` for any tip that stays |
 | `#message` | Toasts, edge prompt, locked bridge prompt, action feedback |
 | `#toggle-dashboard`, `#world-dashboard`, `#world-home`, `#bridge-list` | Island Access in the menu and `createAccessPanel()` |
-| `#follow-updates` | Notification panel (and Followed plants later) |
+| `#follow-updates` | `createFollowedPlants()` (menu 03) and the notification panel |
 | Island Studio link in `#world-dashboard` | Removed |
 | `#home-island` | Home label in `createWorldLabel()` (keep the button behaviour: select home to return) |
 | `#onboarding` and its fields | `createOnboarding()` |
@@ -393,6 +454,9 @@ What each current element in `index.html` becomes.
 - [ ] Add the five stylesheets after `style.css` and mount the HUD (§3) in `.world`.
 - [ ] Hook the callbacks to the API: onboarding (account, password, sign-in, judge, home island), catalog adopt, seed form submit with the PDF, water, follow, post, notifications (list, mark read, email flag).
 - [ ] Island Access data per island ([§4](#4-island-access)) and `turnToward(id)` for Visit island.
+- [ ] Followed plants: the player's followed plants in the Plant Row shape, with `newReplies` since they last opened each one, and marking them seen when opened ([§8](#8-panels)).
+- [ ] Island plants: every plant on an island in the Plant Row shape (origin island, stage, dormant, last activity, contributors). Make the island chip a button that opens it.
+- [ ] Email and reminders: read the saved email and both reminder flags, save them (`onSave`) and remove the email (`onRemove`). The second flag (`remindReplies`) is new: replies and comments on the player's plants.
 - [ ] Screen rectangles for tutorial steps 4 to 6 (`landing`, `nearest-plant`, `nearest-bridge`), and a `refresh()` call on resize.
 - [ ] Project world positions into screen positions for the in-world pieces (§7) and the World View labels (§9).
 - [ ] Scene effects on the canvas: water ripple (two expanding ellipses, 700 ms), nourish pulse (swelling disc, 600 ms), in the plant's island hue.
@@ -433,10 +497,12 @@ What each current element in `index.html` becomes.
   - Discussion: "Write a comment first.", "No comments yet. A comment nourishes this plant.", "Reply to {ID} · nourish", "Following"
   - Catalog: "No seeds from other islands yet.", "No {island} seeds yet."
   - Plant detail tooltip: "You can’t water your own plant"
+  - Followed plants: "Up to date" (subtitle with nothing new), "1 new reply", "1 contributor"
+  - Island plants: "No plants here yet. Plant the first idea with +."
+  - Email and reminders: "Email removed." (screen readers), menu meta "Reminders on" and "Reminders off"
 - Tutorial step 1 says "Drag the left pad". Desktop players may need a W A S D version.
 
 **Design follow-ups (Cassius)**
 - Hover, pressed, disabled and focus states are placeholders; Figma has no variants for them.
 - The tip component and its example copy are not in Figma.
-- Followed plants and Email and reminders have menu items but no panels yet.
-- Figma bugs worked around in code: the Icon Button Active L globe draws black on black; the empty state's Open Seed Catalog button has a blank icon; the selected card's expiry line overflows; tutorial steps 4 and 6 run off the frame; the Figma menu shows 4 items, option C has 5.
+- Figma bugs worked around in code: the Icon Button Active L globe draws black on black; the empty state's Open Seed Catalog button has a blank icon; the selected card's expiry line overflows; tutorial steps 4 and 6 run off the frame. Followed plants' Figma subtitle says "2 with new activity" with one new-activity row; the code counts plants with new activity.
