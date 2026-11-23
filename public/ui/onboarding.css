@@ -66,6 +66,7 @@
   max-width: 320px;
   padding-top: var(--space-12);
   margin-top: calc(var(--space-12) * -1);
+  margin-bottom: calc(var(--space-12) * -1); /* 44 px hit area without extra visual space */
   font: 400 13px/1.45 var(--font-sans);
   color: var(--color-text-primary);
   cursor: pointer;
@@ -132,7 +133,7 @@
 .ui-onboard__body { margin: 0; font: 400 15px/1.5 var(--font-sans); }
 .ui-onboard__col { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-12); min-width: 0; }
 .ui-onboard__col--text { flex: none; width: 250px; overflow: hidden; }
-.ui-onboard__col--form { flex: 1; }
+.ui-onboard__col--form { flex: 0 1 320px; } /* 320 px column in 18:218 */
 .ui-onboard__row { display: flex; align-items: center; gap: var(--space-8); width: 100%; }
 .ui-onboard__row--split > .ui-btn { flex: 1; }
 .ui-onboard__row > .ui-onboard__push { margin-left: auto; }

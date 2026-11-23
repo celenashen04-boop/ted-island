@@ -39,7 +39,10 @@ export function createField({ label, type = 'text', name, placeholder = '', help
       element.classList.toggle('is-error', Boolean(message));
       input.setAttribute('aria-invalid', String(Boolean(message)));
       if (!help && message && !helpText.isConnected) element.append(helpText);
+      if (!help && !message) helpText.remove(); // an empty helper would still take a grid row
       helpText.textContent = message || help;
+      if (message) input.setAttribute('aria-describedby', helpId);
+      else if (!help) input.removeAttribute('aria-describedby');
       if (message) helpText.setAttribute('role', 'alert'); else helpText.removeAttribute('role');
     },
   };
