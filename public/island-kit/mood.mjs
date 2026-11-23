@@ -1,18 +1,19 @@
-// Rendering mood options for Phase 7 (preview only, not wired into the game).
+// Rendering mood options for Phase 7. Lives in island-kit/ (not ui/) because
+// render.mjs loads it, and /island-kit/*.mjs is served by server.mjs and Vercel.
 // Each mood sets four layers: sky (a CSS gradient behind the transparent
 // WebGL canvas, the same way the game draws its sky today), distance fog,
 // a light per-island tint, and cheap blob contact shadows under plants.
 // None of them use shadow maps or post-processing.
 //
-// To adopt one later, render.mjs would call createMood() once behind a flag
-// and pass its own scene, lights and island groups. Check with Ray first.
+// render.mjs calls createMood() only when the mood flag is on (MOOD_DEFAULT,
+// or ?mood=noon). The flag is off by default; Ray signs off before it changes.
 //
 //   const mood = createMood({ scene, renderer, canvas, hemi, sun, fill, islands: [{ group, hue }] });
 //   mood.setShadowSpots([{ x, y, z, radius }]);   // ground point under each plant
 //   mood.apply('morning', 'player');              // or 'world'
 //   mood.setLayers({ sky: true, fog: true, tint: true, shadows: true });
 
-import * as THREE from '../island-kit/three.module.min.js';
+import * as THREE from './three.module.min.js';
 
 // Island hues from tokens.css (--color-island-*), in island id order.
 export const ISLAND_HUES = ['#F05A3C', '#1E9E6A', '#3358E0'];

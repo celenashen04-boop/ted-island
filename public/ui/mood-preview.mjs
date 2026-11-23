@@ -8,7 +8,7 @@
 import * as THREE from '../island-kit/three.module.min.js';
 import { islands, islandScale, islandSpacing } from '../islands.mjs';
 import { islandModel, canPlantOnIsland } from '../island-kit/navigation.mjs';
-import { createMood, MOODS, ISLAND_HUES } from './mood.mjs';
+import { createMood, MOODS, ISLAND_HUES } from '../island-kit/mood.mjs';
 
 const params = new URLSearchParams(location.search);
 const stage = document.querySelector('.ui-mood__stage');

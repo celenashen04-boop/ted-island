@@ -2,7 +2,7 @@
 
 *Branch `ui/v2-look`, November 23, 2026. Owner: Cassius (UI and look). Written for Celena (wiring the UI into the game) and Ray (3D and rendering).*
 
-Everything here is new files in `public/ui/`. Nothing is wired into the game yet: `index.html`, `app.mjs`, `style.css`, `server.mjs`, `garden.mjs`, `api/`, `render.mjs`, `scene.mjs` and `world.mjs` are unchanged. This doc says what each piece is, what data it needs, and which current element it replaces.
+Everything here is new files in `public/ui/`, plus the rendering mood (`public/island-kit/mood.mjs` and a flag in `render.mjs`, off by default). Nothing else is wired into the game yet: `index.html`, `app.mjs`, `style.css`, `server.mjs`, `garden.mjs`, `api/`, `scene.mjs` and `world.mjs` are unchanged. This doc says what each piece is, what data it needs, and which current element it replaces.
 
 Contents:
 1. [How to run and see it](#1-how-to-run-and-see-it)
@@ -14,7 +14,7 @@ Contents:
 7. [In-world prompts and feedback](#7-in-world-prompts-and-feedback)
 8. [Panels: Seed Catalog, New seed, Plant detail](#8-panels-seed-catalog-new-seed-plant-detail)
 9. [World View labels](#9-world-view-labels)
-10. [Rendering mood (options only)](#10-rendering-mood-options-only)
+10. [Rendering mood (option B, behind a flag)](#10-rendering-mood-option-b-behind-a-flag)
 11. [Element ID map](#11-element-id-map)
 12. [Wiring checklist](#12-wiring-checklist)
 13. [Open items](#13-open-items)
@@ -27,7 +27,8 @@ Contents:
 |---|---|
 | Game (unchanged) | `npm run dev`, then http://127.0.0.1:4173 |
 | UI gallery: every component, live, beside its Figma frame | `node ui-preview-server.mjs`, then http://127.0.0.1:4175/ui/preview.html |
-| Rendering mood preview | http://127.0.0.1:4175/ui/mood-preview.html |
+| Rendering mood in the game (flag) | http://127.0.0.1:4173/?preview=mobile-game&mood=noon |
+| Rendering mood preview (all options) | http://127.0.0.1:4175/ui/mood-preview.html |
 | Figma (source of truth for the look) | file `6QNXwAjpDU1niZin1aiWby`, Direction G · Poster Signal. Node IDs are in `docs/ui/UI-CONTEXT.md` §0.1 and in each module's header comment |
 
 `server.mjs` serves only an allowlist, so `/ui/` returns 404 on port 4173. On Vercel, `/ui/` is not routed either (see [§13](#13-open-items)). Until it is, use the `/public/` prefix on a deployment: `/public/ui/mood-preview.html` works fully, and `/public/ui/preview.html` loads but its icons, badges and stage images are missing.
@@ -336,14 +337,28 @@ worldLayer.append(createWorldLegend().element);   // Open to you, Locked, Drag t
 
 Home is inverse with a home icon, Open shows time left ("3d left"), Locked shows a lock and "Locked". Each label has a full `aria-label`. Classes `.ui-world-label`, `.ui-world-legend`.
 
-## 10. Rendering mood (options only)
+## 10. Rendering mood (option B, behind a flag)
 
-Not wired in. Three options to pick from with Ray; the live game is untouched.
+Cassius picked **B · Clear noon** (Nov 23). It is wired into `render.mjs` behind a flag that is **off by default**, so the live game looks exactly as before.
 
-- Preview: `/ui/mood-preview.html?mood=current|morning|noon|dusk&view=player|close|world`. Comparison sheet and frame cost: `docs/ui/phase7-mood/mood-options.png`.
-- Options: **A · Pastel morning**, **B · Clear noon**, **C · Warm dusk**. Each sets a sky (a CSS gradient behind the transparent canvas, as today), `THREE.Fog`, a faint emissive tint of each island's hue, and blob contact shadows drawn as one `InstancedMesh`.
-- Cost: each option adds 1 draw call and stays within 0.5 ms of the current look (measured at 844 × 390, 1.5 pixel ratio, on a Mac).
-- **To adopt one** (after Cassius and Ray pick): `render.mjs` calls `createMood()` from `public/ui/mood.mjs` once, behind a flag that is off by default, passing its scene, renderer, canvas, lights and island groups. Then `mood.apply(id, 'player' | 'world')` when the view changes and `mood.setShadowSpots([{ x, y, z, radius }])` when plants change. Ray signs off before it merges.
+- **Try it:** add `?mood=noon` to the game URL, e.g. `/?preview=mobile-game&mood=noon`. `?mood=off` forces it off. The other options (`morning`, `dusk`) still work through the same param for comparison.
+- **The flag:** `MOOD_DEFAULT` at the top of `public/island-kit/render.mjs` (currently `null`). **Ray signs off before it changes to `'noon'`.**
+- **What it does:** a clear-noon sky (CSS gradient on the renderer canvas, overriding `style.css`), light distance fog, brighter lights, and a faint tint of each island's hue. Code: `public/island-kit/mood.mjs` (moved from `public/ui/` because `/island-kit/*.mjs` is served by both `server.mjs` and Vercel and `/ui/` is not).
+- **When off:** `render.mjs` reads the URL param and nothing else. It never requests `mood.mjs` and adds no work per frame.
+- **Not live yet:**
+  - Contact shadows: `islandRenderer.setPlantSpots([{ x, y, z, radius }])` is ready, but nothing calls it yet, because plants are still drawn on the 2D canvas.
+  - Fog and tint only reach the 3D islands. Plants, bridges and labels on the 2D canvas don't get them until they move into the three.js scene.
+- **Frame time in the live game** (`?preview=mobile-game`, 844 × 390 at 3× density, renderer capped at 1.5×, Chrome on an Apple M4 Max; total work per displayed frame including the 2D canvas, GPU forced to finish):
+
+| View | CPU | Flag off | `?mood=noon` |
+|---|---|---|---|
+| Player | normal | 7.5 ms median, 9.0 ms p95 | 7.4 ms median, 8.6 ms p95 |
+| Player | 4× slower | 21.5 ms median, 23.1 ms p95 | 20.6 ms median, 23.0 ms p95 |
+| World (redraw frames, p95) | normal | 10.2 ms | 10.4 ms |
+| World (redraw frames, p95) | 4× slower | 25.1 ms | 25.1 ms |
+
+  The difference is within run-to-run noise. A real phone test is still needed before turning it on by default.
+- Preview of all options: `/ui/mood-preview.html`. Comparison sheet: `docs/ui/phase7-mood/mood-options.png`.
 
 ## 11. Element ID map
 
@@ -387,9 +402,12 @@ What each current element in `index.html` becomes.
 **Ray**
 - [ ] Island icons (SVG) for the badges and the access rings (`iconSvg`). Placeholders are in `public/ui/badges/` and Figma's Island Badge set 12:404.
 - [ ] Sign off on the island hues: Health #F05A3C, Sustainability #1E9E6A, Games #3358E0.
-- [ ] Pick a rendering mood with Cassius, test the preview on a real phone, and approve the `render.mjs` change.
+- [ ] Review option B (`?mood=noon`), test it on a real phone, and **sign off before `MOOD_DEFAULT` in `render.mjs` is set to `'noon'`**. Until then the flag stays off.
 - [ ] Motion for 3D assets: stage growth from the base (400 ms), dormant scale to 0.7 and desaturate (600 ms), bridge unlock color sweep (500 ms). Tokens in `tokens.css`.
 - [ ] Draw calls ([§13](#13-open-items)).
+
+**Celena (mood, later)**
+- [ ] Once plants are in the three.js scene, call `islandRenderer.setPlantSpots()` with each plant's ground point so the contact shadows appear.
 
 ## 13. Open items
 
@@ -398,6 +416,7 @@ What each current element in `index.html` becomes.
 - Branch previews sit behind Vercel sign-in. Ray needs a share link, or team access, to open the mood preview on his phone.
 
 **For Ray**
+- **Rendering mood sign-off:** option B is behind a flag that is off by default. Ray approves before `MOOD_DEFAULT` changes.
 - **Island colors:** confirm the three hues above so the 3D island tops match the UI.
 - **Island icons:** still placeholders everywhere.
 - **Draw calls:** the islands render at about 2,050 draw calls in Player View and 2,500 in World View before any UI or mood. That is the main cost on phones. Merging meshes per material, or instancing repeated plants and rocks, would help more than any rendering setting.

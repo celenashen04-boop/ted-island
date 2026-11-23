@@ -2,6 +2,16 @@ import * as THREE from './three.module.min.js';
 import { islands, islandScale, islandSpacing } from '../islands.mjs';
 import { islandModel } from './navigation.mjs';
 
+// Rendering mood (Phase 7; Cassius picked option B, Clear noon). OFF by default:
+// with no ?mood= param the game renders exactly as before. ?mood=noon turns it
+// on for testing, ?mood=off forces it off. Ray signs off before MOOD_DEFAULT
+// changes from null. See docs/ui-handoff.md section 10.
+const MOOD_DEFAULT = null;
+function moodFlag() {
+  const param = typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('mood');
+  return param === 'off' ? null : param ?? MOOD_DEFAULT;
+}
+
 export function createIslandRenderer() {
   let renderer;
   try {
@@ -17,7 +27,8 @@ export function createIslandRenderer() {
   renderer.toneMappingExposure = 1.08;
 
   const scene = new THREE.Scene();
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xb4cbb9, 1.7));
+  const hemi = new THREE.HemisphereLight(0xffffff, 0xb4cbb9, 1.7);
+  scene.add(hemi);
   const sun = new THREE.DirectionalLight(0xfff0d8, 2.1);
   sun.position.set(-10, 18, 12);
   scene.add(sun);
@@ -34,6 +45,21 @@ export function createIslandRenderer() {
   bridge.visible = false;
   scene.add(bridge);
   const pixelSize = new THREE.Vector2();
+
+  // Mood: loaded only when the flag is on, so the default game never requests mood.mjs.
+  let mood = null, moodView = 'player', plantSpots = [];
+  const moodId = moodFlag();
+  if (moodId) import('./mood.mjs').then(({ createMood, MOODS, ISLAND_HUES }) => {
+    if (!MOODS[moodId] || moodId === 'current') return;
+    mood = createMood({ scene, renderer, canvas: graphic, hemi, sun, fill,
+      islands: models.map((model, id) => ({ group: model.group, hue: ISLAND_HUES[id] })) });
+    mood.setShadowSpots(plantSpots);
+    mood.apply(moodId, moodView);
+  }).catch(() => {});
+  function setMoodView(view) {
+    if (mood && moodView !== view) mood.apply(undefined, view);
+    moodView = view;
+  }
   let last = 0, elapsed = 0;
 
   function draw(canvas, width, height, camera) {
@@ -49,6 +75,9 @@ export function createIslandRenderer() {
   }
 
   return {
+    // Contact shadows need plant ground points ({ x, y, z, radius } in world units).
+    // Nothing calls this yet: plants are still drawn on the 2D canvas.
+    setPlantSpots(spots) { plantSpots = spots; mood?.setShadowSpots(spots); },
     setBridgeFaces(faces, island) {
       const location = islands.find(item => item.id === island);
       if (!location) return;
@@ -76,6 +105,7 @@ export function createIslandRenderer() {
         model.group.visible = index === island || !artwork.has('island-' + index);
       }
       bridge.visible = true;
+      setMoodView('player');
       const horizontal = Math.cos(pitch);
       perspective.position.set(x + location.x * islandSpacing, eye + location.y * islandSpacing, z + location.z * islandSpacing);
       perspective.lookAt(perspective.position.x + Math.sin(yaw) * horizontal,
@@ -88,6 +118,7 @@ export function createIslandRenderer() {
     world(canvas, { width, height, yaw, pitch, scale }, artwork) {
       for (const [index, model] of models.entries()) model.group.visible = !artwork.has('island-' + index);
       bridge.visible = false;
+      setMoodView('world');
       const unit = islandSpacing / scale;
       overview.left = -width * .5 * unit;
       overview.right = width * .5 * unit;

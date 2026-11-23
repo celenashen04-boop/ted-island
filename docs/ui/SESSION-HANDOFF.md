@@ -20,7 +20,7 @@
 | 4 · Onboarding, rotate prompt, tutorial | Done and verified (Nov 22) | `onboarding.css`, `onboarding.mjs`, `fields.mjs`, `rotate-prompt.mjs`, `tutorial.mjs` |
 | 5 · Notifications and in-world feedback | Done, approved Nov 23 | `notifications.mjs`, `world-feedback.mjs`, `email-notification.html` (styles in `components.css`, `motion.css`) |
 | 6 · Restyle existing panels | Done. Approved by Cassius (Nov 23) | `catalog.mjs`, `seed-form.mjs`, `plant-detail.mjs`, `world-labels.mjs`, `panel.mjs`, `panels.css` |
-| 7 · Rendering mood | 3 options in a separate preview page (Nov 23). Waiting on Cassius and Ray to pick one. Live game untouched | `mood.mjs`, `mood-preview.html`, `mood-preview.mjs`, `docs/ui/phase7-mood/` |
+| 7 · Rendering mood | Option B (Clear noon) picked by Cassius, wired in `render.mjs` behind a flag that is off by default (`?mood=noon` to try). Waiting on Ray's sign-off before it goes on by default | `island-kit/mood.mjs`, `island-kit/render.mjs`, `mood-preview.html`, `mood-preview.mjs`, `docs/ui/phase7-mood/` |
 | 8 · Handoff doc `docs/ui-handoff.md` | Written (Nov 23) | `docs/ui-handoff.md` |
 
 ## Phase 4: verification (done)
@@ -101,7 +101,7 @@
 
 - Preview: http://127.0.0.1:4175/ui/mood-preview.html (gallery server). Query: `?mood=current|morning|noon|dusk&view=player|close|world&ui=0`. Drag to look around. The bar has per-layer toggles (sky, fog, tint, shadows) and a live fps readout.
 - The page builds its own scene from Ray's island models (read-only imports of `islands.mjs` and `island-kit/navigation.mjs`). `render.mjs`, `scene.mjs` and `world.mjs` are unchanged. `ui-preview-server.mjs` now also serves `/island-kit/` and `/islands.mjs`, read-only, for this page.
-- `public/ui/mood.mjs` holds the 3 options (A Pastel morning, B Clear noon, C Warm dusk) plus Current, and `createMood()`, which is the one function render.mjs would call behind a flag once a mood is picked.
+- `public/island-kit/mood.mjs` (moved from `public/ui/` so the game can load it) holds the 3 options (A Pastel morning, B Clear noon, C Warm dusk) plus Current, and `createMood()`, which is the one function render.mjs would call behind a flag once a mood is picked.
 - Sky is a CSS gradient behind the transparent canvas (as the game does today). Fog is `THREE.Fog`, with separate bands for Player and World View. Tint is a faint emissive wash of the island hue. Contact shadows are one `InstancedMesh` of soft blobs (1 draw call).
 - Plants are low-poly stand-ins. Shadows are flat blobs, so they may clip on steep slopes (up to 35 degrees where planting is allowed).
 - Measured on 844×390 at a 1.5 pixel ratio (Apple M4 Max via Chrome; the browser caps the frame loop at 30 fps, so cost is measured with a forced-sync benchmark): every option is within 0.5 ms of Current. With 4× CPU throttling, Current is 19.8 ms (Player) and 23.2 ms (World). The baseline cost is Ray's islands at about 2,050 to 2,500 draw calls, not the mood.
