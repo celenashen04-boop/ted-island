@@ -29,6 +29,17 @@ This plan lists the backend work needed for the v2 logic.
 | Session memory | Remember each player's last island and position, and restore them after sign-in or refresh. Judge sessions must survive a refresh. |
 | Server time | Calculate all expiry times, inactivity, and retention on the server in UTC. The browser only formats them in the player's local time. |
 
+### Decision: demo hosting (confirmed Nov 22)
+
+- The demo, including judges testing remotely on their own devices over several days, runs on **Railway or Render with a small persistent volume**. It uses the current SQLite code with no database change.
+- **Why:**
+  - Judges need sessions that survive a refresh, one shared garden, and live updates.
+  - Vercel cannot guarantee any of these.
+  - A laptop with a tunnel would need to stay on and connected for the whole judging period.
+- **Expected cost:** a few dollars a month.
+- **Setup:** about half a day, following the migration steps below.
+- **Later option:** a hosted database, such as Turso (SQLite-compatible), Supabase, or Neon. This would remove the need for a volume, but it requires rewriting the data access code. Consider it after the conference if usage grows.
+
 ### Why multiplayer seemed to work on Vercel
 
 - On Vercel, `server.mjs` stores SQLite in the instance's temporary directory (`<tmpdir>/ted-island/garden.sqlite`).
