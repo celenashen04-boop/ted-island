@@ -8,7 +8,8 @@ import { el, icon } from './islands-ui.mjs';
 
 const COPIED_MS = 1600;
 
-async function copyText(text) {
+/** Copy text to the clipboard, with a fallback. Resolves true on success. */
+export async function copyText(text) {
   try {
     await navigator.clipboard.writeText(text);
     return true;

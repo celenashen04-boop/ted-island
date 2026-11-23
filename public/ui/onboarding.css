@@ -1,0 +1,358 @@
+/*
+ * CHI Island onboarding, rotate prompt, and tutorial · Poster Signal
+ * Requires tokens.css, components.css, motion.css.
+ * Figma: Screens · Onboarding (11:5). Node IDs on each block.
+ */
+
+/* Headings take focus when a screen or step changes (for screen readers); no ring needed. */
+:is(.ui-onboard, .ui-tutorial-card) [tabindex="-1"]:focus { outline: none; }
+
+/* ---------- Rule (the black / grey / island bar under eyebrows) ----------
+   180 / 110 / 46 px, clipped by its container like the Figma frames. */
+
+.ui-rule { display: flex; flex: none; max-width: 100%; height: 3px; overflow: hidden; }
+.ui-rule > i { flex: none; height: 3px; }
+.ui-rule > i:nth-child(1) { width: 180px; background: var(--color-bg-inverse); }
+.ui-rule > i:nth-child(2) { width: 110px; background: var(--color-text-secondary); }
+.ui-rule > i:nth-child(3) { width: 46px; background: var(--island, var(--color-island-health)); }
+
+.ui-eyebrow {
+  margin: 0;
+  font: 400 11px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+/* ---------- Text Field (14:388) ----------
+   Label, 44 px field, helper. Focus is a 2 px border (drawn inset, so
+   nothing moves). Error: alert border and helper. */
+
+.ui-field { display: grid; gap: var(--space-8); width: 100%; max-width: 356px; }
+.ui-field__label {
+  font: 400 11px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+.ui-field__input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--size-touch);
+  margin: 0;
+  padding: var(--space-12);
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  border-radius: var(--radius-none);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font: 400 15px/1.5 var(--font-sans);
+  outline: none;
+}
+.ui-field__input::placeholder { color: var(--color-text-secondary); opacity: 1; }
+.ui-field__input:focus { box-shadow: inset 0 0 0 1px var(--color-border-default); }
+.ui-field__help { margin: 0; font: 400 13px/1.45 var(--font-sans); color: var(--color-text-secondary); }
+.ui-field.is-error .ui-field__input { border-color: var(--color-status-alert); box-shadow: none; }
+.ui-field.is-error .ui-field__input:focus { box-shadow: inset 0 0 0 1px var(--color-status-alert); }
+.ui-field.is-error .ui-field__help { color: var(--color-status-alert); }
+
+/* ---------- Checkbox (14:398) ---------- */
+
+.ui-check {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  min-height: var(--size-touch);
+  max-width: 320px;
+  padding-top: var(--space-12);
+  margin-top: calc(var(--space-12) * -1);
+  font: 400 13px/1.45 var(--font-sans);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+.ui-check__input { position: absolute; opacity: 0; width: 20px; height: 20px; margin: 0; cursor: pointer; }
+.ui-check__box {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  color: var(--color-text-inverse);
+}
+.ui-check__box .ui-icon { --icon-size: 16px; visibility: hidden; }
+.ui-check__input:checked + .ui-check__box { background: var(--color-bg-inverse); }
+.ui-check__input:checked + .ui-check__box .ui-icon { visibility: visible; }
+.ui-check__input:focus-visible + .ui-check__box { outline: 2px solid var(--color-border-default); outline-offset: 2px; }
+
+/* Small info line ("Without an email...") */
+.ui-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  font: 400 9px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.ui-info .ui-icon { --icon-size: 14px; margin-top: -1px; }
+
+/* ---------- Onboarding shell ----------
+   Covers the viewport. Panels sit on the left; the live World View shows
+   on the right (Figma 18:21 to 18:423). */
+
+.ui-onboard { position: fixed; inset: 0; z-index: 40; overflow: hidden; color: var(--color-text-primary); }
+.ui-onboard--contained { position: absolute; }
+.ui-onboard__screen { position: absolute; inset: 0; }
+.ui-onboard__screen[hidden] { display: none; }
+.ui-onboard__screen.is-entering { animation: ui-fade-in var(--motion-duration-base) var(--motion-ease-out) both; }
+
+.ui-onboard__panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-12);
+  width: min(420px, 100%);
+  padding: max(var(--space-32), env(safe-area-inset-top)) var(--space-32) var(--space-32) max(var(--space-32), env(safe-area-inset-left));
+  overflow-y: auto;
+  border-right: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface);
+}
+.ui-onboard__panel--md { width: min(520px, 100%); }
+.ui-onboard__panel--lg { width: min(700px, 100%); flex-direction: row; gap: var(--space-32); }
+.ui-onboard__spacer { flex: 1 0 var(--space-12); }
+.ui-onboard__title { margin: 0; font: 800 28px/1.1 var(--font-sans); letter-spacing: -0.03em; }
+.ui-onboard__lede { margin: 0; max-width: 356px; font: 400 13px/1.45 var(--font-sans); color: var(--color-text-secondary); }
+.ui-onboard__body { margin: 0; font: 400 15px/1.5 var(--font-sans); }
+.ui-onboard__col { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-12); min-width: 0; }
+.ui-onboard__col--text { flex: none; width: 250px; overflow: hidden; }
+.ui-onboard__col--form { flex: 1; }
+.ui-onboard__row { display: flex; align-items: center; gap: var(--space-8); width: 100%; }
+.ui-onboard__row--split > .ui-btn { flex: 1; }
+.ui-onboard__row > .ui-onboard__push { margin-left: auto; }
+.ui-btn--block { width: 100%; }
+
+/* Enter (18:21): full-width primary, two half-width secondaries */
+.ui-onboard__enter-actions { display: grid; gap: var(--space-12); width: 100%; }
+
+/* ID reveal (18:128): black ID block with an outline Copy button */
+.ui-id-block {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+  width: 100%;
+  padding: var(--space-16);
+  background: var(--color-bg-inverse);
+  color: var(--color-text-inverse);
+}
+.ui-id-block__id {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font: 700 30px/normal var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.ui-id-block__copy {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  padding: var(--space-8) var(--space-12);
+  border: var(--stroke-hairline) solid var(--color-text-inverse);
+  background: transparent;
+  color: var(--color-text-inverse);
+  font: 500 13px/1.4 var(--font-sans);
+  cursor: pointer;
+}
+.ui-id-block__copy .ui-icon { --icon-size: 16px; }
+.ui-id-block__copy::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: max(100%, var(--size-touch));
+  height: max(100%, var(--size-touch));
+  transform: translate(-50%, -50%);
+}
+.ui-id-block__copy:focus-visible { outline: 2px solid var(--color-text-inverse); outline-offset: 2px; }
+.ui-id-block__copy[data-copied] .ui-icon--copy { --icon: url("icons/check.svg"); }
+
+/* ---------- Choose home island (18:519) ---------- */
+
+.ui-home {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-16);
+  padding: max(var(--space-24), env(safe-area-inset-top)) max(var(--space-32), env(safe-area-inset-right)) var(--space-24) max(var(--space-32), env(safe-area-inset-left));
+  overflow-y: auto;
+  background: var(--color-bg-canvas);
+}
+.ui-home__title { margin: 0; font: 800 28px/normal var(--font-sans); letter-spacing: -0.03em; }
+.ui-home__term {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+.ui-home__term:focus-visible { outline: 2px solid var(--color-border-default); outline-offset: 2px; }
+.ui-home__options { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-16); margin: 0; padding: 0; border: 0; }
+.ui-home__option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-8);
+  width: 248px;
+  padding: var(--space-16);
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  cursor: pointer;
+}
+.ui-home__option:has(input:checked) { box-shadow: inset 0 0 0 1px var(--color-border-default); }
+.ui-home__option:has(input:focus-visible) { outline: 2px solid var(--color-border-default); outline-offset: 3px; }
+.ui-home__option input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.ui-home__head { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.ui-home__mark {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  color: var(--color-text-inverse);
+}
+.ui-home__mark .ui-icon { --icon-size: 16px; visibility: hidden; }
+.ui-home__option:has(input:checked) .ui-home__mark { background: var(--color-bg-inverse); }
+.ui-home__option:has(input:checked) .ui-home__mark .ui-icon { visibility: visible; }
+.ui-home__name { margin: 0; font: 700 20px/1.2 var(--font-sans); letter-spacing: -0.02em; }
+.ui-home__desc { margin: 0; font: 400 13px/1.45 var(--font-sans); color: var(--color-text-secondary); }
+.ui-home__stats {
+  margin: 0;
+  font: 400 9px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.ui-home__foot { display: flex; align-items: center; gap: var(--space-8); width: 100%; max-width: 780px; }
+.ui-home__hint { margin: 0; font: 400 13px/1.45 var(--font-sans); color: var(--color-text-secondary); }
+.ui-home__foot > .ui-btn { margin-left: auto; }
+
+.ui-explainer {
+  position: absolute;
+  top: 16px;
+  left: min(500px, calc(100% - 316px));
+  z-index: 2;
+  display: grid;
+  gap: var(--space-8);
+  width: min(300px, calc(100% - 32px));
+  padding: var(--space-16);
+  background: var(--color-bg-inverse);
+  color: var(--color-text-inverse);
+}
+.ui-explainer[hidden] { display: none; }
+.ui-explainer:not([hidden]) { animation: ui-rise-in var(--motion-duration-base) var(--motion-ease-out) both; }
+.ui-explainer__title { display: flex; align-items: center; gap: var(--space-8); margin: 0; font: 600 15px/1.25 var(--font-sans); letter-spacing: -0.01em; }
+.ui-explainer__title .ui-icon { --icon-size: 16px; }
+.ui-explainer__body { margin: 0; font: 400 13px/1.45 var(--font-sans); }
+
+/* ---------- Rotate prompt (18:3) ----------
+   Full-bleed poster type on paper, portrait. Shown over the game when a
+   phone is held upright. */
+
+.ui-rotate {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
+  padding: max(var(--space-32), env(safe-area-inset-top)) var(--space-32) max(var(--space-32), env(safe-area-inset-bottom));
+  overflow-y: auto;
+  background: var(--color-bg-canvas);
+  color: var(--color-text-primary);
+}
+.ui-rotate--contained { position: absolute; }
+.ui-rotate__space { flex: none; height: 120px; }
+.ui-rotate__icon { --icon-size: 120px; }
+.ui-rotate__title { margin: 0; max-width: 326px; font: 800 72px/1 var(--font-sans); letter-spacing: -0.04em; }
+.ui-rotate__body { margin: 0; max-width: 326px; font: 400 15px/1.5 var(--font-sans); }
+.ui-rotate__push { flex: 1 0 var(--space-24); }
+.ui-rotate__note { margin: 0; max-width: 326px; font: 400 13px/1.45 var(--font-sans); color: var(--color-text-secondary); }
+@media (max-height: 640px) {
+  .ui-rotate__space { height: var(--space-24); }
+  .ui-rotate__title { font-size: 56px; }
+}
+
+/* ---------- Tutorial (19:398 to 19:1150) ----------
+   Dim over the whole scene, dashed alert highlight around the target,
+   Tutorial Card (16:389) placed beside it. */
+
+.ui-tutorial { position: fixed; inset: 0; z-index: 30; }
+.ui-tutorial--contained { position: absolute; }
+.ui-tutorial[hidden] { display: none; }
+.ui-tutorial__dim { position: absolute; inset: 0; background: rgb(17 17 17 / 0.28); }
+.ui-tutorial__highlight { position: absolute; overflow: visible; pointer-events: none; }
+.ui-tutorial__highlight .ui-tutorial__dash {
+  fill: none;
+  stroke: var(--color-status-alert);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+}
+.ui-tutorial__highlight mask rect { fill: none; stroke: #fff; stroke-width: 6; stroke-dasharray: 100 100; stroke-dashoffset: 0; }
+.ui-tutorial__highlight.is-playing mask rect {
+  animation: ui-draw var(--motion-duration-grow) var(--motion-ease-in-out) both;
+  stroke-dashoffset: 100;
+}
+
+.ui-tutorial-card {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-12);
+  width: 320px;
+  max-width: calc(100% - 32px);
+  padding: var(--space-24);
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface);
+}
+.ui-tutorial-card.is-playing { animation: ui-rise-in var(--motion-duration-base) var(--motion-ease-out) var(--motion-duration-grow) both; }
+.ui-tutorial-card__step {
+  margin: 0;
+  font: 400 11px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.ui-tutorial-card__progress { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-4); width: 100%; }
+.ui-tutorial-card__progress > i { height: 4px; background: var(--color-border-subtle); }
+.ui-tutorial-card__progress > i.is-done { background: var(--color-bg-inverse); }
+.ui-tutorial-card__title { margin: 0; font: 700 20px/1.2 var(--font-sans); letter-spacing: -0.02em; }
+.ui-tutorial-card__body { margin: 0; font: 400 13px/1.45 var(--font-sans); }
+.ui-tutorial-card__actions { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); width: 100%; }
+
+/* Step 5: plant stage strip under the card (19:1130) */
+.ui-tutorial__stages { position: absolute; display: flex; gap: 6px; }
+.ui-tutorial__stages .ui-stage { width: 36px; height: 36px; background: var(--color-bg-surface); }
+.ui-tutorial__stages.is-playing { animation: ui-rise-in var(--motion-duration-base) var(--motion-ease-out) calc(var(--motion-duration-grow) + var(--motion-stagger)) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-tutorial__highlight.is-playing mask rect { animation: none; stroke-dashoffset: 0; }
+}

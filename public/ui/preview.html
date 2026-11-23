@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="components.css">
   <link rel="stylesheet" href="motion.css">
+  <link rel="stylesheet" href="onboarding.css">
   <style>
     /* Gallery layout only. Not part of the component library. */
     * { box-sizing: border-box; }
@@ -121,6 +122,17 @@
     .g-acc-frame[data-size="wide"] { width: 1280px; height: 720px; }
     .g-acc-open { position: absolute; left: 20px; bottom: 20px; }
     [data-acc][aria-pressed="true"] { background: var(--color-action-primary); color: var(--color-action-on-primary); }
+
+    /* Phase 4 */
+    .g-ob-frame { background: var(--color-bg-muted); }
+    .g-ob-world { position: absolute; right: 24px; bottom: 20px; color: var(--color-text-secondary); }
+    .g-portrait { position: relative; width: 390px; height: 844px; margin: 0 auto; overflow: hidden; border: var(--stroke-hairline) solid var(--color-border-default); }
+    .g-joystick { position: absolute; left: 24px; top: 270px; width: 96px; height: 96px; border: 1px solid var(--color-border-default); background: var(--color-bg-surface-hud); display: grid; place-items: center; }
+    .g-joystick i { width: 36px; height: 36px; border: 1px solid var(--color-border-default); background: var(--color-bg-surface); }
+    .g-scene-mark { position: absolute; }
+    .g-figma-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: var(--space-16); margin-top: var(--space-16); }
+    .g-figma-grid figure { margin: 0; display: grid; gap: var(--space-4); }
+    .g-figma-grid img { width: 100%; height: auto; border: var(--stroke-hairline) solid var(--color-border-default); }
     .g-plant-lg > .ui-stage { width: 96px; height: 96px; }
     .g-coach { width: 300px; padding: var(--space-16); border: var(--stroke-hairline) solid var(--color-border-default); background: var(--color-bg-surface); display: grid; gap: var(--space-8); }
     .g-coach__bar { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-4); }
@@ -149,6 +161,8 @@
       <li><a href="#scene">Over the scene</a></li>
       <li><a href="#hud">Player View HUD</a></li>
       <li><a href="#access">Island Access</a></li>
+      <li><a href="#onboarding">Onboarding</a></li>
+      <li><a href="#tutorial">Tutorial</a></li>
       <li><a href="#motion">Motion</a></li>
     </ul>
   </header>
@@ -606,6 +620,92 @@
       </div>
       <p class="g-note">Fixes against Figma: the selected card's "Access ends Nov 24 at 3:30 p.m." runs past the card edge in 21:3, so here it wraps inside the card. The empty state's "Open Seed Catalog" button has a blank icon slot in 21:559 (likely a black seed icon on black, like the Active L globe); here the seed icon is white.</p>
       <p class="g-note">Copy (Cassius, Nov 22): maturity uses the confirmed "4 of 12 ideas mature (33%)" on cards and rows, which differs from the Figma frames. The phone panel leaves out the body line because it does not fit: with it the panel is 410 px on a 390 px screen. "Not open yet" (an island never unlocked) is new copy; Cassius is flagging it to the team.</p>
+    </section>
+
+    <!-- Phase 4 · Onboarding -->
+    <section id="onboarding" aria-labelledby="ob-title">
+      <header><h2 id="ob-title" class="t-heading-l">Login and onboarding</h2><span class="t-label-s">Phase 4 · onboarding.mjs · fields.mjs · rotate-prompt.mjs</span></header>
+      <p>Built as drawn in Screens · Onboarding (11:5). The flow is live: try "I’m new here" (any password of 6 or more characters works), "I have an ID" (password "wrong" shows the error), and "Login as Judge". The right side is where the live World View renders in the game.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Live flow</span>
+        <div class="g-hud-controls">
+          <span class="t-label-s">Jump to</span>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ob="enter"><span class="ui-btn__label">Enter</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ob="reveal"><span class="ui-btn__label">ID reveal</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ob="secure"><span class="ui-btn__label">Secure</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ob="signin"><span class="ui-btn__label">Sign in</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ob="judge"><span class="ui-btn__label">Judge</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ob="home"><span class="ui-btn__label">Home island</span></button>
+          <span class="t-label-s" id="ob-log" aria-live="polite"></span>
+        </div>
+        <div class="g-hud-scroll">
+          <div class="g-hud g-ob-frame" id="ob-frame"><span class="g-ob-world t-label-s">Live World View</span></div>
+        </div>
+      </div>
+      <div class="g-panel" style="margin-top:16px">
+        <span class="t-label-s" id="ob-ref-label">Figma · Enter 18:21</span>
+        <div class="g-ref"><img id="ob-ref" src="figma-ref/ob-enter.png" alt="Figma onboarding screen for comparison." width="844" height="390" style="max-width:100%;height:auto"></div>
+      </div>
+
+      <h3 class="t-heading-m" style="margin:32px 0 8px">Rotate prompt</h3>
+      <p class="g-sub">18:3. Portrait phone, full-bleed poster type. Replaces #landscape-required; the existing show and hide logic can drive it.</p>
+      <div class="g-compare">
+        <div class="g-panel"><span class="t-label-s">Code · createRotatePrompt() · 390 × 844</span><div class="g-hud-scroll"><div class="g-portrait" id="rotate-frame"></div></div></div>
+        <div class="g-panel"><span class="t-label-s">Figma 18:3</span><div class="g-hud-scroll"><img src="figma-ref/ob-rotate.png" alt="Figma rotate prompt." width="390" height="844" style="display:block;margin:0 auto;border:1px solid var(--color-border-default)"></div></div>
+      </div>
+
+      <h3 class="t-heading-m" style="margin:32px 0 8px">Text field and checkbox</h3>
+      <div class="g-compare">
+        <div class="g-panel"><span class="t-label-s">Code · createField(), createCheckbox()</span><div class="g-stage g-stage--canvas" id="field-states" style="align-items:flex-start"></div></div>
+        <div class="g-panel"><span class="t-label-s">Figma 14:388 · 14:398</span><div class="g-ref" style="display:grid;gap:16px"><img class="fit" src="figma-ref/text-field.png" alt="Figma text field states: default, focus, filled, error." width="1024" height="112"><img src="figma-ref/checkbox.png" alt="Figma checkbox, checked and unchecked." width="690" height="70" style="max-width:100%;height:auto"></div></div>
+      </div>
+      <p class="g-note">New copy not in Figma (needed for real errors): "That ID and password don’t match.", "Enter your ID.", "Check the email address.", and "Copied" on the ID reveal button. The ID reveal keeps the confirmed "Save this ID — you’ll need it to log back in." with its em dash (still flagged in UI-CONTEXT §11).</p>
+    </section>
+
+    <!-- Phase 4 · Tutorial -->
+    <section id="tutorial" aria-labelledby="tut-title">
+      <header><h2 id="tut-title" class="t-heading-l">Tutorial</h2><span class="t-label-s">Phase 4 · tutorial.mjs · 19:398 to 19:1150</span></header>
+      <p>Six steps over the live HUD. The highlight wraps the real control (joystick, plus, menu). Steps 4 to 6 point at things in the 3D scene, so the game passes their screen rectangles; here they use the Figma positions. Arrow keys move between steps; Escape skips.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Live tutorial</span>
+        <div class="g-hud-controls">
+          <button type="button" class="ui-btn ui-btn--s" data-tut="start"><span class="ui-btn__label">Start tutorial</span></button>
+          <span class="t-label-s">Step</span>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-tut="0"><span class="ui-btn__label">1</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-tut="1"><span class="ui-btn__label">2</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-tut="2"><span class="ui-btn__label">3</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-tut="3"><span class="ui-btn__label">4</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-tut="4"><span class="ui-btn__label">5</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-tut="5"><span class="ui-btn__label">6</span></button>
+          <span class="t-label-s" id="tut-log" aria-live="polite"></span>
+        </div>
+        <div class="g-hud-scroll">
+          <div class="g-hud" id="tut-frame">
+            <div class="g-hud-tl">
+              <button type="button" class="ui-icon-btn" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+              <div class="ui-island-chip ui-island-health">
+                <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+                <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+                <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
+              </div>
+            </div>
+            <div class="g-joystick" id="tut-joystick" aria-hidden="true"><i></i></div>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus g-hud-plus" id="tut-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
+            <div class="ui-landing ui-landing--valid g-scene-mark" style="left:380px;top:200px"><img class="ui-landing__marker" src="markers/valid.svg" alt=""><span class="ui-landing__label">Open grass</span></div>
+            <img class="ui-stage g-scene-mark" src="stages/mature.svg" alt="" style="left:501px;top:263px">
+            <svg class="g-scene-mark" style="left:220px;top:110px" width="230" height="90" viewBox="0 0 230 90" aria-hidden="true"><path d="M12 70 Q 115 0 212 70" fill="none" stroke="var(--color-island-sustainability)" stroke-width="5"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="g-figma-grid">
+        <figure><img src="figma-ref/tut-1.png" alt="Figma tutorial step 1." width="844" height="390"><figcaption class="t-label-s">Step 1 · 19:398</figcaption></figure>
+        <figure><img src="figma-ref/tut-2.png" alt="Figma tutorial step 2." width="844" height="390"><figcaption class="t-label-s">Step 2 · 19:565</figcaption></figure>
+        <figure><img src="figma-ref/tut-3.png" alt="Figma tutorial step 3." width="844" height="390"><figcaption class="t-label-s">Step 3 · 19:705</figcaption></figure>
+        <figure><img src="figma-ref/tut-4.png" alt="Figma tutorial step 4." width="844" height="390"><figcaption class="t-label-s">Step 4 · 19:845</figcaption></figure>
+        <figure><img src="figma-ref/tut-5.png" alt="Figma tutorial step 5." width="844" height="390"><figcaption class="t-label-s">Step 5 · 19:991</figcaption></figure>
+        <figure><img src="figma-ref/tut-6.png" alt="Figma tutorial step 6." width="844" height="390"><figcaption class="t-label-s">Step 6 · 19:1150</figcaption></figure>
+      </div>
+      <p class="g-note">Fix against Figma: in steps 4 and 6 the card runs past the bottom of the 390 px screen. The code keeps every card at least 16 px inside the edges. Step 1 says "Drag the left pad"; on desktop, where movement is W A S D, that copy may need a keyboard variant.</p>
     </section>
 
     <!-- Motion -->
@@ -1159,6 +1259,86 @@
     };
     on('wide', () => size('wide'));
     on('phone', () => size('phone'));
+  </script>
+  <script type="module">
+    // Phase 4: onboarding, rotate prompt, fields, tutorial.
+    import { createOnboarding } from './onboarding.mjs';
+    import { createRotatePrompt } from './rotate-prompt.mjs';
+    import { createField, createCheckbox } from './fields.mjs';
+    import { createTutorial } from './tutorial.mjs';
+    import { createTopRight } from './hud.mjs';
+
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const log = document.getElementById('ob-log');
+    const refs = {
+      enter: ['ob-enter', 'Enter 18:21'], reveal: ['ob-id', 'ID reveal 18:128'], secure: ['ob-secure', 'Secure your ID 18:218'],
+      signin: ['ob-signin', 'Sign in 18:323'], judge: ['ob-judge', 'Judge session 18:423'], home: ['ob-home', 'Choose home island 18:519'],
+    };
+    const ob = createOnboarding({
+      contained: true,
+      islandStats: { 0: { residents: 12, ideas: 9 }, 1: { residents: 15, ideas: 12 }, 2: { residents: 4, ideas: 0 } },
+      createAccount: async () => { await wait(300); log.textContent = 'Session created'; return { id: 'Mossy-Fern-4821' }; },
+      setPassword: async ({ email, remind }) => { await wait(300); log.textContent = `Password set${email ? `, email ${email}, reminders ${remind ? 'on' : 'off'}` : ', no email'}`; return { ok: true }; },
+      signIn: async ({ password }) => { await wait(300); return password === 'wrong' ? { ok: false } : { ok: true }; },
+      startJudge: async () => { await wait(300); return { id: 'Quiet-Kelp-7310' }; },
+      onSignedIn: () => { log.textContent = 'Signed in: into the game'; },
+      onChooseIsland: async id => { await wait(300); log.textContent = `Home island ${id}: start the tutorial`; },
+      onForgotPassword: () => { log.textContent = 'Forgot password: no screen designed yet'; },
+    });
+    ob.setPlayerId('Mossy-Fern-4821');
+    document.getElementById('ob-frame').append(ob.element);
+    const setRef = name => {
+      const [file, label] = refs[name];
+      document.getElementById('ob-ref').src = `figma-ref/${file}.png`;
+      document.getElementById('ob-ref-label').textContent = `Figma · ${label}`;
+    };
+    // Keep the Figma reference in step with the live screen.
+    new MutationObserver(() => {
+      const visible = [...ob.element.children].findIndex(s => !s.hidden);
+      setRef(Object.keys(refs)[visible] ?? 'enter');
+    }).observe(ob.element, { attributes: true, subtree: true, attributeFilter: ['hidden'] });
+    document.querySelectorAll('[data-ob]').forEach(b => b.addEventListener('click', () => {
+      if (b.dataset.ob === 'judge') { ob.setPlayerId('Quiet-Kelp-7310'); ob.setPath('judge'); }
+      if (b.dataset.ob === 'home' || b.dataset.ob === 'reveal' || b.dataset.ob === 'secure') ob.setPath('new');
+      ob.show(b.dataset.ob);
+    }));
+
+    // Rotate prompt
+    const rotate = createRotatePrompt({ contained: true });
+    rotate.setVisible(true);
+    document.getElementById('rotate-frame').append(rotate.element);
+
+    // Field states
+    const host = document.getElementById('field-states');
+    const help = 'You need this and your ID to log back in.';
+    const f1 = createField({ label: 'Password', type: 'password', placeholder: 'At least 6 characters', help });
+    const f2 = createField({ label: 'Password', type: 'password', value: '••••', help });
+    const f3 = createField({ label: 'Password', type: 'password', value: '••••', help });
+    f3.setError('Use at least 6 characters.');
+    host.append(f1.element, f2.element, f3.element,
+      createCheckbox({ label: 'Email me when island access is about to expire.', checked: true }).element,
+      createCheckbox({ label: 'Email me when island access is about to expire.' }).element);
+
+    // Tutorial over a live HUD
+    const frame = document.getElementById('tut-frame');
+    const hud = createTopRight({ playerId: 'Mossy-Fern-4821', unread: 1 });
+    frame.append(hud.element);
+    const tlog = document.getElementById('tut-log');
+    const tut = createTutorial({
+      contained: true,
+      targets: {
+        joystick: () => document.getElementById('tut-joystick'),
+        plus: () => document.getElementById('tut-plus'),
+        menu: () => hud.menu.button,
+        landing: { x: 350, y: 170, width: 150, height: 90 },
+        plant: { x: 480, y: 232, width: 90, height: 110 },
+        bridge: { x: 220, y: 110, width: 230, height: 90 },
+      },
+      onDone: kind => { tlog.textContent = kind === 'skip' ? 'Skipped' : 'Start playing'; },
+    });
+    frame.append(tut.element);
+    document.querySelector('[data-tut="start"]').addEventListener('click', () => tut.start());
+    document.querySelectorAll('[data-tut]:not([data-tut="start"])').forEach(b => b.addEventListener('click', () => tut.start(Number(b.dataset.tut))));
   </script>
 </body>
 </html>
