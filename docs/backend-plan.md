@@ -29,6 +29,27 @@ This plan lists the backend work needed for the v2 logic.
 | Session memory | Remember each player's last island and position, and restore them after sign-in or refresh. Judge sessions must survive a refresh. |
 | Server time | Calculate all expiry times, inactivity, and retention on the server in UTC. The browser only formats them in the player's local time. |
 
+### Why multiplayer seemed to work on Vercel
+
+- On Vercel, `server.mjs` stores SQLite in the instance's temporary directory (`<tmpdir>/ted-island/garden.sqlite`).
+- In small tests, Vercel usually runs a **single warm instance**. Every tester reaches the same database, so they see each other's plants.
+- Under conference load, this breaks in three ways:
+  1. **More traffic starts more instances.** Each instance has its own database, so players on different instances see different gardens.
+  2. **Instances are recycled or redeployed.** The temporary directory is wiped, and seeds, likes, and PDFs disappear.
+  3. **Functions have a maximum run time.** Vercel cuts the SSE stream, so live updates drop until the page is refreshed.
+
+### Migration steps: Vercel to an always-on host
+
+1. Create a service on Railway, Render, or Fly.io. Run `node server.mjs` with Node.js 24 or newer as **one instance**, with autoscaling off.
+2. Attach a **persistent volume** and set `TED_DATA_DIR` to its mount path.
+3. Set `HOST=0.0.0.0`, set `PORT` to the value the platform expects, and set `TED_SECURE_COOKIE=1`. HTTPS is provided by the platform.
+4. Make sure the platform's proxy does not buffer `text/event-stream` responses. The server already sends `X-Accel-Buffering: no` and a heartbeat.
+5. If existing preview data is worth keeping, copy `garden.sqlite` from a local run. Vercel's temporary data cannot be recovered reliably.
+6. Point the domain, and the CHI website's entry button, to the new host.
+7. Keep Vercel only for static previews, or remove `vercel.json` and `api/garden.mjs` once the new host is live.
+8. Test with several browsers on different networks. Confirm that everyone sees the same garden, that updates arrive without refreshing, and that data survives a server restart.
+9. Then run the load test in §7 and turn on the backups described in the table above.
+
 ## 2. Accounts and sessions
 
 - **New `accounts` table**
