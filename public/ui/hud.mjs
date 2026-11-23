@@ -16,12 +16,17 @@ import { createIdLabel } from './id-label.mjs';
 import { createBell } from './bell.mjs';
 import { createMenu } from './menu.mjs';
 
-/** Figma's proposed menu (Option A). Meta lines are live; update with setMeta. */
+/**
+ * Menu contents, Option C (chosen by Cassius, Nov 22): Figma's four items
+ * plus Email and reminders, the home for the optional email, the expiry
+ * reminder checkbox, and unsubscribe. Meta lines are live; update with setMeta.
+ */
 export const MENU_ITEMS = [
   { id: 'catalog', title: 'Seed Catalog', meta: 'Adopt from other islands' },
   { id: 'access', title: 'Island Access', meta: '' },
   { id: 'followed', title: 'Followed plants', meta: '' },
   { id: 'how-to-play', title: 'How to play', meta: 'Replay the tutorial' },
+  { id: 'settings', title: 'Email and reminders', meta: 'Not set up' },
 ];
 
 export function createTopRight({ playerId, unread = 0, items = MENU_ITEMS, onSelect, onNotifications, onLogout }) {

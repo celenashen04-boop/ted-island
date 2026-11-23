@@ -501,8 +501,8 @@
         </div>
       </div>
 
-      <h3 class="t-heading-m" style="margin:32px 0 8px">Menu contents · your call</h3>
-      <p class="g-sub">Three options for what the menu holds. The bell and ID label stay outside the menu in all three, as in Figma. The live HUD above uses A until you choose.</p>
+      <h3 class="t-heading-m" style="margin:32px 0 8px">Menu contents · C chosen</h3>
+      <p class="g-sub">Three options for what the menu holds. The bell and ID label stay outside the menu in all three, as in Figma. Cassius chose C (Nov 22); the live HUD uses it. A and B stay here for the record.</p>
       <div class="g-options" id="menu-options"></div>
 
       <h3 class="t-heading-m" style="margin:32px 0 8px">Every state</h3>
@@ -919,7 +919,7 @@
     });
 
     // Static menu matching the Figma frame (Island Access selected).
-    const staticMenu = createMenu({ items: MENU_ITEMS, playerId: 'Mossy-Fern-4821', onLogout: () => {} });
+    const staticMenu = createMenu({ items: MENU_ITEMS.slice(0, 4), playerId: 'Mossy-Fern-4821', onLogout: () => {} });
     staticMenu.setMeta('access', '1 island open · 3d left');
     staticMenu.setMeta('followed', '2 new replies');
     staticMenu.setCurrent('access');
@@ -930,12 +930,12 @@
 
     // Menu content options for Cassius.
     const options = [
-      { name: 'A · As drawn in Figma', note: 'Four items. Followed plants and How to play get their own rows.', items: MENU_ITEMS,
+      { name: 'A · As drawn in Figma', note: 'Four items. Followed plants and How to play get their own rows.', items: MENU_ITEMS.slice(0, 4),
         meta: { access: '1 island open · 3d left', followed: '2 new replies' } },
       { name: 'B · Lean', note: 'Only what a judge needs in the first two minutes. Followed-plant updates arrive through the bell instead.',
         items: [MENU_ITEMS[0], MENU_ITEMS[1], MENU_ITEMS[3]], meta: { access: '1 island open · 3d left' } },
-      { name: 'C · With settings', note: 'A plus a home for the email opt-in, the expiry reminder checkbox, and unsubscribe, which context.md requires somewhere.',
-        items: [...MENU_ITEMS, { id: 'settings', title: 'Email and reminders', meta: 'Not set up' }],
+      { name: 'C · With settings (chosen)', note: 'A plus a home for the email opt-in, the expiry reminder checkbox, and unsubscribe, which context.md requires somewhere.',
+        items: MENU_ITEMS,
         meta: { access: '1 island open · 3d left', followed: '2 new replies' } },
     ];
     const host = document.getElementById('menu-options');

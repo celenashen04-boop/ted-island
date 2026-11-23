@@ -73,7 +73,7 @@ Both fonts are on Google Fonts. Replace Oswald in `style.css`.
 
 ### Layout decisions in the file (proposals for Cassius to confirm)
 
-- **Top-right menu:** 01 Seed Catalog, 02 Island Access, 03 Followed plants, 04 How to play, footer with ID and Log out. The bell and ID label stay outside the menu.
+- **Top-right menu (confirmed Nov 22, Option C):** 01 Seed Catalog, 02 Island Access, 03 Followed plants, 04 How to play, 05 Email and reminders (optional email, expiry reminder checkbox, unsubscribe), footer with ID and Log out. The bell and ID label stay outside the menu.
 - **Island Access:** ring cards in a right panel on wide screens (A1). On a landscape phone a full card is too tall, so phones use the compact **Access Row** in a 440 px right panel (A2 to A4).
 - **Rotate prompt:** full-bleed poster type on paper, portrait frame.
 - **Plus button:** black 58 px square; turns into × when an acorn is readied.

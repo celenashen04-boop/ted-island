@@ -379,7 +379,15 @@
    Width 260. Index, title, one line of live meta. Selected (muted fill,
    dark index) is used for hover, keyboard focus, and the open panel. */
 
-.ui-menu { width: 260px; min-width: 0; padding: 0; }
+.ui-menu {
+  width: 260px;
+  min-width: 0;
+  padding: 0;
+  /* Never run past the bottom of a landscape phone: 72 px is the HUD row plus the 8 px gap. */
+  max-height: calc(100dvh - 72px - max(12px, env(safe-area-inset-bottom)));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 .ui-menu__item {
   display: flex;
   align-items: center;
@@ -433,6 +441,12 @@
   color: var(--color-text-secondary);
   white-space: nowrap;
 }
+/* Short screens (landscape phones): 5 items fit in 390 px with 8 px row padding.
+   Rows stay at least 48 px tall. */
+@media (max-height: 440px) {
+  .ui-menu > .ui-menu__item { padding-block: var(--space-8); }
+}
+
 .ui-menu__foot .ui-menu__item {
   width: auto;
   border-bottom: 0;
