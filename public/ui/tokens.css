@@ -68,6 +68,52 @@
   /* Type families */
   --font-sans: "Archivo", system-ui, sans-serif;
   --font-mono: "Space Mono", ui-monospace, monospace;
+
+  /*
+   * Motion · Poster Signal: quick, precise, graphic.
+   * Not in Figma (the file is static). Every curve decelerates or
+   * accelerates with no overshoot: no bounce, no spring.
+   * Canvas and three.js code can read these with motionMs() in motion.mjs.
+   */
+  --motion-duration-instant: 80ms;   /* color swaps: menu button to black */
+  --motion-duration-fast: 150ms;     /* menu drop, plus rotate, small fades */
+  --motion-duration-base: 200ms;     /* panels, toasts in and out, landing */
+  --motion-duration-shake: 280ms;    /* invalid landing, once */
+  --motion-duration-grow: 400ms;     /* plant stage change, highlight draw */
+  --motion-duration-draw: 500ms;     /* bridge unlock line */
+  --motion-duration-count: 600ms;    /* access ring arc and numeral count */
+  --motion-duration-pulse: 600ms;    /* unread dot, nourish pulse */
+  --motion-duration-ripple: 700ms;   /* water ripple */
+  --motion-duration-dormant: 600ms;  /* shrink to dormant and revive */
+  --motion-toast-hold: 3000ms;       /* toast stays on screen */
+  --motion-stagger: 120ms;           /* second ring, card after highlight */
+
+  --motion-ease-out: cubic-bezier(0.2, 0, 0, 1);      /* enter: fast start, hard stop */
+  --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);       /* exit */
+  --motion-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1); /* state changes in place */
+  --motion-ease-linear: linear;                       /* shake, progress */
+
+  /* Travel distances. Set to 0 under reduced motion, which turns slides into fades. */
+  --motion-shift-panel: 100%;
+  --motion-shift-toast: -100%;
+  --motion-shift-menu: -6px;
+  --motion-shift-card: 8px;
+
+  /*
+   * Effect colors for water and nourish. PLACEHOLDER: these are new hues,
+   * which is a palette decision for Cassius (cool water, warm soil).
+   */
+  --color-fx-water: #3F9BD8;
+  --color-fx-nourish: #C27C2C;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-shift-panel: 0px;
+    --motion-shift-toast: 0px;
+    --motion-shift-menu: 0px;
+    --motion-shift-card: 0px;
+  }
 }
 
 /*

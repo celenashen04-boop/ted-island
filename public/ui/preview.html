@@ -6,6 +6,7 @@
   <title>CHI Island UI Gallery</title>
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="motion.css">
   <style>
     /* Gallery layout only. Not part of the component library. */
     * { box-sizing: border-box; }
@@ -61,6 +62,44 @@
     .g-icons figure { display: grid; justify-items: center; gap: 6px; margin: 0; }
     .g-icons figcaption { font: 400 9px/1.3 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--color-text-secondary); }
     .g-badges { display: flex; gap: var(--space-12); }
+
+    /* Motion demos */
+    .g-motion { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr)); gap: var(--space-16); }
+    .g-demo { display: flex; flex-direction: column; border: var(--stroke-hairline) solid var(--color-border-default); background: var(--color-bg-surface); min-width: 0; }
+    .g-demo > header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-12); padding: var(--space-12) var(--space-16); border-bottom: var(--stroke-hairline) solid var(--color-border-subtle); }
+    .g-demo > header h3 { margin: 0 0 var(--space-4); }
+    .g-demo > header .t-label-s { color: var(--color-text-secondary); }
+    .g-demo__controls { display: flex; flex-wrap: wrap; gap: var(--space-8); justify-content: flex-end; }
+    .g-demo__stage { flex: 1; position: relative; display: grid; place-items: center; min-height: 200px; padding: var(--space-24); overflow: hidden; background: var(--color-bg-canvas); }
+    .g-demo__stage--scene { background: linear-gradient(var(--color-world-sky-top), var(--color-world-sky-bottom) 60%, var(--color-world-ground) 60%); }
+    .g-demo__stage--ground { background: var(--color-world-stone); }
+    .g-demo__hook { margin: 0; padding: var(--space-12) var(--space-16); border-top: var(--stroke-hairline) solid var(--color-border-subtle); font-size: 13px; line-height: 1.45; }
+    .g-demo__hook b { font-weight: 600; }
+    .g-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-24); }
+    .g-mock-panel-body { padding: var(--space-16); display: grid; gap: var(--space-8); }
+    .g-mock-panel-body header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .g-menu-anchor { position: relative; align-self: start; justify-self: end; }
+    .g-menu-item { display: flex; align-items: center; gap: var(--space-12); width: 100%; min-height: var(--size-touch); padding: var(--space-8) var(--space-16); border: 0; border-bottom: var(--stroke-hairline) solid var(--color-border-subtle); background: none; color: inherit; text-align: left; font: 600 15px/1.25 var(--font-sans); cursor: pointer; }
+    .g-menu-item .t-label-s { color: var(--color-text-secondary); }
+    .g-menu-foot { display: flex; justify-content: space-between; align-items: center; padding: var(--space-12) var(--space-16); }
+    .g-card { display: grid; justify-items: start; gap: var(--space-8); width: 180px; padding: var(--space-16); border: var(--stroke-hairline) solid var(--color-border-default); background: var(--color-bg-surface); }
+    .g-card__ring { position: relative; }
+    .g-card__ring .ui-badge { position: absolute; inset: 0; margin: auto; }
+    .g-card__label { display: flex; align-items: center; gap: var(--space-4); font: 500 13px/1.4 var(--font-sans); }
+    .g-card__label.is-alert { color: var(--color-status-alert); }
+    .g-card__label .ui-icon { --icon-size: 14px; display: none; }
+    .g-card__label.is-alert .ui-icon { display: inline-block; }
+    .g-ground { position: relative; display: grid; place-items: end center; width: 160px; height: 90px; }
+    .g-coach-target { position: relative; display: inline-grid; }
+    .g-plant-lg { width: 96px; height: 96px; }
+    .g-plant-lg > .ui-stage { width: 96px; height: 96px; }
+    .g-coach { width: 300px; padding: var(--space-16); border: var(--stroke-hairline) solid var(--color-border-default); background: var(--color-bg-surface); display: grid; gap: var(--space-8); }
+    .g-coach__bar { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-4); }
+    .g-coach__bar i { height: 4px; background: var(--color-border-subtle); }
+    .g-coach__bar i.on { background: var(--color-border-default); }
+    .g-coach h4 { margin: 0; }
+    .g-coach p { margin: 0; }
+    .g-coach footer { display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-8); }
   </style>
 </head>
 <body>
@@ -79,6 +118,7 @@
       <li><a href="#toast">Toast</a></li>
       <li><a href="#prompt">Prompt</a></li>
       <li><a href="#scene">Over the scene</a></li>
+      <li><a href="#motion">Motion</a></li>
     </ul>
   </header>
 
@@ -246,7 +286,7 @@
           <div class="g-item"><span class="t-label-s">Plus, idle</span>
             <button type="button" class="ui-icon-btn ui-icon-btn--l" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button></div>
           <div class="g-item"><span class="t-label-s">Plus, ready (×)</span>
-            <button type="button" class="ui-icon-btn ui-icon-btn--l" aria-label="Cancel throw" title="Cancel throw (Q)" aria-pressed="true"><span class="ui-icon ui-icon--close" aria-hidden="true"></span></button></div>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l ui-plus" aria-label="Cancel throw" title="Cancel throw (Q)" aria-pressed="true"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button></div>
           <div class="g-item"><span class="t-label-s">Disabled · placeholder</span>
             <button type="button" class="ui-icon-btn" aria-label="World View" title="World View" disabled><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button></div>
         </div>
@@ -378,7 +418,350 @@
         </div>
       </div>
     </section>
+    <!-- Motion -->
+    <section id="motion" aria-labelledby="motion-title">
+      <header><h2 id="motion-title" class="t-heading-l">Motion</h2><span class="t-label-s">motion.css · motion.mjs · tokens in tokens.css</span></header>
+      <p>Quick, precise, graphic. Every curve decelerates into place or accelerates away, with no overshoot. Effects that belong in the 3D scene are mocked in 2D here, with a note on who hooks them up. To check reduced motion, turn on Reduce Motion in your OS (or emulate it in DevTools): slides become fades, decorative effects switch off, and values jump to the new number.</p>
+      <div class="g-motion">
+
+        <!-- Panels -->
+        <article class="g-demo" id="demo-panel">
+          <header>
+            <div><h3 class="t-heading-s">Panel slide in</h3><span class="t-label-s">base 200 ms · ease-out · backdrop fades · exit fast 150 ms</span></div>
+            <div class="g-demo__controls"><button type="button" class="ui-btn ui-btn--s" data-act="open"><span class="ui-btn__label">Open</span></button></div>
+          </header>
+          <div class="g-demo__stage g-demo__stage--scene">
+            <span class="t-label-s">Player View</span>
+            <div class="ui-layer ui-layer--contained" data-state="closed">
+              <div class="ui-backdrop" data-act="close"></div>
+              <aside class="ui-panel" aria-label="Island Access" style="width:min(260px,80%)">
+                <div class="g-mock-panel-body">
+                  <header><h4 class="t-heading-m" style="margin:0">Island Access</h4>
+                    <button type="button" class="ui-icon-btn" aria-label="Close Island Access" title="Close" data-act="close" style="width:44px;height:44px;border:0;background:none"><span class="ui-icon ui-icon--close" aria-hidden="true"></span></button></header>
+                  <span class="t-label-m">Home · Health &amp; Wellbeing</span>
+                  <p class="t-body-s" style="margin:0">Adopt, water, or nourish ideas to unlock other islands and extend your visits.</p>
+                </div>
+              </aside>
+            </div>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Celena):</b> wrap each panel in <code>.ui-layer</code> with a <code>.ui-backdrop</code> and <code>.ui-panel</code>, then call <code>openPanel(layer)</code> and <code>closePanel(layer)</code>. Same for Island Access, Seed Catalog, Notifications and plant detail.</p>
+        </article>
+
+        <!-- Menu -->
+        <article class="g-demo" id="demo-menu">
+          <header>
+            <div><h3 class="t-heading-s">Menu drop down</h3><span class="t-label-s">fast 150 ms · ease-out · button to black in 80 ms</span></div>
+            <div class="g-demo__controls"><span class="t-label-s">Tap the menu button</span></div>
+          </header>
+          <div class="g-demo__stage g-demo__stage--scene" style="place-items:start end;min-height:300px">
+            <div class="g-menu-anchor">
+              <button type="button" class="ui-icon-btn" aria-label="Menu" title="Menu" aria-expanded="false" aria-controls="demo-menu-list" data-act="menu"><span class="ui-icon ui-icon--menu" aria-hidden="true"></span></button>
+              <div class="ui-menu" id="demo-menu-list" data-state="closed">
+                <button type="button" class="g-menu-item"><span class="t-label-s">01</span>Seed Catalog</button>
+                <button type="button" class="g-menu-item"><span class="t-label-s">02</span>Island Access</button>
+                <button type="button" class="g-menu-item"><span class="t-label-s">03</span>Followed plants</button>
+                <button type="button" class="g-menu-item"><span class="t-label-s">04</span>How to play</button>
+                <div class="g-menu-foot"><span class="t-mono-id">MOSSY-FERN-4821</span><button type="button" class="ui-btn ui-btn--ghost ui-btn--s"><span class="ui-btn__label">Log out</span></button></div>
+              </div>
+            </div>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Celena):</b> <code>toggleMenu(button, menu)</code>. The button's <code>aria-expanded</code> drives the black state. Items are a stub here; the real Menu component (14:68) comes in Phase 2.</p>
+        </article>
+
+        <!-- Plus -->
+        <article class="g-demo" id="demo-plus">
+          <header>
+            <div><h3 class="t-heading-s">Plus to ×</h3><span class="t-label-s">fast 150 ms · ease-out · rotate 45°</span></div>
+            <div class="g-demo__controls"><span class="t-label-s">Tap the button</span></div>
+          </header>
+          <div class="g-demo__stage g-demo__stage--scene">
+            <button type="button" class="ui-icon-btn ui-icon-btn--l ui-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false" data-act="plus"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Celena):</b> add <code>ui-plus</code> to the seed button and call <code>setPlusReady(button, true/false)</code>. The existing <code>#seed-mode</code> already rotates its icon 45° with <code>aria-pressed</code>, so this is the same behavior on the new timing.</p>
+        </article>
+
+        <!-- Toast -->
+        <article class="g-demo" id="demo-toast">
+          <header>
+            <div><h3 class="t-heading-s">Toast</h3><span class="t-label-s">in 200 ms ease-out · hold 3 s · out 200 ms ease-in</span></div>
+            <div class="g-demo__controls">
+              <button type="button" class="ui-btn ui-btn--s" data-act="gain"><span class="ui-btn__label">+48 hours</span></button>
+              <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-act="full"><span class="ui-btn__label">Access full</span></button>
+            </div>
+          </header>
+          <div class="g-demo__stage g-demo__stage--scene">
+            <div class="ui-toast-region ui-toast-region--contained" aria-live="polite"></div>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Celena):</b> one <code>.ui-toast-region</code> in the HUD, then <code>showToast(region, toast)</code>. It removes the toast when it's done.</p>
+        </article>
+
+        <!-- Ring and numeral -->
+        <article class="g-demo" id="demo-ring">
+          <header>
+            <div><h3 class="t-heading-s">Access ring and numeral</h3><span class="t-label-s">count 600 ms · ease-out · fixed 120 h scale</span></div>
+            <div class="g-demo__controls">
+              <button type="button" class="ui-btn ui-btn--s" data-act="add"><span class="ui-btn__label">+24 hours</span></button>
+              <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-act="six"><span class="ui-btn__label">6 h</span></button>
+              <button type="button" class="ui-btn ui-btn--s ui-btn--ghost" data-act="reset"><span class="ui-btn__label">Reset</span></button>
+            </div>
+          </header>
+          <div class="g-demo__stage">
+            <div class="g-card ui-island-sustainability">
+              <span class="t-label-s">Sustainability</span>
+              <div class="g-card__ring">
+                <svg class="ui-ring" viewBox="0 0 80 80" style="--ring:40" aria-hidden="true">
+                  <circle class="ui-ring__track" cx="40" cy="40" r="34"/>
+                  <circle class="ui-ring__arc" cx="40" cy="40" r="34" pathLength="100"/>
+                </svg>
+                <img class="ui-badge" src="badges/sustainability.svg" alt="">
+              </div>
+              <span class="ui-numeral" style="--num:48" aria-hidden="true"></span>
+              <span class="g-card__label" aria-live="polite"><span class="ui-icon ui-icon--clock" aria-hidden="true"></span><span data-label>2 days left</span></span>
+            </div>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Phase 3, then Celena):</b> <code>setRing(svg, hours)</code> and <code>setNumeral(el, hours)</code>. The full Access Card (14:268) is built in Phase 3; this card is a stub to show the motion. Capping at 120 h is the server's job; the demo caps to show "Access full".</p>
+        </article>
+
+        <!-- Water and nourish -->
+        <article class="g-demo" id="demo-fx">
+          <header>
+            <div><h3 class="t-heading-s">Water ripple and nourish pulse</h3><span class="t-label-s">ripple 700 ms · pulse 600 ms · ease-out · 2D mock</span></div>
+            <div class="g-demo__controls">
+              <button type="button" class="ui-btn ui-btn--s" data-act="water"><span class="ui-icon ui-icon--water" aria-hidden="true"></span><span class="ui-btn__label">Water</span></button>
+              <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-act="nourish"><span class="ui-icon ui-icon--nourish" aria-hidden="true"></span><span class="ui-btn__label">Nourish</span></button>
+            </div>
+          </header>
+          <div class="g-demo__stage g-demo__stage--scene">
+            <div class="g-ground">
+              <span class="ui-fx ui-fx--water" aria-hidden="true"><i></i><i></i></span>
+              <span class="ui-fx ui-fx--nourish" aria-hidden="true"><i></i><i></i></span>
+              <span class="ui-plant"><img class="ui-stage" src="stages/young.svg" alt="Young plant"></span>
+            </div>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Celena now, Ray later):</b> plants are drawn on the 2D canvas over the three.js scene, so for now <code>scene.mjs</code> draws two expanding ellipses (water) or a swelling disc (nourish) at the plant's base, timed with <code>motionMs('--motion-duration-ripple')</code> and colored with <code>--color-fx-water</code> and <code>--color-fx-nourish</code>. Once plants move into three.js, Ray can use a flat ring decal with the same timing. The feedback prompt ("+1 water · ...") stays the text signal.</p>
+        </article>
+
+        <!-- Landing -->
+        <article class="g-demo" id="demo-landing">
+          <header>
+            <div><h3 class="t-heading-s">Landing marker</h3><span class="t-label-s">valid: scale in 200 ms ease-out · invalid: shake 280 ms once</span></div>
+            <div class="g-demo__controls">
+              <button type="button" class="ui-btn ui-btn--s" data-act="valid"><span class="ui-btn__label">Valid</span></button>
+              <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-act="invalid"><span class="ui-btn__label">Invalid</span></button>
+            </div>
+          </header>
+          <div class="g-demo__stage g-demo__stage--ground">
+            <div class="g-row">
+              <div class="ui-landing ui-landing--valid"><img class="ui-landing__marker" src="markers/valid.svg" alt=""><span class="ui-landing__label">Open grass</span></div>
+              <div class="ui-landing ui-landing--invalid" role="status"><img class="ui-landing__marker" src="markers/invalid.svg" alt=""><span class="ui-landing__label">Aim at open soil</span></div>
+            </div>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Celena):</b> the marker sits at the landing point in the scene. Either position this element over the projected point, or draw the marker on the canvas and scale or shake it with the same tokens.</p>
+        </article>
+
+        <!-- Stage change -->
+        <article class="g-demo" id="demo-grow">
+          <header>
+            <div><h3 class="t-heading-s">Stage change</h3><span class="t-label-s">grow 400 ms ease-out from the base · old stage out 150 ms</span></div>
+            <div class="g-demo__controls"><button type="button" class="ui-btn ui-btn--s" data-act="next"><span class="ui-btn__label">Next stage</span></button></div>
+          </header>
+          <div class="g-demo__stage">
+            <div class="g-row" style="flex-direction:column;gap:8px">
+              <span class="ui-plant g-plant-lg"><img class="ui-stage" src="stages/seed.svg" alt="Seed planted"></span>
+              <span class="t-label-m" data-stage-label aria-live="polite">Seed planted</span>
+            </div>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Ray, then Celena):</b> in the scene, Ray's next-stage model scales up from its base over <code>--motion-duration-grow</code> while the old one fades. Celena triggers it when a plant's stage changes. In panels and the catalog, <code>swapStage(plant, src, alt)</code> handles the thumbnail.</p>
+        </article>
+
+        <!-- Dormant -->
+        <article class="g-demo" id="demo-dormant">
+          <header>
+            <div><h3 class="t-heading-s">Dormant and revive</h3><span class="t-label-s">600 ms · ease-in-out · scale 0.7, grayscale</span></div>
+            <div class="g-demo__controls"><button type="button" class="ui-btn ui-btn--s" data-act="dormant" aria-pressed="false"><span class="ui-btn__label">Go dormant</span></button></div>
+          </header>
+          <div class="g-demo__stage">
+            <div class="g-row" style="flex-direction:column;gap:8px">
+              <span class="ui-plant g-plant-lg"><img class="ui-stage" src="stages/mature.svg" alt="Mature plant"></span>
+              <span class="t-label-m" data-dormant-label aria-live="polite">Mature plant</span>
+            </div>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Ray, then Celena):</b> Ray's dormant variant or a uniform scale to 0.7 plus a desaturated material, over <code>--motion-duration-dormant</code>. One interaction reverses it. The dormant label (Phase 5) carries the meaning in text.</p>
+        </article>
+
+        <!-- Bridge -->
+        <article class="g-demo" id="demo-bridge">
+          <header>
+            <div><h3 class="t-heading-s">Bridge unlock</h3><span class="t-label-s">lock drops 200 ms ease-in · line draws 500 ms ease-in-out</span></div>
+            <div class="g-demo__controls">
+              <button type="button" class="ui-btn ui-btn--s" data-act="unlock"><span class="ui-btn__label">Unlock</span></button>
+              <button type="button" class="ui-btn ui-btn--s ui-btn--ghost" data-act="lock"><span class="ui-btn__label">Lock again</span></button>
+            </div>
+          </header>
+          <div class="g-demo__stage">
+            <svg class="ui-bridge ui-island-games" viewBox="0 0 320 90" role="img" aria-label="Bridge from Health and Wellbeing to Games and Play, locked" style="max-width:360px">
+              <path class="ui-bridge__locked" d="M44 45 C 120 10, 200 10, 276 45"/>
+              <path class="ui-bridge__open" d="M44 45 C 120 10, 200 10, 276 45" pathLength="100"/>
+              <image href="badges/health.svg" x="12" y="29" width="32" height="32"/>
+              <image href="badges/games.svg" x="276" y="29" width="32" height="32"/>
+              <g class="ui-bridge__lock">
+                <rect x="148" y="10" width="24" height="24" fill="#FFFFFF" stroke="#111111" stroke-width="1"/>
+                <image href="icons/lock.svg" x="152" y="14" width="16" height="16"/>
+              </g>
+            </svg>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Celena for World View, Ray for 3D):</b> World View bridges can use this SVG approach or the same dash animation on the canvas. In Player View, Ray's bridge model needs locked and open materials; the draw-in can be a sweep of the island color along the deck over <code>--motion-duration-draw</code>.</p>
+        </article>
+
+        <!-- Unread dot -->
+        <article class="g-demo" id="demo-dot">
+          <header>
+            <div><h3 class="t-heading-s">Unread dot</h3><span class="t-label-s">pulse 600 ms · ease-out · once, then still</span></div>
+            <div class="g-demo__controls"><button type="button" class="ui-btn ui-btn--s" data-act="notify"><span class="ui-btn__label">New notification</span></button></div>
+          </header>
+          <div class="g-demo__stage g-demo__stage--scene">
+            <button type="button" class="ui-icon-btn" aria-label="Notifications" title="Notifications" data-bell><span class="ui-icon ui-icon--bell" aria-hidden="true"></span><img class="ui-icon-btn__dot" src="icons/unread-dot.svg" alt="" hidden></button>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Celena):</b> when a notification arrives over Server-Sent Events, unhide the dot, update the bell's <code>aria-label</code> ("Notifications, 1 unread"), and call <code>replay(dot)</code>.</p>
+        </article>
+
+        <!-- Tutorial -->
+        <article class="g-demo" id="demo-tutorial">
+          <header>
+            <div><h3 class="t-heading-s">Tutorial highlight and card</h3><span class="t-label-s">box draws 400 ms ease-in-out · card rises 200 ms after</span></div>
+            <div class="g-demo__controls"><button type="button" class="ui-btn ui-btn--s" data-act="replay"><span class="ui-btn__label">Replay</span></button></div>
+          </header>
+          <div class="g-demo__stage g-demo__stage--scene" style="min-height:320px">
+            <div class="g-row" style="flex-direction:column;gap:16px">
+              <span class="g-coach-target">
+                <button type="button" class="ui-icon-btn ui-icon-btn--l ui-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
+                <svg class="ui-highlight" viewBox="0 0 70 70" preserveAspectRatio="none" aria-hidden="true"><rect x="1" y="1" width="68" height="68" pathLength="100" vector-effect="non-scaling-stroke"/></svg>
+              </span>
+              <div class="g-coach ui-coach-card" role="dialog" aria-label="Tutorial step 2 of 6">
+                <span class="t-label-s">Step 2 of 6</span>
+                <div class="g-coach__bar" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></div>
+                <h4 class="t-heading-m">Plant your first idea</h4>
+                <p class="t-body-s">Tap + to ready an acorn, face open grass, then tap anywhere to throw.</p>
+                <footer><button type="button" class="ui-btn ui-btn--ghost ui-btn--s"><span class="ui-btn__label">Skip tutorial</span></button><button type="button" class="ui-btn ui-btn--s"><span class="ui-icon ui-icon--arrow-right" aria-hidden="true"></span><span class="ui-btn__label">Next</span></button></footer>
+              </div>
+            </div>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Phase 4):</b> the full Tutorial Card (16:389) and coach marks are built in Phase 4. This shows the timing: replay the highlight on the target, then the card.</p>
+        </article>
+
+      </div>
+    </section>
   </main>
+
+  <script type="module">
+    import { openPanel, closePanel, toggleMenu, setPlusReady, showToast, setRing, setNumeral, replay, swapStage, setDormant, ACCESS_CAP_HOURS } from './motion.mjs';
+
+    const on = (demo, act, fn) => document.querySelectorAll(`#${demo} [data-act="${act}"]`).forEach(b => b.addEventListener('click', fn));
+
+    // Panel
+    const layer = document.querySelector('#demo-panel .ui-layer');
+    on('demo-panel', 'open', () => openPanel(layer));
+    on('demo-panel', 'close', () => closePanel(layer));
+    layer.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(layer); });
+
+    // Menu
+    const menuBtn = document.querySelector('#demo-menu [data-act="menu"]');
+    const menu = document.getElementById('demo-menu-list');
+    menuBtn.addEventListener('click', () => {
+      const open = menu.dataset.state !== 'open';
+      toggleMenu(menuBtn, menu, open);
+      menuBtn.firstElementChild.className = 'ui-icon ui-icon--' + (open ? 'close' : 'menu');
+    });
+
+    // Plus
+    on('demo-plus', 'plus', e => { const b = e.currentTarget; setPlusReady(b, b.getAttribute('aria-pressed') !== 'true'); });
+
+    // Toast
+    const region = document.querySelector('#demo-toast .ui-toast-region');
+    const toast = (title, detail) => {
+      const t = document.createElement('div');
+      t.className = 'ui-toast ui-island-games';
+      t.setAttribute('role', 'status');
+      t.innerHTML = `<span class="ui-toast__stripe" aria-hidden="true"></span><div class="ui-toast__text"><p class="ui-toast__title">${title}</p><p class="ui-toast__detail">${detail}</p></div>`;
+      return t;
+    };
+    on('demo-toast', 'gain', () => showToast(region, toast('+48 hours', 'Games &amp; Play access · 4d 00h left')));
+    on('demo-toast', 'full', () => showToast(region, toast('Access full', 'Games &amp; Play · 5 days (cap)')));
+
+    // Ring and numeral
+    const ring = document.querySelector('#demo-ring .ui-ring');
+    const num = document.querySelector('#demo-ring .ui-numeral');
+    const label = document.querySelector('#demo-ring .g-card__label');
+    let hours = 48;
+    const labelFor = h => h <= 0 ? 'Access expired' : h >= 48 ? `${Math.floor(h / 24)} days left` : `${Math.ceil(h)} hours left`;
+    const renderRing = () => {
+      setRing(ring, hours);
+      setNumeral(num, hours);
+      label.querySelector('[data-label]').textContent = labelFor(hours);
+      label.classList.toggle('is-alert', hours > 0 && hours <= 6);
+    };
+    on('demo-ring', 'add', () => { hours = Math.min(ACCESS_CAP_HOURS, hours + 24); renderRing(); });
+    on('demo-ring', 'six', () => { hours = 6; renderRing(); });
+    on('demo-ring', 'reset', () => { hours = 48; renderRing(); });
+
+    // Water and nourish
+    on('demo-fx', 'water', () => replay(document.querySelector('#demo-fx .ui-fx--water')));
+    on('demo-fx', 'nourish', () => replay(document.querySelector('#demo-fx .ui-fx--nourish')));
+
+    // Landing
+    on('demo-landing', 'valid', () => replay(document.querySelector('#demo-landing .ui-landing--valid')));
+    on('demo-landing', 'invalid', () => replay(document.querySelector('#demo-landing .ui-landing--invalid')));
+
+    // Stage change
+    const stages = [['seed', 'Seed planted'], ['sprout', 'Sprout'], ['young', 'Young plant'], ['mature', 'Mature plant']];
+    let stage = 0;
+    const growPlant = document.querySelector('#demo-grow .ui-plant');
+    on('demo-grow', 'next', async () => {
+      stage = (stage + 1) % stages.length;
+      const [file, name] = stages[stage];
+      document.querySelector('#demo-grow [data-stage-label]').textContent = name;
+      await swapStage(growPlant, `stages/${file}.svg`, name);
+    });
+
+    // Dormant
+    on('demo-dormant', 'dormant', e => {
+      const b = e.currentTarget;
+      const dormant = b.getAttribute('aria-pressed') !== 'true';
+      b.setAttribute('aria-pressed', String(dormant));
+      b.querySelector('.ui-btn__label').textContent = dormant ? 'Revive' : 'Go dormant';
+      setDormant(document.querySelector('#demo-dormant .ui-plant'), dormant);
+      document.querySelector('#demo-dormant [data-dormant-label]').textContent = dormant ? 'Dormant · one interaction revives it' : 'Mature plant';
+    });
+
+    // Bridge
+    const bridge = document.querySelector('#demo-bridge .ui-bridge');
+    on('demo-bridge', 'unlock', () => {
+      bridge.classList.add('is-unlocked');
+      replay(bridge);
+      bridge.setAttribute('aria-label', 'Bridge from Health and Wellbeing to Games and Play, open');
+    });
+    on('demo-bridge', 'lock', () => {
+      bridge.classList.remove('is-unlocked', 'is-playing');
+      bridge.setAttribute('aria-label', 'Bridge from Health and Wellbeing to Games and Play, locked');
+    });
+
+    // Unread dot
+    on('demo-dot', 'notify', () => {
+      const bell = document.querySelector('#demo-dot [data-bell]');
+      const dot = bell.querySelector('.ui-icon-btn__dot');
+      dot.hidden = false;
+      bell.setAttribute('aria-label', 'Notifications, 1 unread');
+      replay(dot);
+    });
+
+    // Tutorial
+    const playTutorial = () => {
+      replay(document.querySelector('#demo-tutorial .ui-highlight'));
+      replay(document.querySelector('#demo-tutorial .ui-coach-card'));
+    };
+    on('demo-tutorial', 'replay', playTutorial);
+    playTutorial();
+  </script>
 
   <script type="module">
     // Gallery helpers only: build the swatch and icon grids from lists.
