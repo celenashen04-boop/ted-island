@@ -116,6 +116,11 @@
     .g-option > div { flex: 1; display: grid; place-items: start center; padding: var(--space-24); background: var(--color-bg-canvas); }
     .g-states { display: grid; grid-template-columns: max-content repeat(6, max-content); gap: var(--space-16) var(--space-24); align-items: center; padding: var(--space-24); overflow-x: auto; background: var(--color-bg-canvas); }
     .g-states > .t-label-s { color: var(--color-text-secondary); }
+
+    /* Phase 3 access */
+    .g-acc-frame[data-size="wide"] { width: 1280px; height: 720px; }
+    .g-acc-open { position: absolute; left: 20px; bottom: 20px; }
+    [data-acc][aria-pressed="true"] { background: var(--color-action-primary); color: var(--color-action-on-primary); }
     .g-plant-lg > .ui-stage { width: 96px; height: 96px; }
     .g-coach { width: 300px; padding: var(--space-16); border: var(--stroke-hairline) solid var(--color-border-default); background: var(--color-bg-surface); display: grid; gap: var(--space-8); }
     .g-coach__bar { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-4); }
@@ -143,6 +148,7 @@
       <li><a href="#prompt">Prompt</a></li>
       <li><a href="#scene">Over the scene</a></li>
       <li><a href="#hud">Player View HUD</a></li>
+      <li><a href="#access">Island Access</a></li>
       <li><a href="#motion">Motion</a></li>
     </ul>
   </header>
@@ -531,6 +537,75 @@
         </div>
       </div>
       <p class="g-note">Tip copy is placeholder, paraphrased from context.md (movement hint, first catalog visit). It needs confirmed wording before it ships.</p>
+    </section>
+
+    <!-- Phase 3 · Island Access -->
+    <section id="access" aria-labelledby="access-title">
+      <header><h2 id="access-title" class="t-heading-l">Island Access</h2><span class="t-label-s">Phase 3 · access-ring.mjs · access-panel.mjs</span></header>
+      <p>One card per island on a fixed 120 h scale. The exact time is always in text. Select an open card to see when access ends. Cards on wide screens; compact rows on landscape phones, as in Figma.</p>
+
+      <div class="g-panel">
+        <span class="t-label-s">Live panel · click cards, use the controls</span>
+        <div class="g-hud-controls">
+          <span class="t-label-s">Frame</span>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-acc="wide" aria-pressed="true"><span class="ui-btn__label">Wide 1280 × 720</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-acc="phone" aria-pressed="false"><span class="ui-btn__label">Phone 844 × 390</span></button>
+          <span class="t-label-s" style="margin-left:8px">Actions</span>
+          <button type="button" class="ui-btn ui-btn--s" data-acc="water"><span class="ui-btn__label">Water (+24 h Sustainability)</span></button>
+          <button type="button" class="ui-btn ui-btn--s" data-acc="adopt"><span class="ui-btn__label">Adopt (+48 h Games)</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-acc="time"><span class="ui-btn__label">6 hours pass</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--ghost" data-acc="empty"><span class="ui-btn__label">Empty state</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--ghost" data-acc="reset"><span class="ui-btn__label">Reset</span></button>
+          <span class="t-label-s" id="acc-log" aria-live="polite"></span>
+        </div>
+        <div class="g-hud-scroll">
+          <div class="g-hud g-acc-frame" id="acc-frame" data-size="wide">
+            <div class="g-hud-tl">
+              <button type="button" class="ui-icon-btn" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+              <div class="ui-island-chip ui-island-health">
+                <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+                <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+                <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
+              </div>
+            </div>
+            <button type="button" class="ui-btn g-acc-open" data-acc="open"><span class="ui-icon ui-icon--access" aria-hidden="true"></span><span class="ui-btn__label">Open Island Access</span></button>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="t-heading-m" style="margin:32px 0 8px">Card states</h3>
+      <p class="g-sub">Access Card 14:268. Home, 120 h (full), 72 h, 48 h, 24 h, 6 h with the clock alert, expired, and never opened. The 72 h card is selected to show the expiry line.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Code · createAccessCard()</span>
+        <div class="g-stage g-stage--canvas" id="card-states" style="align-items:flex-start"></div>
+      </div>
+      <div class="g-panel" style="margin-top:16px">
+        <span class="t-label-s">Figma · Access Card 14:268</span>
+        <div class="g-ref"><img class="fit" src="figma-ref/access-card.png" alt="Figma access cards: Home, 120H, 72H, 48H, 24H, 06H, 00H expired." width="1378" height="326"></div>
+      </div>
+
+      <h3 class="t-heading-m" style="margin:32px 0 8px">Row states</h3>
+      <p class="g-sub">Access Row 22:277 for landscape phones. The selected row shows the expiry line under it, as in 21:379.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · createAccessRow()</span>
+          <div class="g-stage g-stage--canvas" id="row-states" style="display:grid;gap:8px;justify-items:stretch;max-width:440px"></div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma · Access Row 22:277</span>
+          <div class="g-ref"><img src="figma-ref/access-row.png" alt="Figma access rows: Home, 72H, 06H, expired." width="442" height="398" style="max-width:100%;height:auto"></div>
+        </div>
+      </div>
+
+      <h3 class="t-heading-m" style="margin:32px 0 8px">Figma screens</h3>
+      <div class="g-compare">
+        <div class="g-panel"><span class="t-label-s">Wide panel 21:3</span><div class="g-ref"><img class="fit" src="figma-ref/access-wide.png" alt="Figma wide Island Access panel." width="1280" height="720"></div></div>
+        <div class="g-panel"><span class="t-label-s">Phone panel 21:148</span><div class="g-ref"><img class="fit" src="figma-ref/access-phone.png" alt="Figma phone Island Access panel." width="844" height="390"></div></div>
+        <div class="g-panel"><span class="t-label-s">Card selected 21:379</span><div class="g-ref"><img class="fit" src="figma-ref/access-selected.png" alt="Figma phone panel with a selected row." width="844" height="390"></div></div>
+        <div class="g-panel"><span class="t-label-s">Empty 21:559</span><div class="g-ref"><img class="fit" src="figma-ref/access-empty.png" alt="Figma empty Island Access panel." width="844" height="390"></div></div>
+      </div>
+      <p class="g-note">Fixes against Figma: the selected card's "Access ends Nov 24 at 3:30 p.m." runs past the card edge in 21:3, so here it wraps inside the card. The empty state's "Open Seed Catalog" button has a blank icon slot in 21:559 (likely a black seed icon on black, like the Active L globe); here the seed icon is white.</p>
+      <p class="g-note">Copy check: Figma writes maturity as "4 of 12 ideas mature · 33%" and the confirmed copy is "4 of 12 ideas mature (33%)". The phone panel in Figma leaves out the confirmed body line ("Adopt, water, or nourish ideas..."). The code follows Figma on both; say if you want the confirmed versions. "Not open yet" (an island never unlocked) is new copy that is not in Figma.</p>
     </section>
 
     <!-- Motion -->
@@ -990,6 +1065,100 @@
       'bridge', 'info', 'judge', 'file', 'reply', 'leaf', 'hand', 'joystick'];
     document.getElementById('icon-grid').innerHTML = icons.map(n =>
       `<figure><span class="ui-icon ui-icon--${n}" aria-hidden="true"></span><figcaption>${n}</figcaption></figure>`).join('');
+  </script>
+  <script type="module">
+    // Phase 3: Island Access.
+    import { createAccessCard, createAccessRow } from './access-ring.mjs';
+    import { createAccessPanel } from './access-panel.mjs';
+    import { toastRegion, accessToast } from './toast.mjs';
+
+    const H = 3600 * 1000;
+    const CAP = 120;
+    // Fixed clock so the 72 h card reads "Access ends Nov 24 at 3:30 p.m." as in Figma.
+    const NOW = new Date(2026, 10, 21, 15, 30).getTime();
+
+    // Static card and row states.
+    const cardStates = [
+      { islandId: 0, isHome: true, maturity: { mature: 3, total: 9 } },
+      { islandId: 1, expiresAt: NOW + 120 * H, maturity: { mature: 4, total: 12 } },
+      { islandId: 1, expiresAt: NOW + 72 * H, maturity: { mature: 4, total: 12 }, selected: true },
+      { islandId: 1, expiresAt: NOW + 48 * H, maturity: { mature: 4, total: 12 } },
+      { islandId: 1, expiresAt: NOW + 24 * H, maturity: { mature: 4, total: 12 } },
+      { islandId: 1, expiresAt: NOW + 6 * H, maturity: { mature: 4, total: 12 } },
+      { islandId: 2, expiresAt: NOW - H, maturity: { mature: 0, total: 0 } },
+      { islandId: 2, expiresAt: null, maturity: { mature: 2, total: 5 } },
+    ];
+    const cardHost = document.getElementById('card-states');
+    for (const s of cardStates) {
+      const card = createAccessCard({ ...s, now: NOW });
+      if (s.selected) card.setSelected(true);
+      cardHost.append(card.element);
+    }
+    const rowStates = [
+      { islandId: 0, isHome: true, maturity: { mature: 3, total: 9 } },
+      { islandId: 1, expiresAt: NOW + 72 * H, maturity: { mature: 4, total: 12 }, selected: true },
+      { islandId: 2, expiresAt: NOW + 6 * H, maturity: { mature: 2, total: 5 } },
+      { islandId: 2, expiresAt: NOW - H, maturity: { mature: 0, total: 0 } },
+    ];
+    const rowHost = document.getElementById('row-states');
+    for (const s of rowStates) {
+      const row = createAccessRow({ ...s, now: NOW });
+      if (s.selected) row.setSelected(true);
+      rowHost.append(row.element);
+    }
+
+    // Live panel with a simulated clock.
+    const frame = document.getElementById('acc-frame');
+    const log = document.getElementById('acc-log');
+    let clock = NOW;
+    const start = () => [
+      { islandId: 0, isHome: true, maturity: { mature: 3, total: 9 } },
+      { islandId: 1, expiresAt: NOW + 72 * H, maturity: { mature: 4, total: 12 } },
+      { islandId: 2, expiresAt: NOW - H, maturity: { mature: 0, total: 0 } },
+    ];
+    let islands = start();
+    const panel = createAccessPanel({
+      homeIsland: 0,
+      islands,
+      contained: true,
+      layout: 'cards',
+      now: () => clock,
+      onVisit: id => { log.textContent = `Visit: turn toward island ${id}'s bridge`; },
+      onUnlock: id => { log.textContent = `Unlock: open the catalog filtered to island ${id}`; },
+      onOpenCatalog: () => { log.textContent = 'Open Seed Catalog'; },
+    });
+    frame.append(panel.layer);
+    const region = toastRegion(frame);
+    region.classList.add('ui-toast-region--contained');
+
+    // Access math mirrors the confirmed rule: min(max(expiry, now) + d, now + 120 h).
+    function earn(id, hours) {
+      islands = islands.map(i => {
+        if (i.islandId !== id) return i;
+        const base = Math.max(i.expiresAt ?? clock, clock);
+        const next = Math.min(base + hours * H, clock + CAP * H);
+        const capped = next === clock + CAP * H;
+        accessToast(region, capped ? { island: id, capped: true } : { island: id, addedHours: hours, hoursLeft: (next - clock) / H });
+        return { ...i, expiresAt: next };
+      });
+      panel.update(islands);
+    }
+
+    const on = (name, fn) => document.querySelectorAll(`[data-acc="${name}"]`).forEach(b => b.addEventListener('click', fn));
+    on('open', () => panel.open());
+    on('water', () => earn(1, 24));
+    on('adopt', () => earn(2, 48));
+    on('time', () => { clock += 6 * H; panel.update(islands); log.textContent = 'Six hours later'; });
+    on('empty', () => { islands = islands.map(i => i.isHome ? i : { ...i, expiresAt: null }); panel.update(islands); });
+    on('reset', () => { clock = NOW; islands = start(); panel.update(islands); log.textContent = ''; });
+    const size = s => {
+      frame.dataset.size = s;
+      panel.setLayout(s === 'phone' ? 'rows' : 'cards');
+      document.querySelector('[data-acc="wide"]').setAttribute('aria-pressed', String(s === 'wide'));
+      document.querySelector('[data-acc="phone"]').setAttribute('aria-pressed', String(s === 'phone'));
+    };
+    on('wide', () => size('wide'));
+    on('phone', () => size('phone'));
   </script>
 </body>
 </html>

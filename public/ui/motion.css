@@ -130,9 +130,12 @@
    --ring is 0 to 100 on the fixed 120 h scale. Change it and the arc moves. */
 
 .ui-ring { display: block; width: 80px; height: 80px; overflow: visible; }
+/* Geometry from the Figma ring: 2 px track, 6 px arc (4 px on the 52 px row ring). */
 .ui-ring__track,
-.ui-ring__arc { fill: none; stroke-width: 6; }
-.ui-ring__track { stroke: var(--color-ring-track); }
+.ui-ring__arc { fill: none; }
+.ui-ring__track { stroke: var(--color-ring-track); stroke-width: 2; }
+.ui-ring__arc { stroke-width: 6; }
+.ui-ring-wrap--row .ui-ring__arc { stroke-width: 4; }
 .ui-ring__arc {
   stroke: var(--island);
   stroke-dasharray: 100 100;

@@ -501,6 +501,173 @@
   white-space: nowrap;
 }
 
+/* ---------- Panel Header (16:132) ----------
+   Title, subtitle, close, and a three-part rule: black, grey, island hue
+   (55 / 35 / 10). Header for every right-side panel. */
+
+.ui-panel-header { display: grid; gap: var(--space-12); }
+.ui-panel-header__row { display: flex; align-items: flex-start; gap: var(--space-12); }
+.ui-panel-header__text { flex: 1; display: grid; gap: var(--space-4); min-width: 0; }
+.ui-panel-header__title { margin: 0; font: 800 28px/1.1 var(--font-sans); letter-spacing: -0.03em; }
+.ui-panel-header__subtitle {
+  margin: 0;
+  font: 400 11px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.ui-panel-header__close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--size-touch);
+  height: var(--size-touch);
+  margin: calc(var(--space-12) * -1) calc(var(--space-12) * -1) 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+.ui-panel-header__close:focus-visible { outline: 2px solid var(--color-border-default); outline-offset: -2px; }
+.ui-panel-header__rule { display: grid; grid-template-columns: 55fr 35fr 10fr; height: 3px; }
+.ui-panel-header__rule > i:nth-child(1) { background: var(--color-bg-inverse); }
+.ui-panel-header__rule > i:nth-child(2) { background: var(--color-text-secondary); }
+.ui-panel-header__rule > i:nth-child(3) { background: var(--island, var(--color-text-secondary)); }
+
+/* ---------- Island Access panel (21:3 wide, 21:148 phone) ---------- */
+
+.ui-panel.ui-panel--access { width: min(640px, 100%); }
+.ui-panel.ui-panel--access.is-compact { width: min(440px, 100%); }
+/* Focus moves to the panel on open (for screen readers); the container itself needs no ring. */
+.ui-panel:focus { outline: none; }
+.ui-access {
+  display: grid;
+  gap: var(--space-24);
+  padding: max(var(--space-32), env(safe-area-inset-top)) var(--space-32) var(--space-32);
+}
+.is-compact .ui-access { gap: var(--space-8); padding: var(--space-16) var(--space-24) var(--space-24); }
+.is-compact .ui-panel-header { margin-bottom: var(--space-4); }
+.ui-access__intro { margin: 0; font: 400 15px/1.45 var(--font-sans); }
+.ui-access__note {
+  margin: 0;
+  font: 400 9px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.ui-access__cards { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-16); }
+.ui-access__rows { display: grid; gap: var(--space-8); }
+.ui-panel--access:not(.is-compact) .ui-access__rows,
+.ui-panel--access.is-compact .ui-access__cards,
+.ui-panel--access.is-compact .ui-access__intro,
+.ui-panel--access.is-compact .ui-access__note { display: none; }
+.ui-access__empty { display: none; justify-items: start; gap: var(--space-12); }
+.ui-panel--access.is-empty .ui-access__empty { display: grid; }
+.ui-panel--access.is-empty .ui-access__note { display: none; }
+.ui-access__empty-title { margin: var(--space-8) 0 0; font: 700 20px/1.2 var(--font-sans); letter-spacing: -0.02em; }
+.ui-access__empty-body { margin: 0; max-width: 46ch; font: 400 13px/1.45 var(--font-sans); color: var(--color-text-secondary); }
+
+/* Ring with centered badge */
+.ui-ring-wrap { position: relative; display: block; flex: none; }
+.ui-ring-wrap--card, .ui-ring-wrap--card .ui-ring { width: 80px; height: 80px; }
+.ui-ring-wrap--row, .ui-ring-wrap--row .ui-ring { width: 52px; height: 52px; }
+.ui-ring__badge { position: absolute; inset: 0; display: grid; place-items: center; }
+.ui-ring-wrap--card .ui-badge, .ui-ring-wrap--card .ui-ring__icon { width: 32px; height: 32px; }
+.ui-ring-wrap--row .ui-badge, .ui-ring-wrap--row .ui-ring__icon { width: 24px; height: 24px; }
+.ui-ring__icon { display: grid; place-items: center; background: var(--island); color: var(--color-text-inverse); }
+.ui-ring__icon > svg { width: 100%; height: 100%; }
+
+/* Shared card and row parts */
+.ui-access__name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 400 9px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.ui-access__swatch { width: 8px; height: 8px; flex: none; background: var(--island); }
+.ui-access__time { display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1.4 var(--font-sans); white-space: nowrap; }
+.ui-access__time .ui-icon { display: none; }
+.ui-access__time.is-alert { color: var(--color-status-alert); }
+.ui-access__time.is-alert .ui-icon { display: inline-block; }
+.ui-access__maturity {
+  font: 400 9px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+.ui-access__expiry {
+  font: 400 9px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+.ui-access__action { position: relative; z-index: 1; }
+.ui-access__hit {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.ui-access__hit:disabled { cursor: default; }
+.ui-access__hit:focus-visible { outline: 2px solid var(--color-border-default); outline-offset: 2px; }
+.ui-numeral.is-text::before { content: none; }
+.ui-numeral.is-text { counter-reset: none; }
+.ui-numeral.ui-numeral--row { font: 800 28px/1.1 var(--font-sans); letter-spacing: -0.03em; }
+
+/* Card (14:268): 176 px, 16/12 padding, 8 px gap */
+.ui-access-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-8);
+  width: 176px;
+  padding: var(--space-16) var(--space-12);
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface);
+}
+.ui-access-card > :not(.ui-access__hit) { pointer-events: none; }
+.ui-access-card > .ui-access__action { pointer-events: auto; }
+/* Figma lets the expiry line run past the card edge; here it wraps inside. */
+.ui-access-card .ui-access__expiry { white-space: normal; }
+
+/* Row (22:277): full width, 12 px padding and gap, 52 px ring */
+.ui-access-row-wrap { display: grid; gap: var(--space-8); }
+.ui-access-row .ui-access__swatch { display: none; }
+.ui-access-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-12);
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface);
+}
+.ui-access-row > :not(.ui-access__hit) { pointer-events: none; }
+.ui-access-row > .ui-access__action { pointer-events: auto; }
+.ui-access-row__text { flex: 1; display: grid; gap: var(--space-2); min-width: 0; }
+.ui-access-row .ui-access__time { font: 600 15px/1.25 var(--font-sans); letter-spacing: -0.01em; }
+.ui-access-row[data-state="home"] .ui-numeral { margin-right: var(--space-24); }
+.ui-access-row-wrap > .ui-access__expiry { padding: 0 var(--space-2); }
+
+/* States */
+.ui-access-card.is-selected,
+.ui-access-row.is-selected { box-shadow: inset 0 0 0 1px var(--color-border-default); }
+.ui-access-card:is([data-state="expired"], [data-state="never"]),
+.ui-access-row:is([data-state="expired"], [data-state="never"]) { background: var(--color-bg-canvas); }
+:is(.ui-access-card, .ui-access-row):is([data-state="expired"], [data-state="never"]) .ui-access__swatch { background: var(--color-island-muted); }
+:is(.ui-access-card, .ui-access-row):is([data-state="expired"], [data-state="never"]) .ui-numeral,
+.ui-access-row:is([data-state="expired"], [data-state="never"]) .ui-access__time { color: var(--color-text-secondary); }
+
 /* ---------- Frosted surfaces: solid fallback ----------
    context.md: use a solid surface when blur is unavailable or the player
    asks for more contrast. */
