@@ -1,13 +1,13 @@
 # UI workstream: session handoff (branch `ui/v2-look`)
 
-*Last updated Nov 22, 2026. For Cassius, or the next agent picking this up. Read `CLAUDE.md` and `docs/ui/UI-CONTEXT.md` first; this file only records where the work stopped.*
+*Last updated Nov 23, 2026. For Cassius, or the next agent picking this up. Read `CLAUDE.md` and `docs/ui/UI-CONTEXT.md` first; this file only records where the work stopped.*
 
 ## How to run
 
 - `npm run dev`: the game at http://127.0.0.1:4173. Nothing from `public/ui/` is wired into it yet.
 - `node ui-preview-server.mjs`: the UI gallery at http://127.0.0.1:4175/ui/preview.html. `server.mjs` only serves an allowlist, so `/ui/` returns 404 on port 4173. On Vercel, `/ui/` is not routed yet (`vercel.json` maps only some paths), so use the `/public/` prefix there: `/public/ui/mood-preview.html` works fully, and `/public/ui/preview.html` loads without its icons, badges and stage images.
 - Figma design system: file `6QNXwAjpDU1niZin1aiWby` (node IDs in UI-CONTEXT §0.1).
-- `ui/v2-look` was pushed to origin on Nov 22 (up to `aa5caf3`). Later commits are local. Ask Cassius before pushing again or opening a PR.
+- `ui/v2-look` is pushed to origin through Phase 8 (Nov 23). Ask Cassius before pushing again or opening a PR.
 
 ## Status by phase
 
@@ -21,7 +21,7 @@
 | 5 · Notifications and in-world feedback | Done, approved Nov 23 | `notifications.mjs`, `world-feedback.mjs`, `email-notification.html` (styles in `components.css`, `motion.css`) |
 | 6 · Restyle existing panels | Done. Approved by Cassius (Nov 23) | `catalog.mjs`, `seed-form.mjs`, `plant-detail.mjs`, `world-labels.mjs`, `panel.mjs`, `panels.css` |
 | 7 · Rendering mood | 3 options in a separate preview page (Nov 23). Waiting on Cassius and Ray to pick one. Live game untouched | `mood.mjs`, `mood-preview.html`, `mood-preview.mjs`, `docs/ui/phase7-mood/` |
-| 8 · Handoff doc `docs/ui-handoff.md` | Not started | |
+| 8 · Handoff doc `docs/ui-handoff.md` | Written (Nov 23) | `docs/ui-handoff.md` |
 
 ## Phase 4: verification (done)
 
