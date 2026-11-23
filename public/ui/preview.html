@@ -653,6 +653,7 @@
         <div class="g-panel"><span class="t-label-s">Code · createRotatePrompt() · 390 × 844</span><div class="g-hud-scroll"><div class="g-portrait" id="rotate-frame"></div></div></div>
         <div class="g-panel"><span class="t-label-s">Figma 18:3</span><div class="g-hud-scroll"><img src="figma-ref/ob-rotate.png" alt="Figma rotate prompt." width="390" height="844" style="display:block;margin:0 auto;border:1px solid var(--color-border-default)"></div></div>
       </div>
+      <p class="g-note">Differences from 18:3, kept on purpose: the Figma frame has no top or bottom padding ("CHI Island" sits at y 0 and the note ends at 844), so the code adds a 32 px safe area at both ends; the gaps between items match. The Figma rule is 336 px wide and runs 10 px past the 326 px text column on the right; the code keeps it inside the column.</p>
 
       <h3 class="t-heading-m" style="margin:32px 0 8px">Text field and checkbox</h3>
       <div class="g-compare">
@@ -706,6 +707,7 @@
         <figure><img src="figma-ref/tut-6.png" alt="Figma tutorial step 6." width="844" height="390"><figcaption class="t-label-s">Step 6 · 19:1150</figcaption></figure>
       </div>
       <p class="g-note">Fix against Figma: in steps 4 and 6 the card runs past the bottom of the 390 px screen. The code keeps every card at least 16 px inside the edges. Step 1 says "Drag the left pad"; on desktop, where movement is W A S D, that copy may need a keyboard variant.</p>
+      <p class="g-note">Other differences: the Figma tutorial frames show the menu button black (the Active variant), while Player View Default (20:3) shows it white; the code keeps the Player View button. Card placement follows each frame: steps 1 to 3 sit beside their control, step 4 is top-aligned to the right of the landing spot, step 5 sits up and to the left of the plant with the stage strip under it, and step 6 sits below and to the right of the bridge.</p>
     </section>
 
     <!-- Motion -->
@@ -1330,7 +1332,7 @@
         joystick: () => document.getElementById('tut-joystick'),
         plus: () => document.getElementById('tut-plus'),
         menu: () => hud.menu.button,
-        landing: { x: 350, y: 170, width: 150, height: 90 },
+        landing: { x: 350, y: 178, width: 100, height: 90 },
         plant: { x: 480, y: 232, width: 90, height: 110 },
         bridge: { x: 220, y: 110, width: 230, height: 90 },
       },

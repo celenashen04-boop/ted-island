@@ -7,7 +7,7 @@
 - `npm run dev`: the game at http://127.0.0.1:4173. Nothing from `public/ui/` is wired into it yet.
 - `node ui-preview-server.mjs`: the UI gallery at http://127.0.0.1:4175/ui/preview.html. `server.mjs` only serves an allowlist, so `/ui/` returns 404 on port 4173. Vercel serves `public/**`, so `/ui/preview.html` works there.
 - Figma design system: file `6QNXwAjpDU1niZin1aiWby` (node IDs in UI-CONTEXT §0.1).
-- Nothing has been pushed. Every commit is local on `ui/v2-look`. Ask Cassius before pushing or opening a PR.
+- `ui/v2-look` was pushed to origin on Nov 22 (up to `aa5caf3`). Later commits are local. Ask Cassius before pushing again or opening a PR.
 
 ## Status by phase
 
@@ -17,28 +17,24 @@
 | Motion layer (extra, requested) | Done | `motion.css`, `motion.mjs`, motion tokens in `tokens.css` |
 | 2 · HUD: menu, ID label, bell, toasts, tip | Done | `hud.mjs`, `menu.mjs`, `id-label.mjs`, `bell.mjs`, `toast.mjs`, `islands-ui.mjs` |
 | 3 · Island Access panel | Done | `access-ring.mjs`, `access-panel.mjs` (styles in `components.css`) |
-| 4 · Onboarding, rotate prompt, tutorial | Built, committed, **verification partly done** (see below) | `onboarding.css`, `onboarding.mjs`, `fields.mjs`, `rotate-prompt.mjs`, `tutorial.mjs` |
-| 5 · Notifications and in-world feedback | Not started | |
+| 4 · Onboarding, rotate prompt, tutorial | Done and verified (Nov 22) | `onboarding.css`, `onboarding.mjs`, `fields.mjs`, `rotate-prompt.mjs`, `tutorial.mjs` |
+| 5 · Notifications and in-world feedback | In progress | |
 | 6 · Restyle existing panels | Not started | |
 | 7 · Rendering mood | Not started (needs Cassius's approval and Ray) | |
 | 8 · Handoff doc `docs/ui-handoff.md` | Not started | |
 
-## Phase 4: what was verified and what is left
+## Phase 4: verification (done)
 
-Verified in the browser (gallery, `#onboarding`):
-- The Enter and Choose home island screens match Figma.
-- The new-player path: ID reveal and Copy; the Secure screen's short-password error and focus; the no-email warning, which hides once an email is typed; then Choose home island.
-- The home island explainer opens.
-- Sign-in: empty ID error, wrong-password error (role="alert"), success.
-- Judge path: random ID, then Choose home with the "Welcome to CHI Island" eyebrow.
-
-Still to check:
-1. Screenshot the ID reveal, Secure, Sign in and Judge screens and compare them with the Figma refs (the gallery swaps the matching Figma image under the live frame).
-2. The rotate prompt in its 390 × 844 frame against `figma-ref/ob-rotate.png`.
-3. The tutorial: run all 6 steps in `#tutorial`. Check that the highlight sits on the joystick, plus and menu; that cards stay inside the frame (steps 4 and 6 overflow in Figma, and the code clamps them); that the step 5 stage strip shows; that the dashed highlight draws in; and that Escape and the arrow keys work.
-4. Phone-width overflow (390 px) and the 44 px hit-area check over the new sections.
-5. Reduced motion: the tutorial highlight should not draw in, and screens should only fade.
-6. Then report Phase 4 to Cassius and wait for a go-ahead on Phase 5.
+- Every onboarding screen was compared with its Figma frame: Enter, ID reveal, Secure, Sign in, Judge, and Choose home island with the explainer.
+  - Fixed: the Secure form column is now 320 px as drawn. A cleared error no longer leaves an empty helper row. The checkbox keeps its 44 px hit area without adding space.
+- Flows checked: the new-player path, the sign-in errors, and the Judge path.
+- Rotate prompt: matches 18:3, apart from a 32 px safe area. The Figma frame has no padding.
+- Tutorial: all 6 steps compared side by side with the Figma frames.
+  - Fixed: the step 4 card is top-aligned beside the landing spot. The step 5 card sits higher, so the stage strip sits under it as drawn.
+  - Every card stays at least 16 px inside the frame.
+  - The arrow keys, Escape, Replay and focus on each card title all work.
+  - Reduced motion: no highlight draw-in, and the card only fades.
+- At 390 px there is no horizontal page scroll. Every control a player touches has a 44 px hit area; the small buttons get theirs from a pseudo-element.
 
 ## Decisions Cassius has made (keep them)
 

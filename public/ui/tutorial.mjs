@@ -27,7 +27,7 @@ export const TUTORIAL_STEPS = [
     body: 'Tap + to ready an acorn, face open grass, then tap anywhere to throw. Add a title, a short description and an open question.' },
   { target: 'menu', pad: 6, side: 'left-below', title: 'Open the Seed Catalog',
     body: 'Ideas from other islands live in the catalog. Open it from the menu at the top right.' },
-  { target: 'landing', pad: 0, side: 'right', title: 'Adopt and plant',
+  { target: 'landing', pad: 0, side: 'right-top', title: 'Adopt and plant',
     body: 'Adopt a seed from another island and plant it at home. That opens 48 hours on its origin island.' },
   { target: 'plant', pad: 0, side: 'left-above', title: 'Water and nourish', stages: true,
     body: 'A like waters a plant, a comment nourishes it. Each one adds time on the plant’s origin island.' },
@@ -95,9 +95,10 @@ export function createTutorial({ targets = {}, steps = TUTORIAL_STEPS, onDone, o
       let x, y;
       switch (step.side) {
         case 'right': x = h.x + h.width + GAP; y = h.y + h.height - ch; break;
+        case 'right-top': x = h.x + h.width + GAP * 2; y = h.y + GAP - 4; break;
         case 'left': x = h.x - GAP - cw; y = h.y + h.height - ch; break;
         case 'left-below': x = h.x - GAP * 2 - cw; y = h.y + h.height + GAP; break;
-        case 'left-above': x = h.x - GAP * 4 - cw; y = h.y - ch / 2; break;
+        case 'left-above': x = h.x - GAP * 4 - cw; y = h.y - (ch * 2) / 3; break;
         case 'below-right': x = h.x + h.width + GAP / 2; y = h.y + h.height - GAP * 2; break;
         default: x = (bounds.width - cw) / 2; y = (bounds.height - ch) / 2;
       }
