@@ -4,7 +4,11 @@
 //
 //   node ui-preview-server.mjs   then open http://127.0.0.1:4175/ui/preview.html
 //
-// On Vercel, public/** is already served statically, so /ui/preview.html works there.
+// On Vercel, /ui/ is not routed yet: vercel.json maps only some paths to public/,
+// so /ui/preview.html returns 404 there. Until a /ui/ route is added, use the
+// /public/ prefix on a deployment, e.g. /public/ui/mood-preview.html. The mood
+// preview works fully that way; the gallery loads but its icons, badges and
+// stage images (absolute /ui/ paths) do not.
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, normalize } from 'node:path';

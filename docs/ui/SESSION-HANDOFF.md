@@ -5,7 +5,7 @@
 ## How to run
 
 - `npm run dev`: the game at http://127.0.0.1:4173. Nothing from `public/ui/` is wired into it yet.
-- `node ui-preview-server.mjs`: the UI gallery at http://127.0.0.1:4175/ui/preview.html. `server.mjs` only serves an allowlist, so `/ui/` returns 404 on port 4173. Vercel serves `public/**`, so `/ui/preview.html` works there.
+- `node ui-preview-server.mjs`: the UI gallery at http://127.0.0.1:4175/ui/preview.html. `server.mjs` only serves an allowlist, so `/ui/` returns 404 on port 4173. On Vercel, `/ui/` is not routed yet (`vercel.json` maps only some paths), so use the `/public/` prefix there: `/public/ui/mood-preview.html` works fully, and `/public/ui/preview.html` loads without its icons, badges and stage images.
 - Figma design system: file `6QNXwAjpDU1niZin1aiWby` (node IDs in UI-CONTEXT §0.1).
 - `ui/v2-look` was pushed to origin on Nov 22 (up to `aa5caf3`). Later commits are local. Ask Cassius before pushing again or opening a PR.
 
