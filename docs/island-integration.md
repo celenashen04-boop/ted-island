@@ -1,4 +1,6 @@
-# Island integration and progress
+# Island integration and progress (v2)
+
+*Version 2 · November 22, 2026 · Based on the updated logic in Figma (node 614:54). Version 1 is commit `0694768`.*
 
 The Studio started from general-site commit `a5fa553`. The revised procedural models have now been brought back into the Research Garden. Both experiences consume the same sources in `public/island-kit/`; the separate Studio viewer and routes live under `public/studios/`. See the [Studio editing guide](island-studio.md).
 
@@ -16,5 +18,6 @@ The Studio started from general-site commit `a5fa553`. The revised procedural mo
 
 - Player View and World View build the same island kit used by the standalone Studio.
 - The Research Garden and its server use the same navigation model to resolve terrain height and seed placement. Decorative vegetation is compatible with seed drops on eligible ground.
-- The full game retains its existing onboarding, Seed Catalog, planting, player movement, and bridge progression. The Studio provides a separate viewing and local editing workflow and has no garden session.
-- Island Studio is linked from the onboarding screen and Bridge dashboard. The Node server and Vercel route configuration both expose `/studios` and its three island pages.
+- The full game keeps its onboarding, Seed Catalog, planting, and player movement. As of November 22, 2026, bridge construction is replaced by permanent bridges with time-limited island access. See [the change log](logic-changes-2026-11-22.md) for details. The Studio provides a separate viewing and local editing workflow and has no garden session.
+- Island Studio is no longer linked from the onboarding screen, because the link confused new players. The Node server and Vercel route configuration both expose `/studios` and its three island pages.
+- Permanent bridge models, revised plant stages, island icons, and scenery-plant changes are tracked in [the modeling brief](modeling-brief.md).

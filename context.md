@@ -1,6 +1,8 @@
-# CHI Island · Design context
+# CHI Island · Design context (v2)
 
-Consult this file before changing CHI Island’s views, game rules, or data model. Update it when design decisions change. It describes the intended platform behavior. The current prototype uses three islands and domain-based onboarding. The rules below are the design reference.
+*Version 2 · November 22, 2026 · Based on the updated logic in Figma (node 614:54). Version 1 is commit `0694768`.*
+
+Consult this file before changing CHI Island’s views, game rules, or data model, and update it when design decisions change. It describes the intended platform behavior and serves as the design reference. The current prototype uses three islands and domain-based onboarding. The rules changed on November 22, 2026; see [the change log](docs/logic-changes-2026-11-22.md). The 3D modeling work is in [the modeling brief](docs/modeling-brief.md), and the server work is in [the backend plan](docs/backend-plan.md).
 
 ## Island environments
 
@@ -10,103 +12,160 @@ Consult this file before changing CHI Island’s views, game rules, or data mode
 | Sustainability | Verdant Springs |
 | Games & Play | Pinwheel Island |
 
-Player View and World View share the same animated environments. Keep the research domain names in the game UI. Follow the terrain for movement and planting, and attach walkable bridges to the models’ designated landing decks.
+Player View and World View share the same animated environments. Keep the research domain names in the game UI. Movement and planting follow the terrain. Each island pair is joined by a permanent walkable bridge attached to the models’ designated landing decks.
 
-In Player View, players automatically step up onto stair treads and low objects with a stable top and enough headroom. The maximum rise is three-quarters of their character height. Taller obstacles such as the pinwheel mast, and unbridged island edges, block movement.
+Each island has a representative color and an icon designed for its theme. Use them on Island Access cards, catalog packets, and the origin icon on each tree trunk.
 
-Use the island meshes for solid-object collision in Player View. Keep stairs, decks, and ramps walkable, preserve clearance through openings, and allow residents to wade through shallow water.
+In Player View, players automatically step up onto stair treads and low objects with a stable top and enough headroom. The maximum rise is three-quarters of the character’s height. Taller obstacles, such as the pinwheel mast, and island edges without a bridge block movement.
+
+Use the island meshes for solid-object collision in Player View. Keep stairs, decks, ramps, and bridges walkable. Preserve clearance through openings, and let residents wade through shallow water.
 
 Scale the three animated islands to 1.125 times their original width, height, and depth. Keep saved plants in the same relative locations.
 
+Scenery plants on the islands must not be confused with idea plants. Remove scenery plants except the round green bushes. Ray makes the final call for each island.
+
+## Login and identity
+
+- The enter page creates the player’s session before they choose a domain.
+- The system generates an anonymous, readable user ID, such as `Mossy-Fern-4821`. Players cannot choose or change it. It is the player’s only public name. It appears as a semi-transparent label at the top right of the main page, on seeds and plants, and in comments.
+- On the first visit, show the ID with a **Copy** button and “Save this ID — you'll need it to log back in.” The player then sets a password of at least six characters. Returning players sign in with their ID and password. A cookie keeps the browser signed in.
+- Email is optional and private. It is used only for notifications and password reset. Encourage players to add it, and warn players without an email that a forgotten password cannot be recovered. Provide consent, notification preferences, and an unsubscribe option.
+- **Login as Judge** creates a random ID without a password. Judges choose an island and play as regular players. Each judge session is unique, synchronizes in real time across browsers and devices, survives a refresh, and lasts for the browser session.
+- The CHI website’s entry button is a regular link to the game and passes no attendee data.
+
+## Onboarding and tutorial
+
+- New residents choose a domain from the three islands. The chosen domain becomes their home island. Selecting **home island** on the Welcome screen explains what a home island means and does. An existing resident completing onboarding can choose their home island. Previously planted seeds stay on their original islands.
+- Residents can add an optional LinkedIn URL and choose whether to share it through their research. Previously uploaded profile photos stay visible only to the resident who supplied them.
+- The Welcome screen does not link to Island Studio.
+- After the home island is chosen, a tutorial covers walking, creating a seed, using the Seed Catalog, and adopting and planting a seed. It also covers watering and nourishing, and shows each plant stage. It ends with the sequence that opens another island: adopt a seed from that island, water or nourish it, and the bridge opens.
+
 ## Instruction overlays
 
-- Use shared frosted glass for instructions and short in-game guidance. Use a low-opacity warm tint, soft blur, and dark text. Use a solid surface when blur is unavailable or the player requests more contrast.
-- Show movement and camera controls on arrival, map controls in World View, and an explanation of watering and fertilizing beside the actions in planted seed details. Give each hint a Got it button and remember dismissal in that browser.
-- After an adopted seed is planted, point the player to Bridges in World View to track construction.
+- Use shared frosted glass for instructions and short in-game guidance: a low-opacity warm tint, soft blur, and dark text. Use a solid surface when blur is unavailable or the player requests more contrast.
+- Show movement and camera controls on arrival and map controls in World View. In planted seed details, explain watering and fertilizing next to those actions, including the access each one earns. Give each hint a **Got it** button and remember dismissal in that browser.
+- At an island edge without a bridge, show “The bridges are this way.” At a locked bridge, show “Adopt a {island} seed, then water or nourish it to unlock this bridge,” with a button that opens the catalog filtered to that island.
 
 ## World View
 
 - Label islands by subject only: **Health & Wellbeing**, **Sustainability**, and **Games & Play**.
+- Show the three permanent bridges. Mark bridges the resident can currently cross.
 - Let residents drag to rotate the world.
-- Make the resident’s home island the only clickable island on the map. Select it to return to Player View. Other island labels are muted and inactive. Residents use the dashboard to check bridge progress and crossing access.
-- Keep the world map full width by default. A circular bridge icon at the top right slides the bridge dashboard in and out, in the same position as Seed Catalog in Player View. The dashboard shows construction progress for every bridge connecting the resident’s home island to another CHI island.
+- The resident’s home island is the only clickable island on the map. Selecting it returns to Player View. Other island labels are muted and inactive.
+- Keep the world map full width.
 
 ## Player View
-- Phone play uses landscape. When a phone opens or returns to portrait, show a rotate prompt over the current screen and resume the same view when it returns to landscape. Offer fullscreen landscape on browsers that support it. The preview scales an interactive landscape phone viewport to fit the panel.
-- During onboarding, residents choose their domain from the three islands. The chosen domain becomes their home island. An existing resident completing onboarding can choose their home island. Previously planted seeds stay on their original islands. Residents can add an optional LinkedIn URL and choose whether to share it through their research. Previously uploaded profile photos stay visible only to the resident who supplied them.
-- Show the other islands in the distance, using the same relative direction and height as World View. Use the island the player is standing on as the reference point.
-- Show the trees growing toward the connected island and the resulting bridge directly in the 3D scene. Eligible players can step onto the completed span and walk across in Player View.
+
+- Phone play uses landscape. When a phone opens or returns to portrait, show a rotate prompt over the current screen. Resume the same view when the phone returns to landscape. Offer fullscreen landscape on browsers that support it. The preview scales an interactive landscape phone viewport to fit the panel.
+- Show the other islands and the bridges leading to them in the distance, using the same relative direction and height as World View. Use the island the player is standing on as the reference point.
 - Use the left joystick to move and drag on the right side to change the viewing direction.
-- Stop walking at the outer edges of islands and completed bridges. An eligible player can walk between an island and the bridge entrance.
 - Provide a circular globe button to switch to World View.
-- Ready an acorn with the bottom-right plus button. It rotates into an × that cancels the throw. Show “Tap to throw.” A tap or click anywhere in the scene sends the acorn the same short distance in the direction the player faces, unless it hits an obstacle first. Frame the flight and hold briefly on the landing. Dragging adjusts the camera while the acorn is ready. Keep the earlier slingshot control available as an alternate in the scene code.
-- Place a circular **Seed Catalog** button with a single seed icon at the top right.
-- Let residents select plants in the garden. Liking another resident’s plant on the same island waters it. Leaving a comment fertilizes it.
-- Let residents adopt seeds from other islands through the Seed Catalog. Residents discover seeds originating on their own island in the physical garden. Those seeds appear in the catalogs of residents on other islands.
+- Show the resident’s user ID and a notification bell at the top right. One dropdown button opens the **Seed Catalog** and **Island Access**. Cassius (UI) decides its final contents and layout.
+- Ready an acorn with the bottom-right plus button. It rotates into an × that cancels the throw. Show “Tap to throw.” A tap or click anywhere in the scene sends the acorn the same short distance in the direction the player faces, unless it hits an obstacle first. Frame the flight and hold briefly on the landing. Dragging adjusts the camera while the acorn is ready. After a failed throw, the player can retry by selecting the seed where it landed, without pressing the plus button again. Keep the earlier slingshot control in the scene code as an alternative.
+- Let residents select plants in the garden. Liking another resident’s plant waters it. Leaving a comment nourishes it. Each action plays an animation and shows how it contributes to growth and access.
+- Residents adopt seeds from other islands through the Seed Catalog. They discover seeds that originated on their own island in the physical garden. Those seeds appear in the catalogs of residents on other islands.
 
 ## Seed creation and planting
 
 - Every resident can create and plant an idea seed on their home island by readying an acorn and tapping the scene to throw it.
 - A seed can start from an article title, a research idea, or an uploaded paper or poster. Include a short description and an open question to invite discussion.
-- Once planted, the seed appears on its original island and enters the catalog of residents on other islands.
-- Each seed retains its creator and original home island. On the shelf, each packet shows only the research title. Select a packet to open a centered overlay with its description, open question, and adoption action or planting status. Catalog and planted seed popups show the original island in a pill and keep the close button visible while the content scrolls. Click or tap outside either popup to close it.
-- Show **Connect to author** at the bottom of the popup when a player selects a planted seed or plant directly in the 3D scene and its creator has chosen to share their LinkedIn. Residents can change sharing from their own island badge. Sharing is off by default, including for existing profiles.
-- Residents can select a seed from another island in the catalog and plant it on their own home island.
-- Show all eligible seed packets together in All islands, with a shelf beneath each row. Color each packet by its original island. Residents can filter to a single island. Packets lift on mouse hover or keyboard focus and give the same feedback on press on touchscreens.
-- The first time the Seed Catalog opens in a browser, show a dismissible tip explaining how to adopt and plant a seed and how this starts a bridge.
-- The catalog is the only place to adopt seeds. Each seed can be planted only once per island. Visiting an island gives no ability to collect or replant its seeds there or bring them home directly.
+- Once planted, the seed appears on its original island and enters the catalogs of residents on other islands.
+- Each seed retains its creator and original home island. On the shelf, each packet shows only the research title. Selecting a packet opens a centered overlay with its description, open question, adoption action or planting status, and the access that adoption earns. Catalog and planted seed popups show the original island in a pill and keep the close button visible while the content scrolls. Clicking or tapping outside either popup closes it.
+- When a player selects a planted seed or plant in the 3D scene and its creator has chosen to share their LinkedIn, show **Connect to author** at the bottom of the popup. Residents can change sharing from their own island badge. Sharing is off by default, including for existing profiles.
+- Residents can select a seed from another island in the catalog and plant it on their home island.
+- Show all eligible seed packets together under All islands, with a shelf beneath each row. Color each packet by its original island. Residents can filter to a single island. Packets lift on mouse hover or keyboard focus, and give the same feedback on press on touchscreens.
+- The first time the Seed Catalog opens in a browser, show a dismissible tip explaining how to adopt and plant a seed, and that adopting opens 48 hours of access to the seed’s island.
+- The catalog is the only place to adopt seeds. Each seed can be planted only once per island. Visiting an island gives no ability to collect or replant its seeds there, or to bring them home directly.
 
 ## Plant growth and shared discussion
 
 - Residents can nourish plants on their home island. A like waters a plant, and a comment fertilizes it.
-- A seed can grow into a tree through participation on its home island alone.
-- Planting the same seed on multiple islands creates multiple locations for one shared plant. Comments, likes, contributors, and growth are synchronized across those locations. Users can see contributions from every participating island.
-- When a growing or mature tree is adopted, the new island receives its current growth and shared discussion. Suggested catalog copy reads “This idea is already growing. Bring its current tree and shared conversation to your island.”
-- Once the same seed is planted on both islands, the two plantings grow in sync and develop toward one another. Their bridge growth becomes visible as they advance from seed to mature tree.
-- When a mature tree is adopted, the new planting inherits its maturity. The new island pair still begins its bridge participation count at 0%, and the two mature plantings grow toward each other to form the span.
-- A mature tree reaches its final size and continues responding to participation. Its bridge-forming growth can continue until it joins the paired tree. Previous discussions and takeaways stay accessible.
+- A seed can grow into a mature plant through participation on its home island alone.
+- Planting the same seed on multiple islands creates multiple locations for one shared plant. Comments, likes, contributors, and growth are synchronized across those locations, and residents can see contributions from every participating island.
+- When a growing or mature plant is adopted, the new island receives its current growth and shared discussion. Suggested catalog copy: “This idea is already growing. Bring its current tree and shared conversation to your island.”
+- Each tree trunk shows its original island’s icon.
+- A mature plant reaches its final size and continues responding to participation. Previous discussions and takeaways stay accessible.
 
-### Prototype growth thresholds
+### Growth stages
 
-- Use a low-poly acorn oak for the default growth art. Show a capped acorn, a two-leaf sprout, a lobed-leaf sapling, a small oak, and a wider mature oak. Use the same acorn when ready to throw and in flight.
+Use the plant models from the modeling brief: a planted seed, then three main stages.
 
 | Stage | Water required | Nutrients required | Participation requirement |
 | --- | ---: | ---: | --- |
 | Seed planted | 0 | 0 | Seed submitted |
 | Sprout | 1 | 0 | One person other than the creator participates |
 | Young plant | 2 | 2 | At least two contributors overall |
-| Tree | 4 | 4 | At least three contributors overall |
-| Mature tree | 6 | 8 | At least four contributors, including two people who have replied to someone else |
+| Mature plant | 6 | 8 | At least four contributors, including two people who have replied to someone else |
 
-Each like gives one water, and each comment or reply gives one nutrient. Count distinct residents across all plantings when applying the participation requirements.
+Each like gives one water, and each comment or reply gives one nutrient. Count distinct residents across all plantings when applying the participation requirements. Each resident can like a plant once, and edits add nothing.
 
-## Bridge creation and construction
+### Inactivity and data retention
 
-- Planting an adopted seed starts the connection between its original island and the adopting island. The paired plantings visibly grow toward each other across the gap. A seed from A planted by residents of B and C can form A–B and A–C connections. A B–C bridge requires its own connection.
-- Use Mossy Tangle in Player View and World View. The saplings develop short shoots, the young oaks start to reach out, and the mature oaks extend thicker, rounded limbs. When the branches intertwine, the broad central bough becomes the walking surface. Show the open gap in the map while the bridge is still growing.
-- Show the construction percentage alongside resident, discussion, and reply counts. Show the next action needed, such as “Add a question, example, or reply to finish the walkway.”
-- **Foundations (40%)** — Add 10% per unique resident who likes or comments on a shared plant, capped at two residents per island.
-- **Walkway (40%)** — Add 10% per qualifying comment or reply, up to four contributions total and at most three from either island. Completion requires at least one contribution from each island.
-- **Connection (20%)** — Award 20% for the first qualifying reply between residents of the two endpoint islands.
-- The bridge physically forms when the two mature trees join across the gap. It opens for crossing when the span has joined and the pair has met all three participation requirements. The dashboard shows when participation is complete and the trees are still growing together. Once open, the bridge stays open.
-- Keep one bridge per island pair. While it is growing, show the most developed shared planting pair. When the bridge opens, keep it attached to the plantings that formed it. For bridges already open before tree-built spans were introduced, preserve crossing access and link an existing shared planting pair.
-- For each shared seed, count activity only after that seed is planted on both islands. Count activity across all plants the pair shares.
-- Count at most two comments or replies per person toward construction. A qualifying cross-island reply can occupy one of those slots in place of an earlier comment. Further discussion still nourishes the plant.
-- Each resident's likes count toward their participation once per bridge, regardless of how many plants they like. Edits, repeated likes, and the original seed description do not add progress.
-- Third-island residents can help the shared plant grow but cannot build this bridge.
-- For a seed originating on A and also planted on B and C, track A–B and A–C independently. New activity from A can support both bridges. Activity from B supports A–B, and activity from C supports A–C. Each bridge needs its own endpoint residents and a reply between those two communities.
+- Meaningful activity is watering, nourishing, commenting, or replying. Opening the site does not count. Measure inactivity on the shared plant, so activity at any planting keeps every planting active.
+
+| Days without meaningful activity | State |
+| --- | --- |
+| 0–14 | Active. No change. |
+| 12 | “Your tree is getting thirsty” reminder |
+| 15–30 | Dormant. The plant gradually shrinks to its seedling form. The discussion stays accessible. |
+| 31–335 | Inactive seedling |
+| 335 | Notify the creator and all contributors that the plant will be deleted in 30 days. Offer return and export options for the plant data and discussion. |
+| 365 | Delete the plant and its data if every planting is still inactive |
+
+- A dormant plant keeps its earned stage. Only its displayed size changes. One meaningful interaction returns it to that stage.
+- Deleting a plant does not remove contributions associated with other plants.
+
+## Bridges and island access
+
+- All three bridges exist from the start and require no construction.
+- Each resident has separate access to each other island. Access to their home island never expires.
+- Access starts as soon as the qualifying action happens and counts down continuously, including while the resident is offline. There are no active-use timers, daily earning limits, or stored minute balances.
+
+| Action | Access earned |
+| --- | --- |
+| Adopt and plant a seed from another island | 48 hours on that seed’s origin island |
+| Water a plant (like) | 24 hours on the plant’s origin island |
+| Nourish a plant (comment or reply) | 36 hours on the plant’s origin island |
+| Create your own seed | None |
+| Like or comment on your own plant | None |
+
+- **Actions stack up to a 5-day cap.** New expiry = min(max(current expiry, action time) + action duration, action time + 120 hours). Each action adds its full duration until the remaining time reaches 5 days. The cap makes a weekend of access reachable, while a burst of comments cannot bank weeks of access.
+- Show the added time after each action, such as “+24 hours · Games & Play access: 3 days 4 hours.” When the cap is reached, show “Access full (5 days).” The plant still receives its water or nutrient.
+- Only a resident’s first comment or reply on each plant per day earns access. Later comments that day still nourish the plant.
+- An expired resident cannot enter that island across a bridge. A resident already on the island when access expires may stay. Any qualifying action there renews access. Notify them: “Your access to {island} ended. Water or nourish a plant here to stay longer.”
+
+### Island maturity rate
+
+- Each island shows **mature plants ÷ all idea plants planted on it**, counting adopted plantings, for example “4 of 12 ideas mature (33%).”
+- Dormant plants do not count as mature. Everyone can see the rate under each island label in World View and on Island Access cards.
+- An island with no plants shows “No ideas yet.”
+
+### Island Access panel
+
+- Header: **Island Access**. Subtitle: “Home · {domain}”. Body: “Adopt, water, or nourish ideas to unlock other islands and extend your visits.”
+- Each card shows the island icon in the center, surrounded by a ring in the island’s color showing the remaining time. The island name and exact remaining time appear below. The action is **Visit island** while access is active, which turns the view toward that bridge entrance, and **Unlock access** after expiry, which opens the catalog filtered to that island.
+- Rings use a fixed 120-hour (5-day) scale, which matches the cap. The ring is full at 120 hours, three-fifths at 72 hours, two-fifths at 48 hours, and one-fifth at 24 hours. At 6 hours it shows a thin sliver with a clock alert. When access has expired, the ring is empty and muted, labeled **Access expired**. Always show the exact remaining time. Selecting an active card shows the expiry, such as “Access ends Nov 24 at 3:30 p.m.”
 
 ## Crossing and exploring
 
-- Once construction finishes, everyone who contributed to that bridge can walk across it in Player View. The connected growth forms a continuous walking surface between the islands.
-- The dashboard can turn the player's view toward a bridge entrance. Players walk across in either direction.
-- A resident of either connected island who did not contribute during construction can earn crossing access after the bridge opens by commenting on a plant shared by the two islands.
-- Without crossing access, residents can preview the other island’s idea seeds in the Seed Catalog, including the title, description, open question, and planting status. Catalog previews contain no discussions. If a seed is already planted on the resident’s home island, its shared discussion remains accessible from that home planting.
-- Walking off the far end of the bridge brings the player onto the destination island and opens access to its plant directory. Visitors can browse all plants there, including those that are not shared with their home island, and read the full discussions.
-- Visitors can read, like, comment, and reply on plants they visit.
+- A resident with active access can walk across that bridge in either direction in Player View.
+- Without access, residents can preview the other island’s idea seeds in the Seed Catalog, including the title, description, open question, and planting status. Catalog previews contain no discussions. If a seed is already planted on the resident’s home island, its shared discussion remains accessible from that home planting.
+- Walking off the far end of the bridge brings the player onto the destination island and opens access to its plant directory. Visitors can browse all plants there, including those not shared with their home island, and read the full discussions.
+- Visitors can read, like, comment, and reply on plants they visit. These actions extend access to the plant’s origin island.
 - Visiting gives no direct way to collect or bring a seed home. Adopting and planting seeds from another island remains a catalog action.
+
+## Notifications
+
+- **In-app notification center (required):** A bell with an unread dot. Notifications cover comments on your plant, replies to your contributions, island access ending in six hours, and the “getting thirsty” reminder. Followed-plant updates appear here. Deliver live updates through Server-Sent Events.
+- **Email (opt-in):** Send the same events to residents who added an email and opted in. Comment and reply emails include the actual comment text, the commenter’s anonymous ID, and a link to the plant. Send the access reminder six hours before expiry, once per island’s current expiry. When an action extends access, cancel the pending reminder and schedule a new one. Combine islands reaching the threshold together into one email. Every email includes a way to turn reminders off.
+- **Web Push:** Planned after the conference.
+
+## Multiplayer
+
+- Players see each other only through shared seeds, plants, comments, replies, and notifications. Other players’ avatars and positions are not shown or synchronized.
+- Garden changes reach every connected player in real time.
 
 ## Continued participation
 
-- Completed bridges remain usable without maintenance. Residents can continue contributing to shared plants after construction ends.
-- Residents can follow plants and receive updates so they can return to the conversation after the first interaction or after the conference.
+- Residents can continue contributing to shared plants at any time.
+- Residents can follow plants and receive updates, so they can return to the conversation after their first interaction or after the conference.

@@ -1,4 +1,6 @@
-# CHI Island · Research Garden
+# CHI Island · Research Garden (v2)
+
+*Version 2 · November 22, 2026 · Based on the updated logic in Figma (node 614:54). Version 1 is commit `0694768`.*
 
 A local multiplayer prototype using Node.js 24 or newer. Run `npm run dev` from this directory and open [CHI Island](http://127.0.0.1:4173). There are no package dependencies.
 
@@ -6,18 +8,18 @@ A local multiplayer prototype using Node.js 24 or newer. Run `npm run dev` from 
 
 1. Use **WASD** to walk and climb stairs. The edges of the islands and bridges stop you from walking into the gap. Drag the view or use the arrow keys to look around.
 2. Press **Q** or select the bottom-right **+** to ready an acorn. Face open grass and tap or click anywhere in the scene for the same short forward throw. If the acorn lands on open grass, add a title, short description, open question, and optional PDF (up to 10 MB), then choose **Plant research seed**.
-3. Open **Seed Catalog** to adopt a seed from another island. Plant it on your home island to start a bridge. Use the bridge icon in **World View** to check progress, see followed plant updates, and find the bridge entrance. Cross completed bridges on foot in **Player View**.
-4. In a private window or a separate browser profile, click a seed or plant in the scene. Open its PDF or select **Like · Water**.
+3. Open **Seed Catalog** from the top-right menu and adopt a seed from another island. Planting it on your home island opens 48 hours of access to that island. Watering a plant adds 24 hours of access to the plant's origin island, and nourishing it adds 36 hours. Access can stack up to 5 days. **Island Access** in the same menu shows the time left for each island. Walk across the bridge in **Player View** while access is active.
+4. In a private window or a separate browser profile, sign in as a second player or choose **Login as Judge**. Click a seed or plant in the scene, then open its PDF or select **Like · Water**.
 
 On a phone, turn it sideways. Use the left joystick to move and drag on the right to look around. Tap a plant to open its research. On desktop, the [landscape phone preview](http://127.0.0.1:4173/?preview=mobile) shows the same layout.
 
-New guests choose a home island during onboarding and can optionally add a LinkedIn profile. When an author opts in to sharing, residents can open that LinkedIn profile from a plant they select in the 3D scene. Each guest can plant multiple seeds and adopt each foreign seed once. A like waters a plant and a comment fertilizes it. Growth is shared across plantings.
+New players receive an anonymous user ID, such as `Mossy-Fern-4821`, and set a password. They can add an email address for reminders and password recovery. They then choose a home island and complete a short tutorial. Judges receive a random ID without a password. Players can optionally add a LinkedIn profile. When an author opts in to sharing, residents can open that profile from a plant they select in the 3D scene. Each player can plant multiple seeds and adopt each foreign seed once. A like waters a plant, and a comment fertilizes it. Plants grow from a seed into a sprout, a young plant, and a mature plant. Growth is shared across plantings. Plants become dormant after 15 days without activity and can be deleted after 365 days.
 
-Bridges open when two mature oaks join across the gap and the pair completes the participation requirements. The dashboard tracks Foundations, Walkway, and Connection. Contributors can cross the moss-covered branches, and a qualifying comment after opening can grant access. See [context.md](context.md) for the full design.
+All bridges exist from the start. Crossing a bridge requires time-limited access to the island on the other side, while access to the home island never expires. The bell shows comments, replies, and access reminders. Players who opt in also receive these by email. See [context.md](context.md) for the full design, [the November 22 change log](docs/logic-changes-2026-11-22.md) for what changed, [the modeling brief](docs/modeling-brief.md) for the 3D work, and [the backend plan](docs/backend-plan.md) for server work.
 
-The server sends garden changes over Server-Sent Events. The SQLite database in `data/` holds research PDFs, seeds, and likes across refreshes and restarts. `TED_DATA_DIR` can point at a different persistent storage directory. The default address only accepts connections from this machine.
+The server sends garden changes over Server-Sent Events. The SQLite database in `data/` holds accounts, research PDFs, seeds, likes, island access expiries, and notifications across refreshes and restarts. `TED_DATA_DIR` can point at a different persistent storage directory. The default address only accepts connections from this machine.
 
-For remote multiplayer, deploy the Node server with a persistent writable disk, HTTPS, and a proxy that supports unbuffered event streams. Set `HOST=0.0.0.0`, assign `PORT` as needed, and set `TED_SECURE_COOKIE=1` behind HTTPS. Add access controls before using it for private conference material. Guest identity is tied to a browser cookie.
+For remote multiplayer, deploy the Node server with a persistent writable disk, HTTPS, and a proxy that supports unbuffered event streams. Set `HOST=0.0.0.0`, assign `PORT` as needed, and set `TED_SECURE_COOKIE=1` behind HTTPS. Add access controls before using it for private conference material. Players sign in with their user ID and password, and a browser cookie keeps the session signed in. Email reminders require an outgoing mail service.
 
 Vercel uses temporary storage for this preview. Seeds, likes, and PDFs may disappear when instances are replaced, and players on different instances may see separate gardens. Use a host with a persistent disk for a shared garden with durable saves.
 
@@ -39,6 +41,6 @@ Open [Island Studio](https://ted-island.vercel.app/studios) to inspect one islan
 
 ## Design references
 
-- [Growth and bridges](docs/growth-and-bridges.html) shows the five acorn oak stages, bridge design studies, and an interactive crossing. Open the HTML in a browser.
+- [Growth and bridges](docs/growth-and-bridges.html) is an earlier study from before November 22. It shows the five acorn oak stages and tree-built bridges, both since replaced. Open the HTML in a browser.
 - [Seed concepts](docs/seed-concepts) contains the acorn oak, cherry blossom, and lantern tree reference sheets.
 - [Earlier prototype snapshot](docs/prototype-snapshot-2026-11-19.md) records the single-island version.
