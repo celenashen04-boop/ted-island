@@ -163,13 +163,14 @@
 
 /* ---------- Water ripple and nourish pulse (mocked in 2D) ----------
    <span class="ui-fx ui-fx--water is-playing"><i></i><i></i></span> under a plant.
-   Water: two cool hairline rings expand outward.
-   Nourish: a warm soil disc swells and fades. */
+   Both use the plant's origin island hue (set .ui-island-* on a parent).
+   Water: two thin rings expand outward.
+   Nourish: a filled disc swells and fades. */
 
 .ui-fx { position: absolute; left: 50%; bottom: 0; width: 96px; height: 32px; translate: -50% 50%; pointer-events: none; }
 .ui-fx > i { position: absolute; inset: 0; border-radius: 50%; opacity: 0; }
 
-.ui-fx--water > i { border: 2px solid var(--color-fx-water); }
+.ui-fx--water > i { border: 2px solid var(--island, var(--color-text-primary)); }
 @keyframes ui-ripple {
   from { transform: scale(0.2); opacity: 1; }
   to   { transform: scale(1.4); opacity: 0; }
@@ -177,7 +178,7 @@
 .ui-fx--water.is-playing > i { animation: ui-ripple var(--motion-duration-ripple) var(--motion-ease-out) both; }
 .ui-fx--water.is-playing > i + i { animation-delay: var(--motion-stagger); }
 
-.ui-fx--nourish > i { background: var(--color-fx-nourish); }
+.ui-fx--nourish > i { background: var(--island, var(--color-text-primary)); }
 @keyframes ui-soil-pulse {
   0%   { transform: scale(0.4); opacity: 0; }
   30%  { opacity: 0.55; }

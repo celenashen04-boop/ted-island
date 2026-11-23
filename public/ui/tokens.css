@@ -100,11 +100,10 @@
   --motion-shift-card: 8px;
 
   /*
-   * Effect colors for water and nourish. PLACEHOLDER: these are new hues,
-   * which is a palette decision for Cassius (cool water, warm soil).
+   * Water and nourish effects use the plant's origin island hue (--island),
+   * so island color stays the only color on screen. Shape tells them apart:
+   * thin rings for water, a filled disc for nourish. (Decided Nov 22.)
    */
-  --color-fx-water: #3F9BD8;
-  --color-fx-nourish: #C27C2C;
 }
 
 @media (prefers-reduced-motion: reduce) {

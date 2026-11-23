@@ -532,13 +532,13 @@
             </div>
           </header>
           <div class="g-demo__stage g-demo__stage--scene">
-            <div class="g-ground">
+            <div class="g-ground ui-island-sustainability">
               <span class="ui-fx ui-fx--water" aria-hidden="true"><i></i><i></i></span>
               <span class="ui-fx ui-fx--nourish" aria-hidden="true"><i></i><i></i></span>
               <span class="ui-plant"><img class="ui-stage" src="stages/young.svg" alt="Young plant"></span>
             </div>
           </div>
-          <p class="g-demo__hook"><b>Hook-up (Celena now, Ray later):</b> plants are drawn on the 2D canvas over the three.js scene, so for now <code>scene.mjs</code> draws two expanding ellipses (water) or a swelling disc (nourish) at the plant's base, timed with <code>motionMs('--motion-duration-ripple')</code> and colored with <code>--color-fx-water</code> and <code>--color-fx-nourish</code>. Once plants move into three.js, Ray can use a flat ring decal with the same timing. The feedback prompt ("+1 water · ...") stays the text signal.</p>
+          <p class="g-demo__hook"><b>Hook-up (Celena now, Ray later):</b> plants are drawn on the 2D canvas over the three.js scene, so for now <code>scene.mjs</code> draws two expanding ellipses (water) or a swelling disc (nourish) at the plant's base, timed with <code>motionMs('--motion-duration-ripple')</code> in the plant's origin island hue (thin rings for water, a filled disc for nourish). Once plants move into three.js, Ray can use a flat ring decal with the same timing. The feedback prompt ("+1 water · ...") stays the text signal.</p>
         </article>
 
         <!-- Landing -->
