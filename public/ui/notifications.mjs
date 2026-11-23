@@ -16,8 +16,8 @@
 //   bell.element.addEventListener('click', () => notes.open());
 //   notes.update(items);                  // new list; returns the unread count for bell.setUnread()
 //
-// Types and copy. "access" and "thirsty" follow Figma; "comment" is the fourth
-// type from the v2 docs and has no Figma variant yet (its copy is new).
+// Types and copy follow the four Notification Row variants in Figma:
+// Reply, Comment, Access and Thirsty.
 
 import { el, icon, islandClass, islandUi } from './islands-ui.mjs';
 import { openPanel, closePanel } from './motion.mjs';
@@ -30,7 +30,7 @@ const TYPES = {
     body: n => (n.quote ? `“${n.quote}”` : ''),
   },
   comment: {
-    icon: 'nourish', // a comment nourishes a plant
+    icon: 'nourish',
     eyebrow: n => n.plant,
     title: () => 'New comment on your seed',
     body: n => (n.quote ? `“${n.quote}”` : ''),

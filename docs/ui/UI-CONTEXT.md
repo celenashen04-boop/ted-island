@@ -320,11 +320,7 @@ Celena's agent is rewriting `index.html`, `app.mjs`, and `style.css` for the v2 
 - **Celena:** the notification panel (`public/ui/notifications.mjs`) needs a list of `{ id, type: 'reply' | 'comment' | 'access' | 'thirsty', island, at (ms), unread, plant?, quote?, hoursLeft?, idleDays? }` and whether the player has an email. `update(items)` returns the unread count for `bell.setUnread()`. `onSelect(item)` should open the plant, or Island Access for `access`. Marking an item read on the server is hers. (Added Nov 22, Phase 5.)
 - **Celena:** `public/ui/email-notification.html` is the email template, with `{{placeholders}}` listed in its header comment. Every value must be HTML-escaped on the server. (Added Nov 22, Phase 5.)
 - **Celena:** in-world pieces in `public/ui/world-feedback.mjs` (View idea pill, dormant label, landing markers, edge and locked prompts, water and nourish feedback) are DOM elements. The game positions them over the canvas from projected world positions. (Added Nov 22, Phase 5.)
-- **Team (Cassius to check):** new Phase 5 copy that is not in Figma:
-  - "New comment on your seed": the fourth notification type.
-  - "+1 nourish · {island} access until {time}".
-  - The comment and access email subjects and leads, listed in the template's header comment.
-  (Added Nov 22, Phase 5.)
+- **Team (Cassius flagging it):** the comment and access email subjects and opening lines in `email-notification.html` are placeholders. Cassius approved them on Nov 23 and is checking them with the team. Nourish feedback is "+1 nutrient · {island} access until {time}" to match the Nutrients stat. (Added Nov 22, Phase 5; updated Nov 23.)
 
 ---
 

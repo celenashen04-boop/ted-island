@@ -744,7 +744,7 @@
         <div class="g-panel"><span class="t-label-s">Figma · List 21:1107</span><div class="g-ref"><img src="figma-ref/notif-list.png" alt="Figma notification list panel." width="440" height="390"></div></div>
         <div class="g-panel"><span class="t-label-s">Figma · Empty 21:1277</span><div class="g-ref"><img src="figma-ref/notif-empty.png" alt="Figma empty notifications panel." width="440" height="390"></div></div>
       </div>
-      <p class="g-note">Figma shows three row types (Reply, Access ending, Thirsty tree). The fourth type from the v2 docs, a comment on your seed, has no Figma variant: it uses the nourish icon (a comment nourishes a plant) and new copy, "New comment on your seed". When the player already has an email, the empty state drops "Add an email to get them after CHI too." and the Add email button. Rows fill the panel width; Figma draws them 10 px short of the header rule.</p>
+      <p class="g-note">All four row types follow the Notification Row variants (14:364): Reply, Comment, Access ending and Thirsty tree. When the player already has an email, the empty state drops "Add an email to get them after CHI too." and the Add email button. Rows fill the panel width; Figma draws them 10 px short of the header rule.</p>
 
       <h3 class="t-heading-m" style="margin:32px 0 8px">Email</h3>
       <p class="g-sub">21:1302. Table layout with inline styles, no images or scripts, so it holds up in Gmail, Apple Mail and Outlook. Placeholders are listed at the top of the file; here they are filled with the Figma sample.</p>
@@ -752,7 +752,7 @@
         <div class="g-panel"><span class="t-label-s">Code · email-notification.html</span><div class="g-ref"><iframe id="email-frame" title="Notification email preview" style="display:block;width:600px;max-width:100%;height:560px;border:0;background:#F4F4F1"></iframe></div></div>
         <div class="g-panel"><span class="t-label-s">Figma · Email body 21:1303</span><div class="g-ref"><img src="figma-ref/email.png" alt="Figma notification email." width="520" height="458" style="max-width:100%;height:auto"></div></div>
       </div>
-      <p class="g-note">Differences from Figma: Figma's rule accent is Health red and its quote bar is Sustainability green on a Health plant; the template uses the plant's island hue for both. Unsubscribe and Email preferences are underlined so they read as links without relying on color. Subjects and leads for the comment and access emails are proposed in the file's header comment and need Cassius's check.</p>
+      <p class="g-note">Differences from Figma: Figma's rule accent is Health red and its quote bar is Sustainability green on a Health plant; the template uses the plant's island hue for both. Unsubscribe and Email preferences are underlined so they read as links without relying on color. Subjects and opening lines for the comment and access emails are in the file's header comment, approved as placeholders while Cassius checks them with the team.</p>
     </section>
 
     <!-- Phase 5 · In-world feedback -->
@@ -793,7 +793,7 @@
         <span class="t-label-s" id="world-ref-label">Figma</span>
         <div class="g-ref"><img id="world-ref" src="figma-ref/player-default.png" alt="Figma Player View frame for comparison." width="844" height="390" style="max-width:100%;height:auto"></div>
       </div>
-      <p class="g-note">Copy: water feedback uses the confirmed "+1 water · Sustainability access until Tue 3 p.m."; nourish follows the same pattern ("+1 nourish · ...") as new copy. The locked prompt keeps the confirmed copy without the final period that Figma adds. The failed-throw marker is a button (tap or Enter retries); the other markers are status messages for screen readers.</p>
+      <p class="g-note">Copy: water feedback uses the confirmed "+1 water · Sustainability access until Tue 3 p.m."; nourish reads "+1 nutrient · Sustainability access until Tue 3 p.m." to match the Nutrients stat (Cassius, Nov 23). The locked prompt keeps the confirmed copy without the final period that Figma adds. The failed-throw marker is a button (tap or Enter retries); the other markers are status messages for screen readers.</p>
     </section>
 
     <!-- Motion -->
@@ -1438,6 +1438,7 @@
     const min = 60000, hour = 60 * min;
     const sample = () => [
       { id: 'n1', type: 'reply', island: 0, plant: 'Haptics for calm breathing', quote: 'Could this work for group breathing?', at: Date.now() - 2 * min, unread: true },
+      { id: 'n4', type: 'comment', island: 0, plant: 'Haptics for calm breathing', quote: 'We tried this in our lab, happy to share.', at: Date.now() - 60 * min, unread: false },
       { id: 'n2', type: 'access', island: 1, hoursLeft: 6, at: Date.now() - 5 * hour, unread: true },
       { id: 'n3', type: 'thirsty', island: 2, plant: 'Play as research', idleDays: 12, at: Date.now() - 26 * hour, unread: false },
     ];

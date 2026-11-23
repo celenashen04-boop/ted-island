@@ -113,7 +113,8 @@ export function createActionFeedback({ kind = 'water', island, until }) {
   const name = islandUi(island).name;
   const element = el('div', { class: `ui-prompt ui-prompt--feedback ui-world-prompt ${islandClass(island)}`, role: 'status' },
     icon(kind === 'nourish' ? 'nourish' : 'water'),
-    el('p', { class: 'ui-prompt__line' }, `+1 ${kind === 'nourish' ? 'nourish' : 'water'} · ${name} access until ${formatUntil(until)}`));
+    // Nourish reads "+1 nutrient" to match the Nutrients stat (Cassius, Nov 23).
+    el('p', { class: 'ui-prompt__line' }, `+1 ${kind === 'nourish' ? 'nutrient' : 'water'} · ${name} access until ${formatUntil(until)}`));
   replay(element);
   return { element };
 }
