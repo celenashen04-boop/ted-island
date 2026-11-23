@@ -19,11 +19,15 @@
 
 /* Shared focus ring: a black outline with a white gap, so it reads on the
    paper UI and over the 3D scene. PLACEHOLDER until Figma has a focus variant. */
-:where(.ui-btn, .ui-icon-btn, .ui-id-label, .ui-prompt__action):focus-visible {
+:where(.ui-btn, .ui-icon-btn, .ui-id-label, .ui-prompt__action, .ui-menu__item):focus-visible,
+:where(.ui-btn, .ui-icon-btn, .ui-id-label).is-focus {
   outline: 2px solid var(--color-border-default);
   outline-offset: 2px;
   box-shadow: 0 0 0 2px var(--color-bg-surface);
 }
+
+/* The hidden attribute always wins over a component's display rule. */
+:where([class^="ui-"], [class*=" ui-"])[hidden] { display: none !important; }
 
 /* Visually hidden text for screen readers */
 .ui-sr-only {
@@ -142,9 +146,12 @@
   transform: translate(-50%, -50%);
 }
 
-/* PLACEHOLDER states */
-.ui-btn:hover .ui-btn__label { text-decoration: underline; text-underline-offset: 3px; }
-.ui-btn:active { transform: translateY(1px); }
+/* PLACEHOLDER states. The .is-hover / .is-pressed / .is-focus classes only
+   exist so the gallery can show each state without a pointer. */
+.ui-btn:hover .ui-btn__label,
+.ui-btn.is-hover .ui-btn__label { text-decoration: underline; text-underline-offset: 3px; }
+.ui-btn:active,
+.ui-btn.is-pressed { transform: translateY(1px); }
 .ui-btn:disabled,
 .ui-btn[aria-disabled="true"] {
   background: var(--color-bg-muted);
@@ -206,10 +213,11 @@
 .ui-icon-btn--l.ui-icon-btn--active .ui-icon-btn__dot { left: 41px; }
 
 /* PLACEHOLDER states */
-.ui-icon-btn:hover:not(.ui-icon-btn--active):not([aria-pressed="true"]):not([aria-expanded="true"]) {
+.ui-icon-btn:is(:hover, .is-hover):not(.ui-icon-btn--active):not([aria-pressed="true"]):not([aria-expanded="true"]) {
   background: var(--color-bg-surface);
 }
-.ui-icon-btn:active { transform: translateY(1px); }
+.ui-icon-btn:active,
+.ui-icon-btn.is-pressed { transform: translateY(1px); }
 .ui-icon-btn:disabled {
   border-color: var(--color-border-subtle);
   color: var(--color-text-secondary);
@@ -350,9 +358,154 @@
 .ui-prompt__swatch { width: 10px; height: 10px; flex: none; background: var(--island); }
 .ui-prompt__body { margin: 0; width: 260px; max-width: 100%; font: 500 13px/1.4 var(--font-sans); }
 
+/* ---------- Top-right cluster (Player View / Default 20:3, Menu open 20:147) ----------
+   ID label, bell, menu button. 20 px from the right edge, 18 px from the top,
+   10 px between the ID label and the bell, 8 px between bell and menu.
+   The ID label sits 2 px above the buttons' bottom edge, as in Figma. */
+
+.ui-hud-tr {
+  position: absolute;
+  top: max(18px, env(safe-area-inset-top));
+  right: max(20px, env(safe-area-inset-right));
+  z-index: 5;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-8);
+}
+.ui-hud-tr > .ui-id-label { margin: 0 var(--space-2) var(--space-2) 0; }
+.ui-menu-anchor { position: relative; }
+
+/* ---------- Menu (14:68) and Menu Item (14:67) ----------
+   Width 260. Index, title, one line of live meta. Selected (muted fill,
+   dark index) is used for hover, keyboard focus, and the open panel. */
+
+.ui-menu { width: 260px; min-width: 0; padding: 0; }
+.ui-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  width: 100%;
+  min-height: var(--size-touch);
+  padding: var(--space-12) var(--space-16);
+  border: 0;
+  border-bottom: var(--stroke-hairline) solid var(--color-border-subtle);
+  border-radius: var(--radius-none);
+  background: transparent;
+  color: var(--color-text-primary);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.ui-menu__index {
+  flex: none;
+  font: 400 11px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.ui-menu__text { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.ui-menu__title { font: 600 15px/1.25 var(--font-sans); letter-spacing: -0.01em; white-space: nowrap; }
+.ui-menu__meta {
+  font: 400 9px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ui-menu__item:is(:hover, :focus-visible, [aria-current="true"], .is-selected) { background: var(--color-bg-muted); }
+.ui-menu__item:is(:hover, :focus-visible, [aria-current="true"], .is-selected) .ui-menu__index { color: var(--color-text-primary); }
+.ui-menu__item:focus-visible { outline-offset: -3px; box-shadow: none; }
+
+.ui-menu__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-4) var(--space-4) var(--space-4) var(--space-16);
+}
+.ui-menu__id {
+  flex: 1;
+  min-width: 0;
+  font: 400 12px/1.3 var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+.ui-menu__foot .ui-menu__item {
+  width: auto;
+  border-bottom: 0;
+  padding: var(--space-12);
+  font: 500 13px/1.4 var(--font-sans);
+}
+
+/* ---------- ID label: copied feedback ---------- */
+
+.ui-id-label[data-copied] .ui-icon--copy { --icon: url("icons/check.svg"); }
+
+/* ---------- Tip (frosted glass, dismissible) ----------
+   Not drawn in Figma: built from the Prompt's Locked anatomy (eyebrow,
+   body, one action) for "Got it" guidance such as movement controls and
+   the first Seed Catalog visit. */
+
+.ui-tip {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-12);
+  width: min(320px, 100%);
+  padding: var(--space-16);
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface-prompt);
+  -webkit-backdrop-filter: blur(var(--blur-hud));
+          backdrop-filter: blur(var(--blur-hud));
+  color: var(--color-text-primary);
+}
+.ui-tip__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+  font: 400 9px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ui-tip__eyebrow .ui-icon { --icon-size: 16px; }
+.ui-tip__body { margin: 0; font: 500 13px/1.4 var(--font-sans); }
+
+/* ---------- Hint ("Tap to throw", Ready to throw 20:313) ---------- */
+
+.ui-hint {
+  display: inline-block;
+  margin: 0;
+  padding: var(--space-8) var(--space-16);
+  background: var(--color-bg-inverse);
+  color: var(--color-text-inverse);
+  font: 400 11px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ---------- Frosted surfaces: solid fallback ----------
+   context.md: use a solid surface when blur is unavailable or the player
+   asks for more contrast. */
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ui-icon-btn:not(.ui-icon-btn--active):not([aria-pressed="true"]):not([aria-expanded="true"]),
+  .ui-island-chip, .ui-prompt, .ui-tip { background: var(--color-bg-surface); }
+}
+@media (prefers-contrast: more) {
+  .ui-icon-btn:not(.ui-icon-btn--active):not([aria-pressed="true"]):not([aria-expanded="true"]),
+  .ui-island-chip, .ui-prompt, .ui-tip { background: var(--color-bg-surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .ui-id-label { background: var(--color-bg-inverse); }
+}
+
 /* ---------- Motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
   .ui-btn:active,
-  .ui-icon-btn:active { transform: none; }
+  .ui-icon-btn:active,
+  .ui-btn.is-pressed,
+  .ui-icon-btn.is-pressed { transform: none; }
 }

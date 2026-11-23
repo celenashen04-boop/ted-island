@@ -9,7 +9,7 @@
 | Item | Value |
 |---|---|
 | **UI design system file (Cassius, Direction G)** | https://www.figma.com/design/6QNXwAjpDU1niZin1aiWby (file key `6QNXwAjpDU1niZin1aiWby`) |
-| Team logic file link (Yuwen's v2 logic, precedents) | `PASTE TEAM FIGMA LINK HERE` |
+| Team logic file link (Yuwen's v2 logic, precedents) | https://www.figma.com/design/VI6Ob1laOCaG5tQFddjlff/CHI-Conference (file key `VI6Ob1laOCaG5tQFddjlff`). Not pulled yet: the v2 docs cover behavior (Cassius, Nov 22). |
 | Figma node for the v2 logic ("new"), team file | `614:54` |
 | Figma node for the old logic, team file | `614:70` |
 | Does Cassius have push access to the repo? | `YES / NO` |
