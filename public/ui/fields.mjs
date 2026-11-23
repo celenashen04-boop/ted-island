@@ -5,18 +5,22 @@
 //     autocomplete: 'new-password' });
 //   form.append(pw.element);
 //   pw.setError('Use at least 6 characters.'); pw.setError(null);
+//   createField({ label: 'Short description', name: 'idea', multiline: true, rows: 1, maxlength: 500 });
 
 import { el, icon } from './islands-ui.mjs';
 
 let count = 0;
 
-export function createField({ label, type = 'text', name, placeholder = '', help = '', value = '', autocomplete, inputmode, required = false, spellcheck }) {
+export function createField({ label, type = 'text', name, placeholder = '', help = '', value = '', autocomplete, inputmode, required = false, spellcheck, multiline = false, rows = 2, maxlength }) {
   const id = `ui-field-${++count}`;
   const helpId = `${id}-help`;
-  const input = el('input', {
-    class: 'ui-field__input',
+  // multiline: a textarea with the same 44 px minimum (description, comment).
+  const input = el(multiline ? 'textarea' : 'input', {
+    class: `ui-field__input${multiline ? ' ui-field__input--multiline' : ''}`,
     id,
-    type,
+    type: multiline ? null : type,
+    rows: multiline ? rows : null,
+    maxlength,
     name,
     placeholder,
     autocomplete,

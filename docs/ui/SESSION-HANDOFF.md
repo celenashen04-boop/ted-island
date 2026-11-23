@@ -18,8 +18,8 @@
 | 2 · HUD: menu, ID label, bell, toasts, tip | Done | `hud.mjs`, `menu.mjs`, `id-label.mjs`, `bell.mjs`, `toast.mjs`, `islands-ui.mjs` |
 | 3 · Island Access panel | Done | `access-ring.mjs`, `access-panel.mjs` (styles in `components.css`) |
 | 4 · Onboarding, rotate prompt, tutorial | Done and verified (Nov 22) | `onboarding.css`, `onboarding.mjs`, `fields.mjs`, `rotate-prompt.mjs`, `tutorial.mjs` |
-| 5 · Notifications and in-world feedback | Built and checked against Figma (Nov 22). Waiting on Cassius's review | `notifications.mjs`, `world-feedback.mjs`, `email-notification.html` (styles in `components.css`, `motion.css`) |
-| 6 · Restyle existing panels | Not started | |
+| 5 · Notifications and in-world feedback | Done, approved Nov 23 | `notifications.mjs`, `world-feedback.mjs`, `email-notification.html` (styles in `components.css`, `motion.css`) |
+| 6 · Restyle existing panels | Built and checked against Figma (Nov 23). Waiting on Cassius's review | `catalog.mjs`, `seed-form.mjs`, `plant-detail.mjs`, `world-labels.mjs`, `panel.mjs`, `panels.css` |
 | 7 · Rendering mood | Not started (needs Cassius's approval and Ray) | |
 | 8 · Handoff doc `docs/ui-handoff.md` | Not started | |
 
@@ -47,6 +47,24 @@
   - View idea pill, dormant label, valid, invalid and failed landing, edge prompt, locked bridge with Unlock access, water and nourish feedback with the access toast.
   - The failed-throw marker is a button that retries.
 - **Not built:** scene effects (water ripple, nourish pulse) stay with Celena; they are in the Motion section.
+
+## Phase 6: what was built and checked
+
+- **Seed Catalog** (23:187, filtered 23:335):
+  - Filters for the other islands.
+  - Card states: Available, Growing, and Planted with View idea.
+  - When it opens from Unlock access at a locked bridge, it shows the locked-bridge note.
+- **New seed form** (20:903): title and question side by side, the description, Attach paper or poster, and Plant seed.
+  - Adopted seeds show the current app's confirmation line instead of the fields.
+- **Plant detail** (23:478): the idea column, the shared discussion with replies, and the composer.
+  - Dormant state: the dormant stage image and "One like or comment revives it".
+- **World View labels and legend** (16:416, 23:126).
+- Checked:
+  - side by side with every Figma frame;
+  - 44 px tap areas;
+  - keyboard: focus, validation, Escape, reply and post, Follow pressed state;
+  - no horizontal scroll at 390 px.
+- `.ui-plant` was already taken by the stage-growth mock in `motion.css`, so the plant detail classes use `ui-plant-detail`.
 
 ## Decisions Cassius has made (keep them)
 
@@ -93,6 +111,6 @@ These are listed in UI-CONTEXT §11:
 
 - Every class starts with `ui-`. New work goes in `public/ui/`. No edits to `index.html`, `app.mjs`, `style.css`, `server.mjs`, `garden.mjs` or `api/`.
 - Modules take plain data and callbacks, return DOM, and have no globals. All copy lives in one place per module.
-- Load order: `tokens.css`, `components.css`, `motion.css`, `onboarding.css`. Watch selector specificity, because `motion.css` loads after `components.css`.
+- Load order: `tokens.css`, `components.css`, `motion.css`, `onboarding.css`, `panels.css`. Watch selector specificity, because `motion.css` loads after `components.css`.
 - No em dashes in anything new. Small commits on `ui/v2-look` with the Co-Authored-By line.
 - Playwright screenshots must be saved under the workspace (`.playwright-mcp/`). Delete that folder afterwards.

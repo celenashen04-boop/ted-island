@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="components.css">
   <link rel="stylesheet" href="motion.css">
   <link rel="stylesheet" href="onboarding.css">
+  <link rel="stylesheet" href="panels.css">
   <style>
     /* Gallery layout only. Not part of the component library. */
     * { box-sizing: border-box; }
@@ -165,6 +166,8 @@
       <li><a href="#tutorial">Tutorial</a></li>
       <li><a href="#notifications">Notifications</a></li>
       <li><a href="#world">In-world feedback</a></li>
+      <li><a href="#panels">Panels</a></li>
+      <li><a href="#world-view">World View</a></li>
       <li><a href="#motion">Motion</a></li>
     </ul>
   </header>
@@ -794,6 +797,55 @@
         <div class="g-ref"><img id="world-ref" src="figma-ref/player-default.png" alt="Figma Player View frame for comparison." width="844" height="390" style="max-width:100%;height:auto"></div>
       </div>
       <p class="g-note">Copy: water feedback uses the confirmed "+1 water · Sustainability access until Tue 3 p.m."; nourish reads "+1 nutrient · Sustainability access until Tue 3 p.m." to match the Nutrients stat (Cassius, Nov 23). The locked prompt keeps the confirmed copy without the final period that Figma adds. The failed-throw marker is a button (tap or Enter retries); the other markers are status messages for screen readers.</p>
+    </section>
+
+    <!-- Phase 6 · Panels -->
+    <section id="panels" aria-labelledby="panels-title">
+      <header><h2 id="panels-title" class="t-heading-l">Panels</h2><span class="t-label-s">Phase 6 · catalog.mjs · seed-form.mjs · plant-detail.mjs · panel.mjs · panels.css</span></header>
+      <p>The Seed Catalog, New seed form and Plant detail, restyled as drawn in Screens · World &amp; Panels (11:8). They are new modules that take data and callbacks, so they replace <code>#seed-catalog</code>, <code>#catalog-seed</code>, <code>#plant-dialog</code> and <code>#idea-dialog</code> without editing <code>index.html</code> or <code>style.css</code>. Pick a state; the Figma frame below switches to match.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Live</span>
+        <div class="g-hud-controls">
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-pn="catalog"><span class="ui-btn__label">Seed Catalog</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-pn="filtered"><span class="ui-btn__label">Catalog from Unlock access</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-pn="seed"><span class="ui-btn__label">New seed</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-pn="adopted"><span class="ui-btn__label">Planting an adopted seed</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-pn="plant"><span class="ui-btn__label">Plant detail</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-pn="dormant"><span class="ui-btn__label">Dormant plant</span></button>
+          <span class="t-label-s" id="pn-log" aria-live="polite"></span>
+        </div>
+        <div class="g-hud-scroll">
+          <div class="g-hud" id="pn-frame">
+            <div class="g-hud-tl">
+              <button type="button" class="ui-icon-btn" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+              <div class="ui-island-chip ui-island-health">
+                <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+                <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+                <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
+              </div>
+            </div>
+            <div class="g-joystick" aria-hidden="true"><i></i></div>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus g-hud-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
+          </div>
+        </div>
+      </div>
+      <div class="g-panel" style="margin-top:16px">
+        <span class="t-label-s" id="pn-ref-label">Figma</span>
+        <div class="g-ref"><img id="pn-ref" src="figma-ref/wp-catalog.png" alt="Figma frame for comparison." width="844" height="390" style="max-width:100%;height:auto"></div>
+      </div>
+      <p class="g-note">Kept from the current app because Figma does not draw them: the adopted-seed confirmation ("Plant “…” here to begin connecting the islands."), the idea's short description on Plant detail (shown in grey above the open question; Figma shows only the question), and "Cancel reply". New copy for states Figma does not cover: "Add a title.", "Add an open question.", "Add a short description.", "Write a comment first.", "No comments yet. A comment nourishes this plant.", "Reply to {ID} · nourish", "Following", "No seeds from other islands yet." and "No {island} seeds yet."</p>
+      <p class="g-note">Choices against Figma: the Water bar uses the plant's island hue (Figma draws Sustainability green on a Health plant, as in the email); the three stat bars stay full length as drawn, so the numbers carry the progress. The Panel Header accent is the home island on the catalog and the landing island on the new seed form. On screens taller than a phone, Plant detail keeps its two columns centered at up to 560 px tall so the discussion has room.</p>
+    </section>
+
+    <!-- Phase 6 · World View -->
+    <section id="world-view" aria-labelledby="wv-title">
+      <header><h2 id="wv-title" class="t-heading-l">World View labels</h2><span class="t-label-s">Phase 6 · world-labels.mjs · 23:3 · World Island Label 16:416</span></header>
+      <p>Home is inverse with a home icon, an open island shows its time left, a locked one shows a lock and "Locked". Maturity sits under every name, or "No ideas yet", never 0%. The game positions the labels over the islands.</p>
+      <div class="g-compare">
+        <div class="g-panel"><span class="t-label-s">Code · createWorldLabel(), createWorldLegend() at the Figma positions</span><div class="g-hud-scroll"><div class="g-hud" id="wv-frame"></div></div></div>
+        <div class="g-panel"><span class="t-label-s">Figma · World View 23:3</span><div class="g-hud-scroll"><img src="figma-ref/wp-world.png" alt="Figma World View." width="844" height="390" style="display:block;margin:0 auto"></div></div>
+      </div>
+      <div class="g-panel" style="margin-top:16px"><span class="t-label-s">Figma · World Island Label 16:416</span><div class="g-ref"><img class="fit" src="figma-ref/world-labels.png" alt="Figma world island labels: home, open, locked." width="676" height="101"></div></div>
     </section>
 
     <!-- Motion -->
@@ -1520,6 +1572,94 @@
     }
     document.querySelectorAll('[data-world]').forEach(b => b.addEventListener('click', () => show(b.dataset.world)));
     show('view');
+  </script>
+  <script type="module">
+    // Phase 6: panels and World View labels.
+    import { createSeedCatalog } from './catalog.mjs';
+    import { createSeedForm } from './seed-form.mjs';
+    import { createPlantDetail } from './plant-detail.mjs';
+    import { createWorldLabel, createWorldLegend } from './world-labels.mjs';
+    import { createTopRight } from './hud.mjs';
+
+    const frame = document.getElementById('pn-frame');
+    const log = document.getElementById('pn-log');
+    frame.append(createTopRight({ playerId: 'Mossy-Fern-4821', unread: 1 }).element);
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const min = 60000, hour = 60 * min;
+
+    const seeds = [
+      { id: 's1', island: 2, title: 'Play as research method', idea: 'Using game jams to prototype study protocols with participants.', stage: 'seed' },
+      { id: 's2', island: 2, title: 'Play as research method', idea: 'Using game jams to prototype study protocols with participants.', stage: 'mature', growing: true },
+      { id: 's4', island: 2, title: 'Play as research method', idea: 'Using game jams to prototype study protocols with participants.', stage: 'seed', planted: true },
+      { id: 's3', island: 1, title: 'Repair cafés as design studios', idea: 'Fixing things together as a way to talk about materials and waste.', stage: 'young', growing: true },
+    ];
+    const catalog = createSeedCatalog({
+      contained: true, homeIsland: 0, seeds,
+      isLocked: id => id === 2,
+      onAdopt: seed => { log.textContent = `Adopt: ${seed.title}. Close the catalog and ready the acorn`; },
+      onView: seed => { log.textContent = `View idea: ${seed.title}`; },
+    });
+    const form = createSeedForm({
+      contained: true,
+      onSubmit: async data => { await wait(300); log.textContent = data.adoption ? `Planted adopted seed ${data.adoption.title}` : `Planted ${data.title}${data.file ? ` with ${data.file.name}` : ''}`; return { ok: true }; },
+    });
+    const plant = {
+      id: 'p1', island: 0, author: 'MOSSY-FERN-4821', title: 'Haptics for calm breathing', stage: 'young', plantedOn: [0, 1],
+      idea: 'A wristband that pulses slowly to pace breathing during stressful moments.',
+      question: 'could one haptic pattern sync a whole group’s breathing?',
+      water: { count: 3, goal: 6 }, nutrients: { count: 4, goal: 8 }, contributors: { count: 3, goal: 4 },
+      likes: 3, following: false, paperUrl: '#', canWater: true,
+    };
+    const comments = [
+      { id: 'c1', author: 'MOSSY-FERN-4821', authorIsland: 0, at: Date.now() - 2 * hour, text: 'Could the haptic pattern sync across a group, like a shared breath?',
+        replies: [{ id: 'c2', author: 'TIDAL-OAK-0193', authorIsland: 1, at: Date.now() - 2 * hour, text: 'We ran something similar with paced audio. Happy to compare notes.' }] },
+    ];
+    let current = { ...plant };
+    let thread = comments.map(c => ({ ...c, replies: [...c.replies] }));
+    const detail = createPlantDetail({
+      contained: true,
+      onWater: async p => { await wait(150); log.textContent = 'Watered: +1 water'; return { ...p, likes: p.likes + 1, water: { ...p.water, count: Math.min(p.water.goal, p.water.count + 1) } }; },
+      onFollow: async (p, on) => { log.textContent = on ? 'Following' : 'Unfollowed'; return { ...p, following: on }; },
+      onPost: async ({ text, replyTo }) => {
+        await wait(200);
+        const c = { id: `c${Date.now()}`, author: 'MOSSY-FERN-4821', authorIsland: 0, at: Date.now(), text };
+        if (replyTo) thread.find(t => t.id === replyTo)?.replies.push(c); else thread.push({ ...c, replies: [] });
+        detail.update(current, thread);
+        log.textContent = replyTo ? 'Reply posted: +1 nutrient' : 'Comment posted: +1 nutrient';
+        return { ok: true };
+      },
+    });
+    frame.append(catalog.layer, form.layer, detail.layer);
+
+    const refs = {
+      catalog: ['wp-catalog', 'Seed Catalog 23:134'], filtered: ['wp-catalog-filtered', 'Seed Catalog filtered 23:282'],
+      seed: ['pv-seed-form', 'New seed form 20:791'], adopted: ['pv-seed-form', 'New seed form 20:791 (adopted seed is not drawn)'],
+      plant: ['wp-plant', 'Plant detail 23:426'], dormant: ['wp-plant', 'Plant detail 23:426 (dormant is not drawn)'],
+    };
+    const closeAll = () => { for (const p of [catalog, form, detail]) { p.layer.dataset.state = 'closed'; } };
+    function show(k) {
+      closeAll();
+      log.textContent = '';
+      if (k === 'catalog') catalog.open();
+      if (k === 'filtered') catalog.open({ island: 2 });
+      if (k === 'seed') form.open({ island: 0 });
+      if (k === 'adopted') form.open({ island: 0, adoption: { title: 'Play as research method' } });
+      if (k === 'plant') { current = { ...plant }; thread = comments.map(c => ({ ...c, replies: [...c.replies] })); detail.open(current, thread); }
+      if (k === 'dormant') { current = { ...plant, title: 'Play as research method', island: 2, author: 'QUIET-KELP-7310', dormant: true, plantedOn: [2] }; detail.open(current, []); }
+      const [file, label] = refs[k];
+      document.getElementById('pn-ref').src = `figma-ref/${file}.png`;
+      document.getElementById('pn-ref-label').textContent = `Figma · ${label}`;
+    }
+    document.querySelectorAll('[data-pn]').forEach(b => b.addEventListener('click', () => show(b.dataset.pn)));
+    show('catalog');
+
+    // World View at the Figma positions
+    const wv = document.getElementById('wv-frame');
+    const place = (node, x, y) => { node.style.cssText += `;position:absolute;left:${x}px;top:${y}px`; wv.append(node); };
+    place(createWorldLabel({ island: 0, access: 'home', maturity: { mature: 3, total: 9 } }).element, 150, 140);
+    place(createWorldLabel({ island: 1, access: 'open', maturity: { mature: 4, total: 12 }, hoursLeft: 76 }).element, 290, 22);
+    place(createWorldLabel({ island: 2, access: 'locked', maturity: { mature: 0, total: 0 } }).element, 560, 140);
+    place(createWorldLegend().element, 20, 340);
   </script>
 </body>
 </html>

@@ -320,6 +320,12 @@ Celena's agent is rewriting `index.html`, `app.mjs`, and `style.css` for the v2 
 - **Celena:** the notification panel (`public/ui/notifications.mjs`) needs a list of `{ id, type: 'reply' | 'comment' | 'access' | 'thirsty', island, at (ms), unread, plant?, quote?, hoursLeft?, idleDays? }` and whether the player has an email. `update(items)` returns the unread count for `bell.setUnread()`. `onSelect(item)` should open the plant, or Island Access for `access`. Marking an item read on the server is hers. (Added Nov 22, Phase 5.)
 - **Celena:** `public/ui/email-notification.html` is the email template, with `{{placeholders}}` listed in its header comment. Every value must be HTML-escaped on the server. (Added Nov 22, Phase 5.)
 - **Celena:** in-world pieces in `public/ui/world-feedback.mjs` (View idea pill, dormant label, landing markers, edge and locked prompts, water and nourish feedback) are DOM elements. The game positions them over the canvas from projected world positions. (Added Nov 22, Phase 5.)
+- **Celena:** Phase 6 panels are new modules that replace dialogs in `index.html`. Each takes data and callbacks:
+  - `catalog.mjs` replaces `#seed-catalog` and `#catalog-seed`. It needs seeds `{ id, island, title, idea, stage, growing, planted }`, plus `isLocked(islandId)`, `onAdopt(seed)` and `onView(seed)`. `open({ island })` opens it filtered, from Unlock access.
+  - `seed-form.mjs` replaces `#plant-dialog`. `onSubmit` receives `{ title, question, idea, file }` or `{ adoption }`.
+  - `plant-detail.mjs` replaces `#idea-dialog`. It needs a plant (fields in the file header), comments with one level of replies, and `onWater`, `onFollow` and `onPost({ text, replyTo })`.
+  - `world-labels.mjs` adds the island labels and legend over the World View map. The game positions them.
+  (Added Nov 23, Phase 6.)
 - **Team (Cassius flagging it):** the comment and access email subjects and opening lines in `email-notification.html` are placeholders. Cassius approved them on Nov 23 and is checking them with the team. Nourish feedback is "+1 nutrient · {island} access until {time}" to match the Nutrients stat. (Added Nov 22, Phase 5; updated Nov 23.)
 
 ---
