@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>CHI Island UI Gallery</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <style>
+    /* Gallery layout only. Not part of the component library. */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--color-bg-canvas);
+      color: var(--color-text-primary);
+      font: 400 15px/1.45 var(--font-sans);
+    }
+    .g-header {
+      padding: var(--space-48) max(var(--space-24), env(safe-area-inset-left)) var(--space-32);
+      border-bottom: var(--stroke-hairline) solid var(--color-border-default);
+      background: var(--color-bg-surface);
+    }
+    .g-header h1 { margin: var(--space-12) 0 var(--space-16); }
+    .g-header p { margin: 0; max-width: 64ch; }
+    .g-toc { display: flex; flex-wrap: wrap; gap: var(--space-8) var(--space-16); margin-top: var(--space-24); padding: 0; list-style: none; }
+    .g-toc a { color: inherit; }
+    main { padding: 0 max(var(--space-24), env(safe-area-inset-right)) var(--space-48) max(var(--space-24), env(safe-area-inset-left)); }
+    section { padding-top: var(--space-48); }
+    section > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-8) var(--space-16); margin-bottom: var(--space-16); }
+    section > header h2 { margin: 0; }
+    section > p { margin: 0 0 var(--space-16); max-width: 72ch; color: var(--color-text-secondary); }
+    .g-compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: var(--space-16); }
+    .g-panel { display: flex; flex-direction: column; border: var(--stroke-hairline) solid var(--color-border-default); background: var(--color-bg-surface); min-width: 0; }
+    .g-panel > :not(.t-label-s) { flex: 1; }
+    .g-panel > .t-label-s { display: block; padding: var(--space-8) var(--space-12); border-bottom: var(--stroke-hairline) solid var(--color-border-subtle); color: var(--color-text-secondary); }
+    .g-stage { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-16) var(--space-24); padding: var(--space-24); overflow-x: auto; }
+    .g-stage--canvas { background: var(--color-bg-canvas); }
+    .g-ref { padding: var(--space-16); overflow-x: auto; background: var(--color-bg-canvas); }
+    .g-ref img { display: block; max-width: none; }
+    .g-ref img.fit { max-width: 100%; height: auto; }
+    .g-scene {
+      background: linear-gradient(var(--color-world-sky-top), var(--color-world-sky-bottom) 55%, var(--color-world-ground) 55%, var(--color-world-ground));
+    }
+    .g-item { display: grid; justify-items: start; gap: var(--space-8); }
+    .g-item > .t-label-s { color: var(--color-text-secondary); }
+    .g-note { margin: var(--space-16) 0 0; padding: var(--space-12) var(--space-16); border-left: 4px solid var(--color-border-default); background: var(--color-bg-surface); font-size: 13px; max-width: 72ch; }
+
+    /* Color swatches */
+    .g-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-12); padding: var(--space-24); }
+    .g-swatch { display: grid; gap: var(--space-4); }
+    .g-swatch i { display: block; height: 56px; border: var(--stroke-hairline) solid var(--color-border-subtle); }
+    .g-swatch code { font: 400 9px/1.3 var(--font-mono); color: var(--color-text-secondary); overflow-wrap: anywhere; }
+
+    /* Type specimens */
+    .g-type { display: grid; grid-template-columns: 140px 1fr; gap: var(--space-16) var(--space-24); align-items: baseline; padding: var(--space-24); }
+    .g-type > .t-label-s { color: var(--color-text-secondary); }
+    @media (max-width: 560px) { .g-type { grid-template-columns: 1fr; gap: var(--space-4); } .g-type > div { margin-bottom: var(--space-12); } }
+
+    /* Icon grid */
+    .g-icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: var(--space-16); padding: var(--space-24); }
+    .g-icons figure { display: grid; justify-items: center; gap: 6px; margin: 0; }
+    .g-icons figcaption { font: 400 9px/1.3 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--color-text-secondary); }
+    .g-badges { display: flex; gap: var(--space-12); }
+  </style>
+</head>
+<body>
+  <header class="g-header">
+    <span class="t-label-m">CHI Island · UI v2 · Direction G · Poster Signal</span>
+    <h1 class="t-display-xl">UI Gallery</h1>
+    <p class="t-body-m">Phase 1: tokens and core components built in plain HTML and CSS from the Figma design system. Each block shows the code on the left and the Figma render on the right. Figma file <span class="t-mono-id">6QNXwAjpDU1niZin1aiWby</span>.</p>
+    <ul class="g-toc t-label-m">
+      <li><a href="#color">Color</a></li>
+      <li><a href="#type">Type</a></li>
+      <li><a href="#icons">Icons</a></li>
+      <li><a href="#badges">Badges and stages</a></li>
+      <li><a href="#button">Button</a></li>
+      <li><a href="#icon-button">Icon button</a></li>
+      <li><a href="#identity">ID label and island chip</a></li>
+      <li><a href="#toast">Toast</a></li>
+      <li><a href="#prompt">Prompt</a></li>
+      <li><a href="#scene">Over the scene</a></li>
+    </ul>
+  </header>
+
+  <main>
+    <!-- Color -->
+    <section id="color" aria-labelledby="color-title">
+      <header><h2 id="color-title" class="t-heading-l">Color</h2><span class="t-label-s">Foundations 12:2</span></header>
+      <p>Black and white carry the interface. Island hues are the only color. Signal orange is reserved for the unread dot and alerts.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · tokens.css</span>
+          <div class="g-swatches" id="swatches"></div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref"><img class="fit" src="figma-ref/color.png" alt="Figma color foundations: surfaces, text and lines, action and status, islands, and world colors." width="1024" height="782"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Type -->
+    <section id="type" aria-labelledby="type-title">
+      <header><h2 id="type-title" class="t-heading-l">Type</h2><span class="t-label-s">Foundations 12:104</span></header>
+      <p>Archivo for everything you read. Space Mono for everything that is data: IDs, times, counts, labels.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · .t-* classes</span>
+          <div class="g-type">
+            <span class="t-label-s">Display/XL</span><div class="t-display-xl">Poster Signal</div>
+            <span class="t-label-s">Display/Numeral</span><div class="t-display-num">72H</div>
+            <span class="t-label-s">Heading/L</span><div class="t-heading-l">Island Access</div>
+            <span class="t-label-s">Heading/M</span><div class="t-heading-m">Seed Catalog</div>
+            <span class="t-label-s">Heading/S</span><div class="t-heading-s">Haptics for calm breathing</div>
+            <span class="t-label-s">Body/M</span><div class="t-body-m">Adopt, water, or nourish ideas to unlock other islands and extend your visits.</div>
+            <span class="t-label-s">Body/S</span><div class="t-body-s">Leave your email and we will let you know when someone replies.</div>
+            <span class="t-label-s">Body/Strong</span><div class="t-body-strong">Visit island</div>
+            <span class="t-label-s">Label/M</span><div class="t-label-m">Home · Health &amp; Wellbeing</div>
+            <span class="t-label-s">Label/S</span><div class="t-label-s">3 of 9 ideas mature · 33%</div>
+            <span class="t-label-s">Mono/ID</span><div class="t-mono-id">MOSSY-FERN-4821</div>
+          </div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref"><img class="fit" src="figma-ref/type.png" alt="Figma type specimens from Display/XL to Mono/ID." width="900" height="696"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Icons -->
+    <section id="icons" aria-labelledby="icons-title">
+      <header><h2 id="icons-title" class="t-heading-l">Icons</h2><span class="t-label-s">Foundations 12:168 · 32 icons</span></header>
+      <p>24 px, 1.8 px square-cap stroke. Exported from Figma; drawn as a mask so the stroke follows the text color.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · .ui-icon--{name}</span>
+          <div class="g-icons" id="icon-grid"></div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref"><img class="fit" src="figma-ref/icons.png" alt="Figma icon set, 32 icons." width="1024" height="145"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Badges and stages -->
+    <section id="badges" aria-labelledby="badges-title">
+      <header><h2 id="badges-title" class="t-heading-l">Island badges and plant stages</h2><span class="t-label-s">12:404 · 12:433</span></header>
+      <p>Badge glyphs are placeholders until Ray delivers the island icons (swap the glyph, keep the square).</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · .ui-badge, .ui-stage</span>
+          <div class="g-stage">
+            <div class="g-item"><span class="t-label-s">Island Badge</span>
+              <div class="g-badges">
+                <img class="ui-badge" src="badges/health.svg" alt="Health &amp; Wellbeing">
+                <img class="ui-badge" src="badges/sustainability.svg" alt="Sustainability">
+                <img class="ui-badge" src="badges/games.svg" alt="Games &amp; Play">
+                <img class="ui-badge" src="badges/muted.svg" alt="Locked or expired">
+              </div>
+            </div>
+            <div class="g-item"><span class="t-label-s">Plant Stage</span>
+              <div class="g-badges">
+                <img class="ui-stage" src="stages/seed.svg" alt="Seed planted">
+                <img class="ui-stage" src="stages/sprout.svg" alt="Sprout">
+                <img class="ui-stage" src="stages/young.svg" alt="Young plant">
+                <img class="ui-stage" src="stages/mature.svg" alt="Mature plant">
+                <img class="ui-stage" src="stages/dormant.svg" alt="Dormant">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref" style="display:flex;flex-wrap:wrap;gap:16px">
+            <img src="figma-ref/badges.png" alt="Figma island badges: Health, Sustainability, Games, Muted." width="190" height="58">
+            <img src="figma-ref/stages.png" alt="Figma plant stages: Seed, Sprout, Young, Mature, Dormant." width="314" height="74">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Button -->
+    <section id="button" aria-labelledby="button-title">
+      <header><h2 id="button-title" class="t-heading-l">Button</h2><span class="t-label-s">13:41 · Primary, Secondary, Ghost · M, S</span></header>
+      <p>Primary: the main action in a panel. Secondary: alternatives. Ghost: inline links like View idea. S buttons get an invisible 44 px hit area.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · .ui-btn</span>
+          <div class="g-stage g-stage--canvas">
+            <button type="button" class="ui-btn"><span class="ui-icon ui-icon--seed" aria-hidden="true"></span><span class="ui-btn__label">Adopt seed</span></button>
+            <button type="button" class="ui-btn ui-btn--s"><span class="ui-icon ui-icon--seed" aria-hidden="true"></span><span class="ui-btn__label">Adopt seed</span></button>
+            <button type="button" class="ui-btn ui-btn--secondary"><span class="ui-icon ui-icon--seed" aria-hidden="true"></span><span class="ui-btn__label">Adopt seed</span></button>
+            <button type="button" class="ui-btn ui-btn--secondary ui-btn--s"><span class="ui-icon ui-icon--seed" aria-hidden="true"></span><span class="ui-btn__label">Adopt seed</span></button>
+            <button type="button" class="ui-btn ui-btn--ghost"><span class="ui-icon ui-icon--seed" aria-hidden="true"></span><span class="ui-btn__label">Adopt seed</span></button>
+            <button type="button" class="ui-btn ui-btn--ghost ui-btn--s"><span class="ui-icon ui-icon--seed" aria-hidden="true"></span><span class="ui-btn__label">Adopt seed</span></button>
+          </div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref"><img class="fit" src="figma-ref/button.png" alt="Figma buttons: Primary M and S, Secondary M and S, Ghost M and S." width="890" height="95"></div>
+        </div>
+      </div>
+      <div class="g-panel" style="margin-top:16px">
+        <span class="t-label-s">States · placeholder (not drawn in Figma yet)</span>
+        <div class="g-stage g-stage--canvas">
+          <div class="g-item"><span class="t-label-s">Disabled</span><button type="button" class="ui-btn" disabled><span class="ui-icon ui-icon--seed" aria-hidden="true"></span><span class="ui-btn__label">Adopt seed</span></button></div>
+          <div class="g-item"><span class="t-label-s">Disabled secondary</span><button type="button" class="ui-btn ui-btn--secondary" disabled><span class="ui-btn__label">Cancel</span></button></div>
+          <div class="g-item"><span class="t-label-s">Hover</span><span class="t-body-s">Underlines the label</span></div>
+          <div class="g-item"><span class="t-label-s">Pressed</span><span class="t-body-s">Nudges down 1 px</span></div>
+          <div class="g-item"><span class="t-label-s">Focus</span><span class="t-body-s">Press Tab: 2 px black ring with a white gap</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Icon button -->
+    <section id="icon-button" aria-labelledby="iconbtn-title">
+      <header><h2 id="iconbtn-title" class="t-heading-l">Icon button</h2><span class="t-label-s">13:69 · HUD, Active · M 46, L 58</span></header>
+      <p>Square, icon only. Active is the selected state (for example the menu while open). The plus button is L.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · .ui-icon-btn</span>
+          <div class="g-stage g-stage--canvas">
+            <button type="button" class="ui-icon-btn" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+            <button type="button" class="ui-icon-btn ui-icon-btn--active" aria-label="World View" title="World View" aria-pressed="true"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active" aria-label="World View" title="World View" aria-pressed="true"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+          </div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref"><img src="figma-ref/icon-button.png" alt="Figma icon buttons: HUD M, HUD L, Active M, Active L." width="306" height="108"></div>
+        </div>
+      </div>
+      <div class="g-panel" style="margin-top:16px">
+        <span class="t-label-s">In use · from the Figma variants</span>
+        <div class="g-stage g-stage--canvas">
+          <div class="g-item"><span class="t-label-s">Bell, unread</span>
+            <button type="button" class="ui-icon-btn" aria-label="Notifications, 2 unread" title="Notifications"><span class="ui-icon ui-icon--bell" aria-hidden="true"></span><img class="ui-icon-btn__dot" src="icons/unread-dot.svg" alt=""></button></div>
+          <div class="g-item"><span class="t-label-s">Bell, read</span>
+            <button type="button" class="ui-icon-btn" aria-label="Notifications" title="Notifications"><span class="ui-icon ui-icon--bell" aria-hidden="true"></span></button></div>
+          <div class="g-item"><span class="t-label-s">Menu, closed</span>
+            <button type="button" class="ui-icon-btn" aria-label="Menu" title="Menu" aria-expanded="false"><span class="ui-icon ui-icon--menu" aria-hidden="true"></span></button></div>
+          <div class="g-item"><span class="t-label-s">Menu, open</span>
+            <button type="button" class="ui-icon-btn" aria-label="Menu" title="Menu" aria-expanded="true"><span class="ui-icon ui-icon--close" aria-hidden="true"></span></button></div>
+          <div class="g-item"><span class="t-label-s">Plus, idle</span>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button></div>
+          <div class="g-item"><span class="t-label-s">Plus, ready (×)</span>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l" aria-label="Cancel throw" title="Cancel throw (Q)" aria-pressed="true"><span class="ui-icon ui-icon--close" aria-hidden="true"></span></button></div>
+          <div class="g-item"><span class="t-label-s">Disabled · placeholder</span>
+            <button type="button" class="ui-icon-btn" aria-label="World View" title="World View" disabled><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button></div>
+        </div>
+      </div>
+      <p class="g-note">Figma fix needed: in the Active L variant (13:64), only the globe's outer circle is set to white. The inner meridian and equator strokes are still black, so on the black square it reads as "( )". The code draws the full globe in white. In Figma, set all three strokes in that instance to text/inverse.</p>
+      <p class="g-note">Plus button: the context doc describes a black 58 px square that turns into ×. The Figma variants above don't show the plus button by itself, so "Plus, idle" and "Plus, ready" use the HUD L style with plus and close glyphs. I'll match the Player View screens (Default 20:3, Ready to throw 20:313) in Phase 2.</p>
+    </section>
+
+    <!-- Identity -->
+    <section id="identity" aria-labelledby="identity-title">
+      <header><h2 id="identity-title" class="t-heading-l">ID label and island chip</h2><span class="t-label-s">13:81 · 13:105</span></header>
+      <p>The anonymous ID is the only public name. The chip shows the island you are on, with the home icon, a color square, and the name, so color is never the only signal.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · .ui-id-label, .ui-island-chip</span>
+          <div class="g-stage g-stage--canvas">
+            <button type="button" class="ui-id-label" aria-label="Your ID, MOSSY-FERN-4821. Copy"><span>MOSSY-FERN-4821</span><span class="ui-icon ui-icon--copy" aria-hidden="true"></span></button>
+            <div class="ui-island-chip ui-island-health">
+              <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+              <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+              <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
+            </div>
+            <div class="ui-island-chip ui-island-sustainability">
+              <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+              <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+              <span class="ui-island-chip__text"><span class="ui-island-chip__context">Visiting</span><span class="ui-island-chip__name">Sustainability</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center">
+            <img src="figma-ref/id-label.png" alt="Figma ID label: MOSSY-FERN-4821 with copy icon." width="163" height="32">
+            <img src="figma-ref/island-chip.png" alt="Figma island chips: Home island Health and Wellbeing, Visiting Sustainability." width="422" height="96">
+          </div>
+        </div>
+      </div>
+      <p class="g-note">Figma uses the home icon on the Visiting chip too. Worth a look: a different glyph for Visiting would add a second non-color signal.</p>
+    </section>
+
+    <!-- Toast -->
+    <section id="toast" aria-labelledby="toast-title">
+      <header><h2 id="toast-title" class="t-heading-l">Toast</h2><span class="t-label-s">13:124 · Access gained, Access full, Planted</span></header>
+      <p>Top center for 3 seconds. The island stripe carries the hue; the words carry the meaning.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · .ui-toast</span>
+          <div class="g-stage g-stage--canvas">
+            <div class="ui-toast ui-island-sustainability" role="status">
+              <span class="ui-toast__stripe" aria-hidden="true"></span>
+              <div class="ui-toast__text"><p class="ui-toast__title">+24 hours</p><p class="ui-toast__detail">Sustainability access · 3d 04h left</p></div>
+            </div>
+            <div class="ui-toast ui-island-sustainability" role="status">
+              <span class="ui-toast__stripe" aria-hidden="true"></span>
+              <div class="ui-toast__text"><p class="ui-toast__title">Access full</p><p class="ui-toast__detail">Sustainability · 5 days (cap)</p></div>
+            </div>
+            <div class="ui-toast ui-island-sustainability" role="status">
+              <span class="ui-toast__stripe" aria-hidden="true"></span>
+              <div class="ui-toast__text"><p class="ui-toast__title">Planted</p><p class="ui-toast__detail">Haptics for calm breathing · on your island</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref"><img class="fit" src="figma-ref/toast.png" alt="Figma toasts: +24 hours, Access full, Planted." width="831" height="102"></div>
+        </div>
+      </div>
+      <p class="g-note">Copy check: the confirmed toast strings are "+48 hours", "+24 hours · Games &amp; Play access: 3 days 4 hours", and "Access full (5 days)". Figma splits them into a title and a detail line with a shorter format ("3d 04h left", "5 days (cap)"). The gallery follows Figma. Confirm the split is fine with the team.</p>
+    </section>
+
+    <!-- Prompt -->
+    <section id="prompt" aria-labelledby="prompt-title">
+      <header><h2 id="prompt-title" class="t-heading-l">Prompt</h2><span class="t-label-s">13:153 · Edge, Locked, Feedback</span></header>
+      <p>Frosted in-world notices. One line, except Locked.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · .ui-prompt</span>
+          <div class="g-stage g-stage--canvas">
+            <div class="ui-prompt" role="status">
+              <p class="ui-prompt__line">The bridges are this way</p>
+              <span class="ui-icon ui-icon--arrow-right" aria-hidden="true"></span>
+            </div>
+            <div class="ui-prompt ui-prompt--locked ui-island-games" role="status">
+              <p class="ui-prompt__eyebrow"><span class="ui-icon ui-icon--lock" aria-hidden="true"></span><span class="ui-prompt__swatch" aria-hidden="true"></span>Bridge locked · Games &amp; Play</p>
+              <p class="ui-prompt__body">Adopt a Games &amp; Play seed, then water or nourish it to unlock this bridge.</p>
+              <button type="button" class="ui-btn ui-btn--s ui-prompt__action"><span class="ui-btn__label">Unlock access</span></button>
+            </div>
+            <div class="ui-prompt ui-prompt--feedback ui-island-sustainability" role="status">
+              <span class="ui-icon ui-icon--water" aria-hidden="true"></span>
+              <p class="ui-prompt__line">+1 water · Sustainability access until Tue 3 p.m.</p>
+            </div>
+          </div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref"><img class="fit" src="figma-ref/prompt.png" alt="Figma prompts: edge, locked bridge, water feedback." width="957" height="194"></div>
+        </div>
+      </div>
+      <p class="g-note">Copy check: the Figma Locked prompt ends with a period ("...to unlock this bridge.") and the confirmed copy has none. Minor; flagging it so it's a deliberate choice.</p>
+    </section>
+
+    <!-- Over the scene -->
+    <section id="scene" aria-labelledby="scene-title">
+      <header><h2 id="scene-title" class="t-heading-l">Over the scene</h2><span class="t-label-s">Translucency check on world colors</span></header>
+      <p>HUD pieces on the world sky and ground tokens, to check that the frosted surfaces still read.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Code · HUD over world/sky and world/ground</span>
+        <div class="g-stage g-scene" style="min-height:220px;align-items:flex-start;justify-content:space-between">
+          <div style="display:flex;gap:8px;align-items:center">
+            <button type="button" class="ui-icon-btn" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+            <div class="ui-island-chip ui-island-health">
+              <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+              <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+              <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
+            </div>
+          </div>
+          <div class="ui-toast ui-island-sustainability" role="status">
+            <span class="ui-toast__stripe" aria-hidden="true"></span>
+            <div class="ui-toast__text"><p class="ui-toast__title">+24 hours</p><p class="ui-toast__detail">Sustainability access · 3d 04h left</p></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button type="button" class="ui-id-label" aria-label="Your ID, MOSSY-FERN-4821. Copy"><span>MOSSY-FERN-4821</span><span class="ui-icon ui-icon--copy" aria-hidden="true"></span></button>
+            <button type="button" class="ui-icon-btn" aria-label="Notifications, 2 unread" title="Notifications"><span class="ui-icon ui-icon--bell" aria-hidden="true"></span><img class="ui-icon-btn__dot" src="icons/unread-dot.svg" alt=""></button>
+            <button type="button" class="ui-icon-btn" aria-label="Menu" title="Menu" aria-expanded="false"><span class="ui-icon ui-icon--menu" aria-hidden="true"></span></button>
+          </div>
+          <div style="flex-basis:100%;display:flex;justify-content:center">
+            <div class="ui-prompt" role="status"><p class="ui-prompt__line">The bridges are this way</p><span class="ui-icon ui-icon--arrow-right" aria-hidden="true"></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    // Gallery helpers only: build the swatch and icon grids from lists.
+    const swatches = [
+      'bg-canvas', 'bg-surface', 'bg-muted', 'bg-inverse',
+      'text-primary', 'text-secondary', 'text-inverse', 'border-default', 'border-subtle',
+      'action-primary', 'action-on-primary', 'status-alert', 'ring-track',
+      'island-health', 'island-sustainability', 'island-games', 'island-muted',
+      'world-sky-top', 'world-sky-bottom', 'world-ground', 'world-stone',
+    ];
+    const root = getComputedStyle(document.documentElement);
+    document.getElementById('swatches').innerHTML = swatches.map(name => {
+      const v = '--color-' + name;
+      return `<div class="g-swatch"><i style="background:var(${v})"></i><span class="t-body-strong">${name.replace('-', '/')}</span><code>var(${v}) · ${root.getPropertyValue(v).trim()}</code></div>`;
+    }).join('');
+
+    const icons = ['globe', 'bell', 'menu', 'close', 'plus', 'copy', 'home', 'seed', 'access', 'arrow-right', 'arrow-left', 'reticle',
+      'water', 'nourish', 'follow', 'lock', 'unlock', 'clock', 'paperclip', 'rotate', 'check', 'user', 'mail', 'eye',
+      'bridge', 'info', 'judge', 'file', 'reply', 'leaf', 'hand', 'joystick'];
+    document.getElementById('icon-grid').innerHTML = icons.map(n =>
+      `<figure><span class="ui-icon ui-icon--${n}" aria-hidden="true"></span><figcaption>${n}</figcaption></figure>`).join('');
+  </script>
+</body>
+</html>

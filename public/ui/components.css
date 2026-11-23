@@ -1,0 +1,358 @@
+/*
+ * CHI Island components · Direction G · Poster Signal
+ * Requires tokens.css. Every class is prefixed with ui- so nothing here
+ * collides with the existing style.css (.primary, .secondary, .round-button).
+ *
+ * Figma: Components page (11:4). Node IDs are noted on each block.
+ *
+ * States marked PLACEHOLDER are not drawn in Figma yet (hover, pressed,
+ * disabled, focus). They are kept minimal and use only existing tokens
+ * so Cassius can replace them once the Figma variants exist.
+ */
+
+/* ---------- Base helpers ---------- */
+
+.ui-island-health         { --island: var(--color-island-health); }
+.ui-island-sustainability { --island: var(--color-island-sustainability); }
+.ui-island-games          { --island: var(--color-island-games); }
+.ui-island-muted          { --island: var(--color-island-muted); }
+
+/* Shared focus ring: a black outline with a white gap, so it reads on the
+   paper UI and over the 3D scene. PLACEHOLDER until Figma has a focus variant. */
+:where(.ui-btn, .ui-icon-btn, .ui-id-label, .ui-prompt__action):focus-visible {
+  outline: 2px solid var(--color-border-default);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--color-bg-surface);
+}
+
+/* Visually hidden text for screen readers */
+.ui-sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ---------- Icon (Foundations · Icons 12:168) ----------
+   24 px frames exported from Figma. Drawn as a mask so the stroke follows
+   currentColor (text/primary on paper, text/inverse on black). */
+
+.ui-icon {
+  display: inline-block;
+  flex: none;
+  width: var(--icon-size, 24px);
+  height: var(--icon-size, 24px);
+  background: currentColor;
+  -webkit-mask: var(--icon) center / 100% 100% no-repeat;
+          mask: var(--icon) center / 100% 100% no-repeat;
+}
+.ui-icon--18 { --icon-size: 18px; }
+.ui-icon--16 { --icon-size: 16px; }
+.ui-icon--14 { --icon-size: 14px; }
+
+.ui-icon--access      { --icon: url("icons/access.svg"); }
+.ui-icon--arrow-left  { --icon: url("icons/arrow-left.svg"); }
+.ui-icon--arrow-right { --icon: url("icons/arrow-right.svg"); }
+.ui-icon--bell        { --icon: url("icons/bell.svg"); }
+.ui-icon--bridge      { --icon: url("icons/bridge.svg"); }
+.ui-icon--check       { --icon: url("icons/check.svg"); }
+.ui-icon--clock       { --icon: url("icons/clock.svg"); }
+.ui-icon--close       { --icon: url("icons/close.svg"); }
+.ui-icon--copy        { --icon: url("icons/copy.svg"); }
+.ui-icon--eye         { --icon: url("icons/eye.svg"); }
+.ui-icon--file        { --icon: url("icons/file.svg"); }
+.ui-icon--follow      { --icon: url("icons/follow.svg"); }
+.ui-icon--globe       { --icon: url("icons/globe.svg"); }
+.ui-icon--hand        { --icon: url("icons/hand.svg"); }
+.ui-icon--home        { --icon: url("icons/home.svg"); }
+.ui-icon--info        { --icon: url("icons/info.svg"); }
+.ui-icon--joystick    { --icon: url("icons/joystick.svg"); }
+.ui-icon--judge       { --icon: url("icons/judge.svg"); }
+.ui-icon--leaf        { --icon: url("icons/leaf.svg"); }
+.ui-icon--lock        { --icon: url("icons/lock.svg"); }
+.ui-icon--mail        { --icon: url("icons/mail.svg"); }
+.ui-icon--menu        { --icon: url("icons/menu.svg"); }
+.ui-icon--nourish     { --icon: url("icons/nourish.svg"); }
+.ui-icon--paperclip   { --icon: url("icons/paperclip.svg"); }
+.ui-icon--plus        { --icon: url("icons/plus.svg"); }
+.ui-icon--reply       { --icon: url("icons/reply.svg"); }
+.ui-icon--reticle     { --icon: url("icons/reticle.svg"); }
+.ui-icon--rotate      { --icon: url("icons/rotate.svg"); }
+.ui-icon--seed        { --icon: url("icons/seed.svg"); }
+.ui-icon--unlock      { --icon: url("icons/unlock.svg"); }
+.ui-icon--user        { --icon: url("icons/user.svg"); }
+.ui-icon--water       { --icon: url("icons/water.svg"); }
+
+/* ---------- Island Badge (12:404) and Plant Stage (12:433) ----------
+   Use as <img class="ui-badge" src="/ui/badges/health.svg" alt="">.
+   Badge glyphs are placeholders until Ray's island icons arrive. */
+
+.ui-badge { display: block; width: 32px; height: 32px; flex: none; }
+.ui-badge--sm { width: 16px; height: 16px; }
+.ui-stage { display: block; width: 48px; height: 48px; flex: none; }
+
+/* ---------- Button (13:41) ----------
+   Primary: main action per panel. Secondary: alternatives.
+   Ghost: inline links like View idea.
+   M is 44 px tall. S is shorter, so its hit area is extended to 44 px. */
+
+.ui-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  min-height: var(--size-touch);
+  padding: var(--space-12) var(--space-16);
+  border: var(--stroke-hairline) solid transparent;
+  border-radius: var(--radius-none);
+  background: var(--color-action-primary);
+  color: var(--color-action-on-primary);
+  font: 600 15px/1.25 var(--font-sans);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.ui-btn .ui-icon { --icon-size: 18px; }
+
+.ui-btn--secondary {
+  background: var(--color-bg-surface);
+  border-color: var(--color-border-default);
+  color: var(--color-text-primary);
+}
+.ui-btn--ghost {
+  background: transparent;
+  color: var(--color-text-primary);
+}
+
+.ui-btn--s {
+  min-height: 0;
+  padding: var(--space-8) var(--space-12);
+  font: 500 13px/1.4 var(--font-sans);
+  letter-spacing: 0;
+}
+.ui-btn--s .ui-icon { --icon-size: 16px; }
+.ui-btn--s::after {
+  /* Invisible 44 px hit area */
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: max(100%, var(--size-touch));
+  height: max(100%, var(--size-touch));
+  transform: translate(-50%, -50%);
+}
+
+/* PLACEHOLDER states */
+.ui-btn:hover .ui-btn__label { text-decoration: underline; text-underline-offset: 3px; }
+.ui-btn:active { transform: translateY(1px); }
+.ui-btn:disabled,
+.ui-btn[aria-disabled="true"] {
+  background: var(--color-bg-muted);
+  border-color: var(--color-border-subtle);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+  transform: none;
+}
+.ui-btn--ghost:disabled,
+.ui-btn--ghost[aria-disabled="true"] { background: transparent; border-color: transparent; }
+.ui-btn:disabled .ui-btn__label,
+.ui-btn[aria-disabled="true"] .ui-btn__label { text-decoration: none; }
+
+/* ---------- Icon Button (13:69) ----------
+   Square, icon only. M 46 px, L 58 px (plus/throw button).
+   HUD: translucent paper with hairline. Active: solid black (selected).
+   Always give it aria-label (and a title for pointer users). */
+
+.ui-icon-btn {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  border-radius: var(--radius-none);
+  background: var(--color-bg-surface-hud);
+  -webkit-backdrop-filter: blur(var(--blur-hud));
+          backdrop-filter: blur(var(--blur-hud));
+  color: var(--color-text-primary);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.ui-icon-btn--l { width: 58px; height: 58px; }
+
+.ui-icon-btn--active,
+.ui-icon-btn[aria-pressed="true"],
+.ui-icon-btn[aria-expanded="true"] {
+  border-color: var(--color-bg-inverse);
+  background: var(--color-bg-inverse);
+  color: var(--color-text-inverse);
+}
+
+/* Unread dot: 10 px, positioned as in Figma. Shape plus the accessible
+   label carry the meaning, not color alone. */
+.ui-icon-btn__dot {
+  position: absolute;
+  top: 6px;
+  left: 28px;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+}
+.ui-icon-btn--l .ui-icon-btn__dot { left: 40px; }
+.ui-icon-btn--active .ui-icon-btn__dot,
+.ui-icon-btn[aria-expanded="true"] .ui-icon-btn__dot { top: 7px; left: 29px; }
+.ui-icon-btn--l.ui-icon-btn--active .ui-icon-btn__dot { left: 41px; }
+
+/* PLACEHOLDER states */
+.ui-icon-btn:hover:not(.ui-icon-btn--active):not([aria-pressed="true"]):not([aria-expanded="true"]) {
+  background: var(--color-bg-surface);
+}
+.ui-icon-btn:active { transform: translateY(1px); }
+.ui-icon-btn:disabled {
+  border-color: var(--color-border-subtle);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ---------- ID Label (13:81) ----------
+   Anonymous player ID with a copy action. Top right of Player View. */
+
+.ui-id-label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-12);
+  border: 0;
+  border-radius: var(--radius-none);
+  background: var(--color-bg-inverse-hud);
+  color: var(--color-text-inverse);
+  font: 400 12px/1.3 var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.ui-id-label .ui-icon { --icon-size: 14px; }
+.ui-id-label::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: max(100%, var(--size-touch));
+  height: max(100%, var(--size-touch));
+  transform: translate(-50%, -50%);
+}
+
+/* ---------- Island Chip (13:105) ----------
+   Shows the island you are on. Home or Visiting. */
+
+.ui-island-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 46px;
+  padding: var(--space-4) var(--space-12);
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface-hud);
+  -webkit-backdrop-filter: blur(var(--blur-hud));
+          backdrop-filter: blur(var(--blur-hud));
+  color: var(--color-text-primary);
+}
+.ui-island-chip .ui-icon { --icon-size: 16px; }
+.ui-island-chip__swatch { width: 10px; height: 10px; flex: none; background: var(--island); }
+.ui-island-chip__text { display: flex; flex-direction: column; white-space: nowrap; }
+.ui-island-chip__context {
+  font: 400 9px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.ui-island-chip__name { font: 600 15px/1.25 var(--font-sans); letter-spacing: -0.01em; }
+
+/* ---------- Toast (13:124) ----------
+   Top center for 3 s. Access gained, Access full, Planted.
+   Island stripe on the left carries the hue; the text carries the meaning. */
+
+.ui-toast {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding-right: var(--space-16);
+  background: var(--color-bg-inverse);
+  color: var(--color-text-inverse);
+}
+.ui-toast__stripe { align-self: stretch; width: 6px; min-height: 52px; flex: none; background: var(--island); }
+.ui-toast__text { display: flex; flex-direction: column; gap: var(--space-2); padding-block: var(--space-4); white-space: nowrap; }
+.ui-toast__title {
+  margin: 0;
+  font: 700 20px/1.2 var(--font-sans);
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+.ui-toast__detail {
+  margin: 0;
+  font: 400 9px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ---------- Prompt (13:153) ----------
+   Frosted in-world notices. One line except Locked. */
+
+.ui-prompt {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-12) var(--space-16);
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface-prompt);
+  -webkit-backdrop-filter: blur(var(--blur-hud));
+          backdrop-filter: blur(var(--blur-hud));
+  color: var(--color-text-primary);
+}
+.ui-prompt .ui-icon { --icon-size: 16px; }
+.ui-prompt__line {
+  margin: 0;
+  font: 400 11px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ui-prompt--feedback {
+  padding: var(--space-8) var(--space-12);
+  -webkit-backdrop-filter: none;
+          backdrop-filter: none;
+}
+.ui-prompt--feedback .ui-prompt__line { font-size: 9px; }
+.ui-prompt--feedback .ui-icon { color: var(--island, var(--color-text-primary)); }
+
+.ui-prompt--locked {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-12);
+  padding: var(--space-16);
+}
+.ui-prompt__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+  font: 400 9px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.ui-prompt__swatch { width: 10px; height: 10px; flex: none; background: var(--island); }
+.ui-prompt__body { margin: 0; width: 260px; max-width: 100%; font: 500 13px/1.4 var(--font-sans); }
+
+/* ---------- Motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-btn:active,
+  .ui-icon-btn:active { transform: none; }
+}

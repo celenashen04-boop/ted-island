@@ -1,0 +1,9 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Plant Stage">
+<rect x="0.5" y="0.5" width="47" height="47" fill="white"/>
+<rect x="0.5" y="0.5" width="47" height="47" stroke="#111111"/>
+<path id="Vector" d="M8 40H40" stroke-width="1.5" stroke="#111111"/>
+<path id="Vector_2" d="M22 24H26V40H22V24Z" fill="#111111"/>
+<path id="Vector_3" d="M24 30C30.6274 30 36 24.6274 36 18C36 11.3726 30.6274 6 24 6C17.3726 6 12 11.3726 12 18C12 24.6274 17.3726 30 24 30Z" fill="#E2E2E2" stroke-width="1.5" stroke="#111111"/>
+</g>
+</svg>
