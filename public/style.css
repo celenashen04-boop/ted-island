@@ -29,9 +29,6 @@ canvas.over-plant{cursor:pointer}
 
 .seed-mode{bottom:max(1rem,env(safe-area-inset-bottom))}
 .catalog-button{top:max(1rem,env(safe-area-inset-top))}
-.move-stick{position:absolute;display:none;place-items:center;left:max(.75rem,env(safe-area-inset-left));bottom:max(.75rem,env(safe-area-inset-bottom));width:clamp(70px,24dvh,104px);aspect-ratio:1;border:1px solid #fcf4d6a8;border-radius:50%;background:#253e398c;touch-action:none;user-select:none}
-.move-stick span{width:44%;aspect-ratio:1;border-radius:50%;background:#eae6c7;border:1px solid #ffffffb3;transform:translate(var(--stick-x,0px),var(--stick-y,0px));pointer-events:none}
-.mobile-layout .move-stick{display:grid}
 .mobile-layout :is(.seed-mode,.catalog-button){min-height:44px}
 :where(.mobile-layout) dialog{max-height:calc(100dvh - 1rem);overflow:auto;overscroll-behavior:contain}
 

@@ -128,8 +128,7 @@
     .g-ob-frame { background: var(--color-bg-muted); }
     .g-ob-world { position: absolute; right: 24px; bottom: 20px; color: var(--color-text-secondary); }
     .g-portrait { position: relative; width: 390px; height: 844px; margin: 0 auto; overflow: hidden; border: var(--stroke-hairline) solid var(--color-border-default); }
-    .g-joystick { position: absolute; left: 24px; top: 270px; width: 96px; height: 96px; border: 1px solid var(--color-border-default); background: var(--color-bg-surface-hud); display: grid; place-items: center; }
-    .g-joystick i { width: 36px; height: 36px; border: 1px solid var(--color-border-default); background: var(--color-bg-surface); }
+    .g-joystick { position: absolute; left: 24px; top: 270px; width: 96px; }
     .g-scene-mark { position: absolute; }
     .g-figma-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: var(--space-16); margin-top: var(--space-16); }
     .g-figma-grid figure { margin: 0; display: grid; gap: var(--space-4); }
@@ -696,7 +695,7 @@
                 <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
               </div>
             </div>
-            <div class="g-joystick" id="tut-joystick" aria-hidden="true"><i></i></div>
+            <div class="g-joystick ui-joystick" id="tut-joystick" aria-hidden="true"><i class="ui-joystick__handle"></i></div>
             <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus g-hud-plus" id="tut-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
             <div class="ui-landing ui-landing--valid g-scene-mark" style="left:380px;top:200px"><img class="ui-landing__marker" src="markers/valid.svg" alt=""><span class="ui-landing__label">Open grass</span></div>
             <img class="ui-stage g-scene-mark" src="stages/mature.svg" alt="" style="left:501px;top:263px">
@@ -739,7 +738,7 @@
                 <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
               </div>
             </div>
-            <div class="g-joystick" aria-hidden="true"><i></i></div>
+            <div class="g-joystick ui-joystick" aria-hidden="true"><i class="ui-joystick__handle"></i></div>
             <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus g-hud-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
           </div>
         </div>
@@ -787,7 +786,7 @@
                 <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
               </div>
             </div>
-            <div class="g-joystick" aria-hidden="true"><i></i></div>
+            <div class="g-joystick ui-joystick" aria-hidden="true"><i class="ui-joystick__handle"></i></div>
             <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus g-hud-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
             <img class="g-hud-reticle" id="world-reticle" src="icons/reticle.svg" alt="" width="28" height="28">
           </div>
@@ -825,7 +824,7 @@
                 <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
               </div>
             </div>
-            <div class="g-joystick" aria-hidden="true"><i></i></div>
+            <div class="g-joystick ui-joystick" aria-hidden="true"><i class="ui-joystick__handle"></i></div>
             <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus g-hud-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
           </div>
         </div>
@@ -863,7 +862,7 @@
                 <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
               </button>
             </div>
-            <div class="g-joystick" aria-hidden="true"><i></i></div>
+            <div class="g-joystick ui-joystick" aria-hidden="true"><i class="ui-joystick__handle"></i></div>
             <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus g-hud-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
           </div>
         </div>

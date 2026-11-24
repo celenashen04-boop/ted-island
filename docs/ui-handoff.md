@@ -93,13 +93,14 @@ document.querySelector('.world').append(hud.element);
 
 Menu items (option C): **Seed Catalog**, **Island Access**, **Followed plants**, **How to play** (replays the tutorial), **Email and reminders** (the optional email, the expiry reminder checkbox and unsubscribe). Footer: the player ID and **Log out**. `onSelect` receives the item id: open Followed plants for `'followed'` and Email and reminders for `'settings'` ([§8](#8-panels)). Keep the meta lines live with `followedMenuMeta()` and `emailMenuMeta()`.
 
-**Top left and bottom right: markup patterns (CSS only, no module).** Copy from the gallery's `#hud` section:
+**Corner controls: markup patterns (CSS only, no module).** Copy from the gallery's `#hud` section:
 
 | Piece | Classes | Notes |
 |---|---|---|
 | World View button | `.ui-icon-btn` + `icon('globe')` | `aria-label="World View"` |
 | Island chip | `button.ui-island-chip` + `islandClass(id)`, `__context`, `__name` | "Home island" over the island name. Visiting another island: change the context line. **It is a button:** tapping it opens Island plants (Figma 31:1150). Give it `aria-haspopup="dialog"` and an `aria-label` such as "Health & Wellbeing, home island. Show island plants" |
 | Plant button (+) | `.ui-icon-btn.ui-icon-btn--l.ui-icon-btn--active.ui-plus` | Call `setPlusReady(button, ready)` from `motion.mjs`: it sets `aria-pressed` and swaps the label between "Plant a seed" and "Cancel throw" |
+| Movement pad | `.ui-joystick` + `.ui-joystick__handle` | Square pad with four direction ticks. The existing touch controller drives the handle position. |
 | Throw hint | `.ui-hint` | "Tap to throw" while the acorn is ready |
 | Tip (frosted) | `.ui-tip`, `__eyebrow`, `__body` + a secondary button | Replaces the `instruction-glass` tips. Example copy in the gallery is a placeholder |
 
@@ -447,7 +448,8 @@ What each current element in `index.html` becomes.
 | `#plant-dialog`, `#adoption-confirmation` | `createSeedForm()` |
 | `#idea-dialog`, `#comment-form`, `#reply-context`, `#cancel-reply`, `#participation-tip` | `createPlantDetail()` |
 | `#landscape-required`, `#play-landscape` | `createRotatePrompt()` |
-| `#map`, `#world-map`, `#move-stick` | Unchanged. The UI mounts around them |
+| `#map`, `#world-map` | The UI mounts around the existing canvases. |
+| `#move-stick` | Uses the square `.ui-joystick` component with the original touch input. |
 
 ## 12. Wiring checklist
 

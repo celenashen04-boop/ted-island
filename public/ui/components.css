@@ -98,6 +98,10 @@
    Ghost: inline links like View idea.
    M is 44 px tall. S is shorter, so its hit area is extended to 44 px. */
 
+:is(button, a.ui-btn, [role="button"], .ui-joystick) {
+  opacity: 0.8;
+}
+
 .ui-btn {
   position: relative;
   display: inline-flex;
@@ -253,6 +257,37 @@
   width: max(100%, var(--size-touch));
   height: max(100%, var(--size-touch));
   transform: translate(-50%, -50%);
+}
+
+/* Movement pad */
+.ui-joystick {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface-hud);
+  color: var(--color-border-default);
+}
+.ui-joystick::before {
+  content: "";
+  position: absolute;
+  inset: 5%;
+  background:
+    linear-gradient(currentColor, currentColor) center top / var(--stroke-hairline) 9% no-repeat,
+    linear-gradient(currentColor, currentColor) center bottom / var(--stroke-hairline) 9% no-repeat,
+    linear-gradient(currentColor, currentColor) left center / 9% var(--stroke-hairline) no-repeat,
+    linear-gradient(currentColor, currentColor) right center / 9% var(--stroke-hairline) no-repeat;
+  pointer-events: none;
+}
+.ui-joystick__handle {
+  position: relative;
+  width: 38%;
+  aspect-ratio: 1;
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  transform: translate(var(--stick-x, 0px), var(--stick-y, 0px));
+  pointer-events: none;
 }
 
 /* ---------- Island Chip (13:105) ----------
