@@ -1,0 +1,1774 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>CHI Island UI Gallery</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="motion.css">
+  <link rel="stylesheet" href="onboarding.css">
+  <link rel="stylesheet" href="panels.css">
+  <style>
+    /* Gallery layout only. Not part of the component library. */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--color-bg-canvas);
+      color: var(--color-text-primary);
+      font: 400 15px/1.45 var(--font-sans);
+    }
+    .g-header {
+      padding: var(--space-48) max(var(--space-24), env(safe-area-inset-left)) var(--space-32);
+      border-bottom: var(--stroke-hairline) solid var(--color-border-default);
+      background: var(--color-bg-surface);
+    }
+    .g-header h1 { margin: var(--space-12) 0 var(--space-16); }
+    .g-header p { margin: 0; max-width: 64ch; }
+    .g-toc { display: flex; flex-wrap: wrap; gap: var(--space-8) var(--space-16); margin-top: var(--space-24); padding: 0; list-style: none; }
+    .g-toc a { color: inherit; }
+    main { padding: 0 max(var(--space-24), env(safe-area-inset-right)) var(--space-48) max(var(--space-24), env(safe-area-inset-left)); }
+    section { padding-top: var(--space-48); }
+    section > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-8) var(--space-16); margin-bottom: var(--space-16); }
+    section > header h2 { margin: 0; }
+    section > p { margin: 0 0 var(--space-16); max-width: 72ch; color: var(--color-text-secondary); }
+    .g-compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: var(--space-16); }
+    .g-panel { display: flex; flex-direction: column; border: var(--stroke-hairline) solid var(--color-border-default); background: var(--color-bg-surface); min-width: 0; }
+    .g-panel > :not(.t-label-s) { flex: 1; }
+    .g-panel > .t-label-s { display: block; padding: var(--space-8) var(--space-12); border-bottom: var(--stroke-hairline) solid var(--color-border-subtle); color: var(--color-text-secondary); }
+    .g-stage { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-16) var(--space-24); padding: var(--space-24); overflow-x: auto; }
+    .g-stage--canvas { background: var(--color-bg-canvas); }
+    .g-ref { padding: var(--space-16); overflow-x: auto; background: var(--color-bg-canvas); }
+    .g-ref img { display: block; max-width: none; }
+    .g-ref img.fit { max-width: 100%; height: auto; }
+    .g-scene {
+      background: linear-gradient(var(--color-world-sky-top), var(--color-world-sky-bottom) 55%, var(--color-world-ground) 55%, var(--color-world-ground));
+    }
+    .g-item { display: grid; justify-items: start; gap: var(--space-8); }
+    .g-item > .t-label-s { color: var(--color-text-secondary); }
+    .g-note { margin: var(--space-16) 0 0; padding: var(--space-12) var(--space-16); border-left: 4px solid var(--color-border-default); background: var(--color-bg-surface); font-size: 13px; max-width: 72ch; }
+
+    /* Color swatches */
+    .g-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-12); padding: var(--space-24); }
+    .g-swatch { display: grid; gap: var(--space-4); }
+    .g-swatch i { display: block; height: 56px; border: var(--stroke-hairline) solid var(--color-border-subtle); }
+    .g-swatch code { font: 400 9px/1.3 var(--font-mono); color: var(--color-text-secondary); overflow-wrap: anywhere; }
+
+    /* Type specimens */
+    .g-type { display: grid; grid-template-columns: 140px 1fr; gap: var(--space-16) var(--space-24); align-items: baseline; padding: var(--space-24); }
+    .g-type > .t-label-s { color: var(--color-text-secondary); }
+    @media (max-width: 560px) { .g-type { grid-template-columns: 1fr; gap: var(--space-4); } .g-type > div { margin-bottom: var(--space-12); } }
+
+    /* Icon grid */
+    .g-icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: var(--space-16); padding: var(--space-24); }
+    .g-icons figure { display: grid; justify-items: center; gap: 6px; margin: 0; }
+    .g-icons figcaption { font: 400 9px/1.3 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--color-text-secondary); }
+    .g-badges { display: flex; gap: var(--space-12); }
+
+    /* Motion demos */
+    .g-motion { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr)); gap: var(--space-16); }
+    .g-demo { display: flex; flex-direction: column; border: var(--stroke-hairline) solid var(--color-border-default); background: var(--color-bg-surface); min-width: 0; }
+    .g-demo > header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-12); padding: var(--space-12) var(--space-16); border-bottom: var(--stroke-hairline) solid var(--color-border-subtle); }
+    .g-demo > header h3 { margin: 0 0 var(--space-4); }
+    .g-demo > header .t-label-s { color: var(--color-text-secondary); }
+    .g-demo__controls { display: flex; flex-wrap: wrap; gap: var(--space-8); justify-content: flex-end; }
+    .g-demo__stage { flex: 1; position: relative; display: grid; place-items: center; min-height: 200px; padding: var(--space-24); overflow: hidden; background: var(--color-bg-canvas); }
+    .g-demo__stage--scene { background: linear-gradient(var(--color-world-sky-top), var(--color-world-sky-bottom) 60%, var(--color-world-ground) 60%); }
+    .g-demo__stage--ground { background: var(--color-world-stone); }
+    .g-demo__hook { margin: 0; padding: var(--space-12) var(--space-16); border-top: var(--stroke-hairline) solid var(--color-border-subtle); font-size: 13px; line-height: 1.45; }
+    .g-demo__hook b { font-weight: 600; }
+    .g-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-24); }
+    .g-mock-panel-body { padding: var(--space-16); display: grid; gap: var(--space-8); }
+    .g-mock-panel-body header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .g-menu-anchor { position: relative; align-self: start; justify-self: end; }
+    .g-menu-item { display: flex; align-items: center; gap: var(--space-12); width: 100%; min-height: var(--size-touch); padding: var(--space-8) var(--space-16); border: 0; border-bottom: var(--stroke-hairline) solid var(--color-border-subtle); background: none; color: inherit; text-align: left; font: 600 15px/1.25 var(--font-sans); cursor: pointer; }
+    .g-menu-item .t-label-s { color: var(--color-text-secondary); }
+    .g-menu-foot { display: flex; justify-content: space-between; align-items: center; padding: var(--space-12) var(--space-16); }
+    .g-card { display: grid; justify-items: start; gap: var(--space-8); width: 180px; padding: var(--space-16); border: var(--stroke-hairline) solid var(--color-border-default); background: var(--color-bg-surface); }
+    .g-card__ring { position: relative; }
+    .g-card__ring .ui-badge { position: absolute; inset: 0; margin: auto; }
+    .g-card__label { display: flex; align-items: center; gap: var(--space-4); font: 500 13px/1.4 var(--font-sans); }
+    .g-card__label.is-alert { color: var(--color-status-alert); }
+    .g-card__label .ui-icon { --icon-size: 14px; display: none; }
+    .g-card__label.is-alert .ui-icon { display: inline-block; }
+    .g-ground { position: relative; display: grid; place-items: end center; width: 160px; height: 90px; }
+    .g-coach-target { position: relative; display: inline-grid; }
+    .g-plant-lg { width: 96px; height: 96px; }
+
+    /* Phase 2 HUD */
+    .g-sub { margin: 0 0 var(--space-16); max-width: 72ch; color: var(--color-text-secondary); }
+    .g-hud-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8); padding: var(--space-12) var(--space-16); border-bottom: var(--stroke-hairline) solid var(--color-border-subtle); }
+    .g-hud-scroll { overflow-x: auto; padding: var(--space-16); background: var(--color-bg-canvas); }
+    .g-hud {
+      position: relative; width: 844px; height: 390px; margin: 0 auto; overflow: hidden;
+      background: linear-gradient(var(--color-world-sky-top), var(--color-world-sky-bottom) 62%, var(--color-world-ground) 62%);
+      border: var(--stroke-hairline) solid var(--color-border-default);
+    }
+    .g-hud .ui-hud-tr { top: 18px; right: 20px; }
+    .g-hud .ui-toast-region { top: 80px; }
+    .g-hud-tl { position: absolute; top: 18px; left: 20px; display: flex; gap: 10px; }
+    .g-hud-reticle { position: absolute; left: 408px; top: 181px; }
+    .g-hud-plus { position: absolute; right: 20px; bottom: 20px; }
+    .g-hud-hint { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); }
+    .g-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: var(--space-16); }
+    .g-option { display: flex; flex-direction: column; border: var(--stroke-hairline) solid var(--color-border-default); background: var(--color-bg-surface); }
+    .g-option > header { padding: var(--space-12) var(--space-16); border-bottom: var(--stroke-hairline) solid var(--color-border-subtle); }
+    .g-option > header h4 { margin: 0 0 var(--space-4); }
+    .g-option > header p { margin: 0; color: var(--color-text-secondary); }
+    .g-option > div { flex: 1; display: grid; place-items: start center; padding: var(--space-24); background: var(--color-bg-canvas); }
+    .g-states { display: grid; grid-template-columns: max-content repeat(6, max-content); gap: var(--space-16) var(--space-24); align-items: center; padding: var(--space-24); overflow-x: auto; background: var(--color-bg-canvas); }
+    .g-states > .t-label-s { color: var(--color-text-secondary); }
+
+    /* Phase 3 access */
+    .g-acc-frame[data-size="wide"] { width: 1280px; height: 720px; }
+    .g-acc-open { position: absolute; left: 20px; bottom: 20px; }
+    [data-acc][aria-pressed="true"] { background: var(--color-action-primary); color: var(--color-action-on-primary); }
+
+    /* Phase 4 */
+    .g-ob-frame { background: var(--color-bg-muted); }
+    .g-ob-world { position: absolute; right: 24px; bottom: 20px; color: var(--color-text-secondary); }
+    .g-portrait { position: relative; width: 390px; height: 844px; margin: 0 auto; overflow: hidden; border: var(--stroke-hairline) solid var(--color-border-default); }
+    .g-joystick { position: absolute; left: 24px; top: 270px; width: 96px; height: 96px; border: 1px solid var(--color-border-default); background: var(--color-bg-surface-hud); display: grid; place-items: center; }
+    .g-joystick i { width: 36px; height: 36px; border: 1px solid var(--color-border-default); background: var(--color-bg-surface); }
+    .g-scene-mark { position: absolute; }
+    .g-figma-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: var(--space-16); margin-top: var(--space-16); }
+    .g-figma-grid figure { margin: 0; display: grid; gap: var(--space-4); }
+    .g-figma-grid img { width: 100%; height: auto; border: var(--stroke-hairline) solid var(--color-border-default); }
+    .g-plant-lg > .ui-stage { width: 96px; height: 96px; }
+    .g-coach { width: 300px; padding: var(--space-16); border: var(--stroke-hairline) solid var(--color-border-default); background: var(--color-bg-surface); display: grid; gap: var(--space-8); }
+    .g-coach__bar { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-4); }
+    .g-coach__bar i { height: 4px; background: var(--color-border-subtle); }
+    .g-coach__bar i.on { background: var(--color-border-default); }
+    .g-coach h4 { margin: 0; }
+    .g-coach p { margin: 0; }
+    .g-coach footer { display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-8); }
+  </style>
+</head>
+<body>
+  <header class="g-header">
+    <span class="t-label-m">CHI Island · UI v2 · Direction G · Poster Signal</span>
+    <h1 class="t-display-xl">UI Gallery</h1>
+    <p class="t-body-m">Phase 1: tokens and core components built in plain HTML and CSS from the Figma design system. Each block shows the code on the left and the Figma render on the right. Figma file <span class="t-mono-id">6QNXwAjpDU1niZin1aiWby</span>.</p>
+    <ul class="g-toc t-label-m">
+      <li><a href="#color">Color</a></li>
+      <li><a href="#type">Type</a></li>
+      <li><a href="#icons">Icons</a></li>
+      <li><a href="#badges">Badges and stages</a></li>
+      <li><a href="#button">Button</a></li>
+      <li><a href="#icon-button">Icon button</a></li>
+      <li><a href="#identity">ID label and island chip</a></li>
+      <li><a href="#toast">Toast</a></li>
+      <li><a href="#prompt">Prompt</a></li>
+      <li><a href="#scene">Over the scene</a></li>
+      <li><a href="#hud">Player View HUD</a></li>
+      <li><a href="#access">Island Access</a></li>
+      <li><a href="#onboarding">Onboarding</a></li>
+      <li><a href="#tutorial">Tutorial</a></li>
+      <li><a href="#notifications">Notifications</a></li>
+      <li><a href="#world">In-world feedback</a></li>
+      <li><a href="#panels">Panels</a></li>
+      <li><a href="#lists">Plant lists and email</a></li>
+      <li><a href="#world-view">World View</a></li>
+      <li><a href="#motion">Motion</a></li>
+    </ul>
+  </header>
+
+  <main>
+    <!-- Color -->
+    <section id="color" aria-labelledby="color-title">
+      <header><h2 id="color-title" class="t-heading-l">Color</h2><span class="t-label-s">Foundations 12:2</span></header>
+      <p>Black and white carry the interface. Island hues are the only color. Signal orange is reserved for the unread dot and alerts.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · tokens.css</span>
+          <div class="g-swatches" id="swatches"></div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref"><img class="fit" src="figma-ref/color.png" alt="Figma color foundations: surfaces, text and lines, action and status, islands, and world colors." width="1024" height="782"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Type -->
+    <section id="type" aria-labelledby="type-title">
+      <header><h2 id="type-title" class="t-heading-l">Type</h2><span class="t-label-s">Foundations 12:104</span></header>
+      <p>Archivo for everything you read. Space Mono for everything that is data: IDs, times, counts, labels.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · .t-* classes</span>
+          <div class="g-type">
+            <span class="t-label-s">Display/XL</span><div class="t-display-xl">Poster Signal</div>
+            <span class="t-label-s">Display/Numeral</span><div class="t-display-num">72H</div>
+            <span class="t-label-s">Heading/L</span><div class="t-heading-l">Island Access</div>
+            <span class="t-label-s">Heading/M</span><div class="t-heading-m">Seed Catalog</div>
+            <span class="t-label-s">Heading/S</span><div class="t-heading-s">Haptics for calm breathing</div>
+            <span class="t-label-s">Body/M</span><div class="t-body-m">Adopt, water, or nourish ideas to unlock other islands and extend your visits.</div>
+            <span class="t-label-s">Body/S</span><div class="t-body-s">Leave your email and we will let you know when someone replies.</div>
+            <span class="t-label-s">Body/Strong</span><div class="t-body-strong">Visit island</div>
+            <span class="t-label-s">Label/M</span><div class="t-label-m">Home · Health &amp; Wellbeing</div>
+            <span class="t-label-s">Label/S</span><div class="t-label-s">3 of 9 ideas mature · 33%</div>
+            <span class="t-label-s">Mono/ID</span><div class="t-mono-id">MOSSY-FERN-4821</div>
+          </div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref"><img class="fit" src="figma-ref/type.png" alt="Figma type specimens from Display/XL to Mono/ID." width="900" height="696"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Icons -->
+    <section id="icons" aria-labelledby="icons-title">
+      <header><h2 id="icons-title" class="t-heading-l">Icons</h2><span class="t-label-s">Foundations 12:168 · 32 icons</span></header>
+      <p>24 px, 1.8 px square-cap stroke. Exported from Figma; drawn as a mask so the stroke follows the text color.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · .ui-icon--{name}</span>
+          <div class="g-icons" id="icon-grid"></div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref"><img class="fit" src="figma-ref/icons.png" alt="Figma icon set, 32 icons." width="1024" height="145"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Badges and stages -->
+    <section id="badges" aria-labelledby="badges-title">
+      <header><h2 id="badges-title" class="t-heading-l">Island badges and plant stages</h2><span class="t-label-s">12:404 · 12:433</span></header>
+      <p>Badge glyphs are placeholders until Ray delivers the island icons (swap the glyph, keep the square).</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · .ui-badge, .ui-stage</span>
+          <div class="g-stage">
+            <div class="g-item"><span class="t-label-s">Island Badge</span>
+              <div class="g-badges">
+                <img class="ui-badge" src="badges/health.svg" alt="Health &amp; Wellbeing">
+                <img class="ui-badge" src="badges/sustainability.svg" alt="Sustainability">
+                <img class="ui-badge" src="badges/games.svg" alt="Games &amp; Play">
+                <img class="ui-badge" src="badges/muted.svg" alt="Locked or expired">
+              </div>
+            </div>
+            <div class="g-item"><span class="t-label-s">Plant Stage</span>
+              <div class="g-badges">
+                <img class="ui-stage" src="stages/seed.svg" alt="Seed planted">
+                <img class="ui-stage" src="stages/sprout.svg" alt="Sprout">
+                <img class="ui-stage" src="stages/young.svg" alt="Young plant">
+                <img class="ui-stage" src="stages/mature.svg" alt="Mature plant">
+                <img class="ui-stage" src="stages/dormant.svg" alt="Dormant">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref" style="display:flex;flex-wrap:wrap;gap:16px">
+            <img src="figma-ref/badges.png" alt="Figma island badges: Health, Sustainability, Games, Muted." width="190" height="58">
+            <img src="figma-ref/stages.png" alt="Figma plant stages: Seed, Sprout, Young, Mature, Dormant." width="314" height="74">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Button -->
+    <section id="button" aria-labelledby="button-title">
+      <header><h2 id="button-title" class="t-heading-l">Button</h2><span class="t-label-s">13:41 · Primary, Secondary, Ghost · M, S</span></header>
+      <p>Primary: the main action in a panel. Secondary: alternatives. Ghost: inline links like View idea. S buttons get an invisible 44 px hit area.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · .ui-btn</span>
+          <div class="g-stage g-stage--canvas">
+            <button type="button" class="ui-btn"><span class="ui-icon ui-icon--seed" aria-hidden="true"></span><span class="ui-btn__label">Adopt seed</span></button>
+            <button type="button" class="ui-btn ui-btn--s"><span class="ui-icon ui-icon--seed" aria-hidden="true"></span><span class="ui-btn__label">Adopt seed</span></button>
+            <button type="button" class="ui-btn ui-btn--secondary"><span class="ui-icon ui-icon--seed" aria-hidden="true"></span><span class="ui-btn__label">Adopt seed</span></button>
+            <button type="button" class="ui-btn ui-btn--secondary ui-btn--s"><span class="ui-icon ui-icon--seed" aria-hidden="true"></span><span class="ui-btn__label">Adopt seed</span></button>
+            <button type="button" class="ui-btn ui-btn--ghost"><span class="ui-icon ui-icon--seed" aria-hidden="true"></span><span class="ui-btn__label">Adopt seed</span></button>
+            <button type="button" class="ui-btn ui-btn--ghost ui-btn--s"><span class="ui-icon ui-icon--seed" aria-hidden="true"></span><span class="ui-btn__label">Adopt seed</span></button>
+          </div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref"><img class="fit" src="figma-ref/button.png" alt="Figma buttons: Primary M and S, Secondary M and S, Ghost M and S." width="890" height="95"></div>
+        </div>
+      </div>
+      <div class="g-panel" style="margin-top:16px">
+        <span class="t-label-s">States · placeholder (not drawn in Figma yet)</span>
+        <div class="g-stage g-stage--canvas">
+          <div class="g-item"><span class="t-label-s">Disabled</span><button type="button" class="ui-btn" disabled><span class="ui-icon ui-icon--seed" aria-hidden="true"></span><span class="ui-btn__label">Adopt seed</span></button></div>
+          <div class="g-item"><span class="t-label-s">Disabled secondary</span><button type="button" class="ui-btn ui-btn--secondary" disabled><span class="ui-btn__label">Cancel</span></button></div>
+          <div class="g-item"><span class="t-label-s">Hover</span><span class="t-body-s">Underlines the label</span></div>
+          <div class="g-item"><span class="t-label-s">Pressed</span><span class="t-body-s">Nudges down 1 px</span></div>
+          <div class="g-item"><span class="t-label-s">Focus</span><span class="t-body-s">Press Tab: 2 px black ring with a white gap</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Icon button -->
+    <section id="icon-button" aria-labelledby="iconbtn-title">
+      <header><h2 id="iconbtn-title" class="t-heading-l">Icon button</h2><span class="t-label-s">13:69 · HUD, Active · M 46, L 58</span></header>
+      <p>Square, icon only. Active is the selected state (for example the menu while open). The plus button is L.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · .ui-icon-btn</span>
+          <div class="g-stage g-stage--canvas">
+            <button type="button" class="ui-icon-btn" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+            <button type="button" class="ui-icon-btn ui-icon-btn--active" aria-label="World View" title="World View" aria-pressed="true"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active" aria-label="World View" title="World View" aria-pressed="true"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+          </div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref"><img src="figma-ref/icon-button.png" alt="Figma icon buttons: HUD M, HUD L, Active M, Active L." width="306" height="108"></div>
+        </div>
+      </div>
+      <div class="g-panel" style="margin-top:16px">
+        <span class="t-label-s">In use · from the Figma variants</span>
+        <div class="g-stage g-stage--canvas">
+          <div class="g-item"><span class="t-label-s">Bell, unread</span>
+            <button type="button" class="ui-icon-btn" aria-label="Notifications, 2 unread" title="Notifications"><span class="ui-icon ui-icon--bell" aria-hidden="true"></span><img class="ui-icon-btn__dot" src="icons/unread-dot.svg" alt=""></button></div>
+          <div class="g-item"><span class="t-label-s">Bell, read</span>
+            <button type="button" class="ui-icon-btn" aria-label="Notifications" title="Notifications"><span class="ui-icon ui-icon--bell" aria-hidden="true"></span></button></div>
+          <div class="g-item"><span class="t-label-s">Menu, closed</span>
+            <button type="button" class="ui-icon-btn" aria-label="Menu" title="Menu" aria-expanded="false"><span class="ui-icon ui-icon--menu" aria-hidden="true"></span></button></div>
+          <div class="g-item"><span class="t-label-s">Menu, open</span>
+            <button type="button" class="ui-icon-btn" aria-label="Menu" title="Menu" aria-expanded="true"><span class="ui-icon ui-icon--menu" aria-hidden="true"></span></button></div>
+          <div class="g-item"><span class="t-label-s">Plus, idle</span>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button></div>
+          <div class="g-item"><span class="t-label-s">Plus, ready (×)</span>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus" aria-label="Cancel throw" title="Cancel throw (Q)" aria-pressed="true"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button></div>
+          <div class="g-item"><span class="t-label-s">Disabled · placeholder</span>
+            <button type="button" class="ui-icon-btn" aria-label="World View" title="World View" disabled><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button></div>
+        </div>
+      </div>
+      <p class="g-note">Figma fix needed: in the Active L variant (13:64), only the globe's outer circle is set to white. The inner meridian and equator strokes are still black, so on the black square it reads as "( )". The code draws the full globe in white. In Figma, set all three strokes in that instance to text/inverse.</p>
+      <p class="g-note">Plus button: matches Player View Default (20:3) and Ready to throw (20:313). It is the black Active L square in both states; only the + rotates 45° into ×. Menu open (20:147) keeps the menu glyph on the black button.</p>
+    </section>
+
+    <!-- Identity -->
+    <section id="identity" aria-labelledby="identity-title">
+      <header><h2 id="identity-title" class="t-heading-l">ID label and island chip</h2><span class="t-label-s">13:81 · 13:105</span></header>
+      <p>The anonymous ID is the only public name. The chip shows the island you are on, with the home icon, a color square, and the name, so color is never the only signal.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · .ui-id-label, .ui-island-chip</span>
+          <div class="g-stage g-stage--canvas">
+            <button type="button" class="ui-id-label" aria-label="Your ID, MOSSY-FERN-4821. Copy"><span>MOSSY-FERN-4821</span><span class="ui-icon ui-icon--copy" aria-hidden="true"></span></button>
+            <div class="ui-island-chip ui-island-health">
+              <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+              <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+              <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
+            </div>
+            <div class="ui-island-chip ui-island-sustainability">
+              <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+              <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+              <span class="ui-island-chip__text"><span class="ui-island-chip__context">Visiting</span><span class="ui-island-chip__name">Sustainability</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center">
+            <img src="figma-ref/id-label.png" alt="Figma ID label: MOSSY-FERN-4821 with copy icon." width="163" height="32">
+            <img src="figma-ref/island-chip.png" alt="Figma island chips: Home island Health and Wellbeing, Visiting Sustainability." width="422" height="96">
+          </div>
+        </div>
+      </div>
+      <p class="g-note">Figma uses the home icon on the Visiting chip too. Worth a look: a different glyph for Visiting would add a second non-color signal.</p>
+    </section>
+
+    <!-- Toast -->
+    <section id="toast" aria-labelledby="toast-title">
+      <header><h2 id="toast-title" class="t-heading-l">Toast</h2><span class="t-label-s">13:124 · Access gained, Access full, Planted</span></header>
+      <p>Top center for 3 seconds. The island stripe carries the hue; the words carry the meaning.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · .ui-toast</span>
+          <div class="g-stage g-stage--canvas">
+            <div class="ui-toast ui-island-sustainability" role="status">
+              <span class="ui-toast__stripe" aria-hidden="true"></span>
+              <div class="ui-toast__text"><p class="ui-toast__title">+24 hours</p><p class="ui-toast__detail">Sustainability access · 3d 04h left</p></div>
+            </div>
+            <div class="ui-toast ui-island-sustainability" role="status">
+              <span class="ui-toast__stripe" aria-hidden="true"></span>
+              <div class="ui-toast__text"><p class="ui-toast__title">Access full</p><p class="ui-toast__detail">Sustainability · 5 days (cap)</p></div>
+            </div>
+            <div class="ui-toast ui-island-sustainability" role="status">
+              <span class="ui-toast__stripe" aria-hidden="true"></span>
+              <div class="ui-toast__text"><p class="ui-toast__title">Planted</p><p class="ui-toast__detail">Haptics for calm breathing · on your island</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref"><img class="fit" src="figma-ref/toast.png" alt="Figma toasts: +24 hours, Access full, Planted." width="831" height="102"></div>
+        </div>
+      </div>
+      <p class="g-note">Copy check: the confirmed toast strings are "+48 hours", "+24 hours · Games &amp; Play access: 3 days 4 hours", and "Access full (5 days)". Figma splits them into a title and a detail line with a shorter format ("3d 04h left", "5 days (cap)"). The gallery follows Figma. Confirm the split is fine with the team.</p>
+    </section>
+
+    <!-- Prompt -->
+    <section id="prompt" aria-labelledby="prompt-title">
+      <header><h2 id="prompt-title" class="t-heading-l">Prompt</h2><span class="t-label-s">13:153 · Edge, Locked, Feedback</span></header>
+      <p>Frosted in-world notices. One line, except Locked.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · .ui-prompt</span>
+          <div class="g-stage g-stage--canvas">
+            <div class="ui-prompt" role="status">
+              <p class="ui-prompt__line">The bridges are this way</p>
+              <span class="ui-icon ui-icon--arrow-right" aria-hidden="true"></span>
+            </div>
+            <div class="ui-prompt ui-prompt--locked ui-island-games" role="status">
+              <p class="ui-prompt__eyebrow"><span class="ui-icon ui-icon--lock" aria-hidden="true"></span><span class="ui-prompt__swatch" aria-hidden="true"></span>Bridge locked · Games &amp; Play</p>
+              <p class="ui-prompt__body">Adopt a Games &amp; Play seed, then water or nourish it to unlock this bridge.</p>
+              <button type="button" class="ui-btn ui-btn--s ui-prompt__action"><span class="ui-btn__label">Unlock access</span></button>
+            </div>
+            <div class="ui-prompt ui-prompt--feedback ui-island-sustainability" role="status">
+              <span class="ui-icon ui-icon--water" aria-hidden="true"></span>
+              <p class="ui-prompt__line">+1 water · Sustainability access until Tue 3 p.m.</p>
+            </div>
+          </div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref"><img class="fit" src="figma-ref/prompt.png" alt="Figma prompts: edge, locked bridge, water feedback." width="957" height="194"></div>
+        </div>
+      </div>
+      <p class="g-note">Copy check: the Figma Locked prompt ends with a period ("...to unlock this bridge.") and the confirmed copy has none. Minor; flagging it so it's a deliberate choice.</p>
+    </section>
+
+    <!-- Over the scene -->
+    <section id="scene" aria-labelledby="scene-title">
+      <header><h2 id="scene-title" class="t-heading-l">Over the scene</h2><span class="t-label-s">Translucency check on world colors</span></header>
+      <p>HUD pieces on the world sky and ground tokens, to check that the frosted surfaces still read.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Code · HUD over world/sky and world/ground</span>
+        <div class="g-stage g-scene" style="min-height:220px;align-items:flex-start;justify-content:space-between">
+          <div style="display:flex;gap:8px;align-items:center">
+            <button type="button" class="ui-icon-btn" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+            <div class="ui-island-chip ui-island-health">
+              <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+              <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+              <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
+            </div>
+          </div>
+          <div class="ui-toast ui-island-sustainability" role="status">
+            <span class="ui-toast__stripe" aria-hidden="true"></span>
+            <div class="ui-toast__text"><p class="ui-toast__title">+24 hours</p><p class="ui-toast__detail">Sustainability access · 3d 04h left</p></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button type="button" class="ui-id-label" aria-label="Your ID, MOSSY-FERN-4821. Copy"><span>MOSSY-FERN-4821</span><span class="ui-icon ui-icon--copy" aria-hidden="true"></span></button>
+            <button type="button" class="ui-icon-btn" aria-label="Notifications, 2 unread" title="Notifications"><span class="ui-icon ui-icon--bell" aria-hidden="true"></span><img class="ui-icon-btn__dot" src="icons/unread-dot.svg" alt=""></button>
+            <button type="button" class="ui-icon-btn" aria-label="Menu" title="Menu" aria-expanded="false"><span class="ui-icon ui-icon--menu" aria-hidden="true"></span></button>
+          </div>
+          <div style="flex-basis:100%;display:flex;justify-content:center">
+            <div class="ui-prompt" role="status"><p class="ui-prompt__line">The bridges are this way</p><span class="ui-icon ui-icon--arrow-right" aria-hidden="true"></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Phase 2 · HUD -->
+    <section id="hud" aria-labelledby="hud-title">
+      <header><h2 id="hud-title" class="t-heading-l">Player View HUD</h2><span class="t-label-s">Phase 2 · hud.mjs · menu.mjs · id-label.mjs · bell.mjs · toast.mjs</span></header>
+      <p>Live components in an 844 × 390 landscape phone frame. Copy the ID, open the menu (mouse or keyboard: Tab to the menu button, then the arrow keys and Escape), ready the acorn, and fire toasts.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Code · live</span>
+        <div class="g-hud-controls">
+          <button type="button" class="ui-btn ui-btn--s" data-hud="notify"><span class="ui-btn__label">New notification</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-hud="read"><span class="ui-btn__label">Mark all read</span></button>
+          <button type="button" class="ui-btn ui-btn--s" data-hud="gain"><span class="ui-btn__label">+48 hours toast</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-hud="full"><span class="ui-btn__label">Access full toast</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--ghost" data-hud="planted"><span class="ui-btn__label">Planted toast</span></button>
+          <span class="t-label-s" id="hud-log" aria-live="polite"></span>
+        </div>
+        <div class="g-hud-scroll">
+          <div class="g-hud" id="hud-frame">
+            <div class="g-hud-tl">
+              <button type="button" class="ui-icon-btn" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+              <div class="ui-island-chip ui-island-health">
+                <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+                <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+                <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
+              </div>
+            </div>
+            <img class="g-hud-reticle" src="icons/reticle.svg" alt="" width="28" height="28">
+            <p class="ui-hint g-hud-hint" id="hud-hint" hidden>Tap to throw</p>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus g-hud-plus" id="hud-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
+          </div>
+        </div>
+      </div>
+      <div class="g-compare" style="margin-top:16px">
+        <div class="g-panel">
+          <span class="t-label-s">Figma · Player View / Default 20:3</span>
+          <div class="g-ref"><img class="fit" src="figma-ref/player-default.png" alt="Figma Player View default HUD." width="844" height="390"></div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma · Player View / Menu open 20:147</span>
+          <div class="g-ref"><img class="fit" src="figma-ref/player-menu-open.png" alt="Figma Player View with the menu open." width="844" height="390"></div>
+        </div>
+      </div>
+
+      <h3 class="t-heading-m" style="margin:32px 0 8px">Menu</h3>
+      <p class="g-sub">Menu 14:68 and Menu Item 14:67. Selected (muted fill, dark index) doubles as hover, keyboard focus, and the item whose panel is open.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · createMenu()</span>
+          <div class="g-stage g-stage--canvas" id="menu-static" style="align-items:flex-start"></div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma</span>
+          <div class="g-ref" style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+            <img src="figma-ref/menu.png" alt="Figma menu: Seed Catalog, Island Access selected, Followed plants, How to play, Email and reminders, ID and Log out." width="260" height="334">
+            <img class="fit" src="figma-ref/menu-item.png" alt="Figma menu item, default and selected." width="586" height="108" style="max-width:min(586px,100%)">
+          </div>
+        </div>
+      </div>
+
+      <h3 class="t-heading-m" style="margin:32px 0 8px">Menu contents · C chosen</h3>
+      <p class="g-sub">Three options for what the menu holds. The bell and ID label stay outside the menu in all three, as in Figma. Cassius chose C (Nov 22); the live HUD uses it. A and B stay here for the record.</p>
+      <div class="g-options" id="menu-options"></div>
+
+      <h3 class="t-heading-m" style="margin:32px 0 8px">Every state</h3>
+      <p class="g-sub">Default, selected and the HUD look come from Figma. Hover, focus, pressed and disabled are placeholders until Figma has those variants.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Icon button (HUD M) and buttons (Primary, Secondary, Ghost)</span>
+        <div class="g-states" id="state-grid"></div>
+      </div>
+
+      <h3 class="t-heading-m" style="margin:32px 0 8px">Frosted tip and hint</h3>
+      <p class="g-sub">The tip is not drawn in Figma; it reuses the Locked prompt's anatomy (eyebrow, body, one action) for "Got it" guidance. Over the scene it is frosted; without blur support, or with Increase Contrast on, it becomes solid white.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Code · .ui-tip, .ui-hint</span>
+        <div class="g-stage g-scene" style="align-items:flex-start">
+          <aside class="ui-tip" aria-label="Movement controls">
+            <p class="ui-tip__eyebrow"><span class="ui-icon ui-icon--joystick" aria-hidden="true"></span>Movement</p>
+            <p class="ui-tip__body">Use the stick to walk. Drag on the right side to look around.</p>
+            <button type="button" class="ui-btn ui-btn--secondary ui-btn--s"><span class="ui-btn__label">Got it</span></button>
+          </aside>
+          <aside class="ui-tip" aria-label="Seed Catalog tip">
+            <p class="ui-tip__eyebrow"><span class="ui-icon ui-icon--seed" aria-hidden="true"></span>Seed Catalog</p>
+            <p class="ui-tip__body">Open a seed packet and choose Adopt seed. Adopting opens 48 hours of access to the seed's island.</p>
+            <button type="button" class="ui-btn ui-btn--secondary ui-btn--s"><span class="ui-btn__label">Got it</span></button>
+          </aside>
+          <p class="ui-hint">Tap to throw</p>
+        </div>
+      </div>
+      <p class="g-note">Tip copy is placeholder, paraphrased from context.md (movement hint, first catalog visit). It needs confirmed wording before it ships.</p>
+    </section>
+
+    <!-- Phase 3 · Island Access -->
+    <section id="access" aria-labelledby="access-title">
+      <header><h2 id="access-title" class="t-heading-l">Island Access</h2><span class="t-label-s">Phase 3 · access-ring.mjs · access-panel.mjs</span></header>
+      <p>One card per island on a fixed 120 h scale. The exact time is always in text. Select an open card to see when access ends. Cards on wide screens; compact rows on landscape phones, as in Figma.</p>
+
+      <div class="g-panel">
+        <span class="t-label-s">Live panel · click cards, use the controls</span>
+        <div class="g-hud-controls">
+          <span class="t-label-s">Frame</span>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-acc="wide" aria-pressed="true"><span class="ui-btn__label">Wide 1280 × 720</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-acc="phone" aria-pressed="false"><span class="ui-btn__label">Phone 844 × 390</span></button>
+          <span class="t-label-s" style="margin-left:8px">Actions</span>
+          <button type="button" class="ui-btn ui-btn--s" data-acc="water"><span class="ui-btn__label">Water (+24 h Sustainability)</span></button>
+          <button type="button" class="ui-btn ui-btn--s" data-acc="adopt"><span class="ui-btn__label">Adopt (+48 h Games)</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-acc="time"><span class="ui-btn__label">6 hours pass</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--ghost" data-acc="empty"><span class="ui-btn__label">Empty state</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--ghost" data-acc="reset"><span class="ui-btn__label">Reset</span></button>
+          <span class="t-label-s" id="acc-log" aria-live="polite"></span>
+        </div>
+        <div class="g-hud-scroll">
+          <div class="g-hud g-acc-frame" id="acc-frame" data-size="wide">
+            <div class="g-hud-tl">
+              <button type="button" class="ui-icon-btn" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+              <div class="ui-island-chip ui-island-health">
+                <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+                <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+                <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
+              </div>
+            </div>
+            <button type="button" class="ui-btn g-acc-open" data-acc="open"><span class="ui-icon ui-icon--access" aria-hidden="true"></span><span class="ui-btn__label">Open Island Access</span></button>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="t-heading-m" style="margin:32px 0 8px">Card states</h3>
+      <p class="g-sub">Access Card 14:268. Home, 120 h (full), 72 h, 48 h, 24 h, 6 h with the clock alert, expired, and never opened. The 72 h card is selected to show the expiry line.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Code · createAccessCard()</span>
+        <div class="g-stage g-stage--canvas" id="card-states" style="align-items:flex-start"></div>
+      </div>
+      <div class="g-panel" style="margin-top:16px">
+        <span class="t-label-s">Figma · Access Card 14:268</span>
+        <div class="g-ref"><img class="fit" src="figma-ref/access-card.png" alt="Figma access cards: Home, 120H, 72H, 48H, 24H, 06H, 00H expired." width="1378" height="326"></div>
+      </div>
+
+      <h3 class="t-heading-m" style="margin:32px 0 8px">Row states</h3>
+      <p class="g-sub">Access Row 22:277 for landscape phones. The selected row shows the expiry line under it, as in 21:379.</p>
+      <div class="g-compare">
+        <div class="g-panel">
+          <span class="t-label-s">Code · createAccessRow()</span>
+          <div class="g-stage g-stage--canvas" id="row-states" style="display:grid;gap:8px;justify-items:stretch;max-width:440px"></div>
+        </div>
+        <div class="g-panel">
+          <span class="t-label-s">Figma · Access Row 22:277</span>
+          <div class="g-ref"><img src="figma-ref/access-row.png" alt="Figma access rows: Home, 72H, 06H, expired." width="442" height="398" style="max-width:100%;height:auto"></div>
+        </div>
+      </div>
+
+      <h3 class="t-heading-m" style="margin:32px 0 8px">Figma screens</h3>
+      <div class="g-compare">
+        <div class="g-panel"><span class="t-label-s">Wide panel 21:3</span><div class="g-ref"><img class="fit" src="figma-ref/access-wide.png" alt="Figma wide Island Access panel." width="1280" height="720"></div></div>
+        <div class="g-panel"><span class="t-label-s">Phone panel 21:148</span><div class="g-ref"><img class="fit" src="figma-ref/access-phone.png" alt="Figma phone Island Access panel." width="844" height="390"></div></div>
+        <div class="g-panel"><span class="t-label-s">Card selected 21:379</span><div class="g-ref"><img class="fit" src="figma-ref/access-selected.png" alt="Figma phone panel with a selected row." width="844" height="390"></div></div>
+        <div class="g-panel"><span class="t-label-s">Empty 21:559</span><div class="g-ref"><img class="fit" src="figma-ref/access-empty.png" alt="Figma empty Island Access panel." width="844" height="390"></div></div>
+      </div>
+      <p class="g-note">Fixes against Figma: the selected card's "Access ends Nov 24 at 3:30 p.m." runs past the card edge in 21:3, so here it wraps inside the card. The empty state's "Open Seed Catalog" button has a blank icon slot in 21:559 (likely a black seed icon on black, like the Active L globe); here the seed icon is white.</p>
+      <p class="g-note">Copy (Cassius, Nov 22): maturity uses the confirmed "4 of 12 ideas mature (33%)" on cards and rows, which differs from the Figma frames. The phone panel leaves out the body line because it does not fit: with it the panel is 410 px on a 390 px screen. "Not open yet" (an island never unlocked) is new copy; Cassius is flagging it to the team.</p>
+    </section>
+
+    <!-- Phase 4 · Onboarding -->
+    <section id="onboarding" aria-labelledby="ob-title">
+      <header><h2 id="ob-title" class="t-heading-l">Login and onboarding</h2><span class="t-label-s">Phase 4 · onboarding.mjs · fields.mjs · rotate-prompt.mjs</span></header>
+      <p>Built as drawn in Screens · Onboarding (11:5). The flow is live: try "I’m new here" (any password of 6 or more characters works), "I have an ID" (password "wrong" shows the error), and "Login as Judge". The right side is where the live World View renders in the game.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Live flow</span>
+        <div class="g-hud-controls">
+          <span class="t-label-s">Jump to</span>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ob="enter"><span class="ui-btn__label">Enter</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ob="reveal"><span class="ui-btn__label">ID reveal</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ob="secure"><span class="ui-btn__label">Secure</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ob="signin"><span class="ui-btn__label">Sign in</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ob="judge"><span class="ui-btn__label">Judge</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ob="home"><span class="ui-btn__label">Home island</span></button>
+          <span class="t-label-s" id="ob-log" aria-live="polite"></span>
+        </div>
+        <div class="g-hud-scroll">
+          <div class="g-hud g-ob-frame" id="ob-frame"><span class="g-ob-world t-label-s">Live World View</span></div>
+        </div>
+      </div>
+      <div class="g-panel" style="margin-top:16px">
+        <span class="t-label-s" id="ob-ref-label">Figma · Enter 18:21</span>
+        <div class="g-ref"><img id="ob-ref" src="figma-ref/ob-enter.png" alt="Figma onboarding screen for comparison." width="844" height="390" style="max-width:100%;height:auto"></div>
+      </div>
+
+      <h3 class="t-heading-m" style="margin:32px 0 8px">Rotate prompt</h3>
+      <p class="g-sub">18:3. Portrait phone, full-bleed poster type. Replaces #landscape-required; the existing show and hide logic can drive it.</p>
+      <div class="g-compare">
+        <div class="g-panel"><span class="t-label-s">Code · createRotatePrompt() · 390 × 844</span><div class="g-hud-scroll"><div class="g-portrait" id="rotate-frame"></div></div></div>
+        <div class="g-panel"><span class="t-label-s">Figma 18:3</span><div class="g-hud-scroll"><img src="figma-ref/ob-rotate.png" alt="Figma rotate prompt." width="390" height="844" style="display:block;margin:0 auto;border:1px solid var(--color-border-default)"></div></div>
+      </div>
+      <p class="g-note">Differences from 18:3, kept on purpose: the Figma frame has no top or bottom padding ("CHI Island" sits at y 0 and the note ends at 844), so the code adds a 32 px safe area at both ends; the gaps between items match. The Figma rule is 336 px wide and runs 10 px past the 326 px text column on the right; the code keeps it inside the column.</p>
+
+      <h3 class="t-heading-m" style="margin:32px 0 8px">Text field and checkbox</h3>
+      <div class="g-compare">
+        <div class="g-panel"><span class="t-label-s">Code · createField(), createCheckbox()</span><div class="g-stage g-stage--canvas" id="field-states" style="align-items:flex-start"></div></div>
+        <div class="g-panel"><span class="t-label-s">Figma 14:388 · 14:398</span><div class="g-ref" style="display:grid;gap:16px"><img class="fit" src="figma-ref/text-field.png" alt="Figma text field states: default, focus, filled, error." width="1024" height="112"><img src="figma-ref/checkbox.png" alt="Figma checkbox, checked and unchecked." width="690" height="70" style="max-width:100%;height:auto"></div></div>
+      </div>
+      <p class="g-note">New copy not in Figma (needed for real errors): "That ID and password don’t match.", "Enter your ID.", "Check the email address.", and "Copied" on the ID reveal button. The ID reveal keeps the confirmed "Save this ID — you’ll need it to log back in." with its em dash (still flagged in UI-CONTEXT §11).</p>
+    </section>
+
+    <!-- Phase 4 · Tutorial -->
+    <section id="tutorial" aria-labelledby="tut-title">
+      <header><h2 id="tut-title" class="t-heading-l">Tutorial</h2><span class="t-label-s">Phase 4 · tutorial.mjs · 19:398 to 19:1150</span></header>
+      <p>Six steps over the live HUD. The highlight wraps the real control (joystick, plus, menu). Steps 4 to 6 point at things in the 3D scene, so the game passes their screen rectangles; here they use the Figma positions. Arrow keys move between steps; Escape skips.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Live tutorial</span>
+        <div class="g-hud-controls">
+          <button type="button" class="ui-btn ui-btn--s" data-tut="start"><span class="ui-btn__label">Start tutorial</span></button>
+          <span class="t-label-s">Step</span>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-tut="0"><span class="ui-btn__label">1</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-tut="1"><span class="ui-btn__label">2</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-tut="2"><span class="ui-btn__label">3</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-tut="3"><span class="ui-btn__label">4</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-tut="4"><span class="ui-btn__label">5</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-tut="5"><span class="ui-btn__label">6</span></button>
+          <span class="t-label-s" id="tut-log" aria-live="polite"></span>
+        </div>
+        <div class="g-hud-scroll">
+          <div class="g-hud" id="tut-frame">
+            <div class="g-hud-tl">
+              <button type="button" class="ui-icon-btn" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+              <div class="ui-island-chip ui-island-health">
+                <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+                <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+                <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
+              </div>
+            </div>
+            <div class="g-joystick" id="tut-joystick" aria-hidden="true"><i></i></div>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus g-hud-plus" id="tut-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
+            <div class="ui-landing ui-landing--valid g-scene-mark" style="left:380px;top:200px"><img class="ui-landing__marker" src="markers/valid.svg" alt=""><span class="ui-landing__label">Open grass</span></div>
+            <img class="ui-stage g-scene-mark" src="stages/mature.svg" alt="" style="left:501px;top:263px">
+            <svg class="g-scene-mark" style="left:220px;top:110px" width="230" height="90" viewBox="0 0 230 90" aria-hidden="true"><path d="M12 70 Q 115 0 212 70" fill="none" stroke="var(--color-island-sustainability)" stroke-width="5"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="g-figma-grid">
+        <figure><img src="figma-ref/tut-1.png" alt="Figma tutorial step 1." width="844" height="390"><figcaption class="t-label-s">Step 1 · 19:398</figcaption></figure>
+        <figure><img src="figma-ref/tut-2.png" alt="Figma tutorial step 2." width="844" height="390"><figcaption class="t-label-s">Step 2 · 19:565</figcaption></figure>
+        <figure><img src="figma-ref/tut-3.png" alt="Figma tutorial step 3." width="844" height="390"><figcaption class="t-label-s">Step 3 · 19:705</figcaption></figure>
+        <figure><img src="figma-ref/tut-4.png" alt="Figma tutorial step 4." width="844" height="390"><figcaption class="t-label-s">Step 4 · 19:845</figcaption></figure>
+        <figure><img src="figma-ref/tut-5.png" alt="Figma tutorial step 5." width="844" height="390"><figcaption class="t-label-s">Step 5 · 19:991</figcaption></figure>
+        <figure><img src="figma-ref/tut-6.png" alt="Figma tutorial step 6." width="844" height="390"><figcaption class="t-label-s">Step 6 · 19:1150</figcaption></figure>
+      </div>
+      <p class="g-note">Fix against Figma: in steps 4 and 6 the card runs past the bottom of the 390 px screen. The code keeps every card at least 16 px inside the edges. Step 1 says "Drag the left pad"; on desktop, where movement is W A S D, that copy may need a keyboard variant.</p>
+      <p class="g-note">Other differences: the Figma tutorial frames show the menu button black (the Active variant), while Player View Default (20:3) shows it white; the code keeps the Player View button. Card placement follows each frame: steps 1 to 3 sit beside their control, step 4 is top-aligned to the right of the landing spot, step 5 sits up and to the left of the plant with the stage strip under it, and step 6 sits below and to the right of the bridge.</p>
+    </section>
+
+    <!-- Phase 5 · Notifications -->
+    <section id="notifications" aria-labelledby="notes-title">
+      <header><h2 id="notes-title" class="t-heading-l">Notifications</h2><span class="t-label-s">Phase 5 · notifications.mjs · email-notification.html</span></header>
+      <p>The bell opens a right-side list (21:996). Unread rows have a black tab and a hidden "Unread" label; selecting a row marks it read and hands the item to the game, which opens the plant or Island Access. The bell's count follows the list.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Live · tap the bell</span>
+        <div class="g-hud-controls">
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-notes="list"><span class="ui-btn__label">List</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-notes="empty"><span class="ui-btn__label">Empty, no email</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-notes="empty-email"><span class="ui-btn__label">Empty, has email</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-notes="arrive"><span class="ui-btn__label">New notification</span></button>
+          <span class="t-label-s" id="notes-log" aria-live="polite"></span>
+        </div>
+        <div class="g-hud-scroll">
+          <div class="g-hud" id="notes-frame">
+            <div class="g-hud-tl">
+              <button type="button" class="ui-icon-btn" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+              <div class="ui-island-chip ui-island-health">
+                <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+                <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+                <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
+              </div>
+            </div>
+            <div class="g-joystick" aria-hidden="true"><i></i></div>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus g-hud-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
+          </div>
+        </div>
+      </div>
+      <div class="g-compare" style="margin-top:16px">
+        <div class="g-panel"><span class="t-label-s">Figma · List 21:1107</span><div class="g-ref"><img src="figma-ref/notif-list.png" alt="Figma notification list panel." width="440" height="390"></div></div>
+        <div class="g-panel"><span class="t-label-s">Figma · Empty 21:1277</span><div class="g-ref"><img src="figma-ref/notif-empty.png" alt="Figma empty notifications panel." width="440" height="390"></div></div>
+      </div>
+      <p class="g-note">All four row types follow the Notification Row variants (14:364): Reply, Comment, Access ending and Thirsty tree. When the player already has an email, the empty state drops "Add an email to get them after CHI too." and the Add email button. Rows fill the panel width; Figma draws them 10 px short of the header rule.</p>
+
+      <h3 class="t-heading-m" style="margin:32px 0 8px">Email</h3>
+      <p class="g-sub">21:1302. Table layout with inline styles, no images or scripts, so it holds up in Gmail, Apple Mail and Outlook. Placeholders are listed at the top of the file; here they are filled with the Figma sample.</p>
+      <div class="g-compare">
+        <div class="g-panel"><span class="t-label-s">Code · email-notification.html</span><div class="g-ref"><iframe id="email-frame" title="Notification email preview" style="display:block;width:600px;max-width:100%;height:560px;border:0;background:#F4F4F1"></iframe></div></div>
+        <div class="g-panel"><span class="t-label-s">Figma · Email body 21:1303</span><div class="g-ref"><img src="figma-ref/email.png" alt="Figma notification email." width="520" height="458" style="max-width:100%;height:auto"></div></div>
+      </div>
+      <p class="g-note">Differences from Figma: Figma's rule accent is Health red and its quote bar is Sustainability green on a Health plant; the template uses the plant's island hue for both. Unsubscribe and Email preferences are underlined so they read as links without relying on color. Subjects and opening lines for the comment and access emails are in the file's header comment, approved as placeholders while Cassius checks them with the team.</p>
+    </section>
+
+    <!-- Phase 5 · In-world feedback -->
+    <section id="world" aria-labelledby="world-title">
+      <header><h2 id="world-title" class="t-heading-l">In-world prompts and feedback</h2><span class="t-label-s">Phase 5 · world-feedback.mjs · Player View 20:437 to 20:1355</span></header>
+      <p>Pieces the game places over the 3D scene at a projected position. Pick a state; the Figma frame below switches to match.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Live</span>
+        <div class="g-hud-controls">
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-world="view"><span class="ui-btn__label">View idea</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-world="valid"><span class="ui-btn__label">Landing valid</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-world="invalid"><span class="ui-btn__label">Landing invalid</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-world="failed"><span class="ui-btn__label">Failed throw</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-world="edge"><span class="ui-btn__label">Edge</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-world="locked"><span class="ui-btn__label">Locked bridge</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-world="water"><span class="ui-btn__label">Water</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-world="nourish"><span class="ui-btn__label">Nourish</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-world="dormant"><span class="ui-btn__label">Dormant</span></button>
+          <span class="t-label-s" id="world-log" aria-live="polite"></span>
+        </div>
+        <div class="g-hud-scroll">
+          <div class="g-hud" id="world-frame">
+            <div class="g-hud-tl">
+              <button type="button" class="ui-icon-btn" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+              <div class="ui-island-chip ui-island-health">
+                <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+                <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+                <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
+              </div>
+            </div>
+            <div class="g-joystick" aria-hidden="true"><i></i></div>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus g-hud-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
+            <img class="g-hud-reticle" id="world-reticle" src="icons/reticle.svg" alt="" width="28" height="28">
+          </div>
+        </div>
+      </div>
+      <div class="g-panel" style="margin-top:16px">
+        <span class="t-label-s" id="world-ref-label">Figma</span>
+        <div class="g-ref"><img id="world-ref" src="figma-ref/player-default.png" alt="Figma Player View frame for comparison." width="844" height="390" style="max-width:100%;height:auto"></div>
+      </div>
+      <p class="g-note">Copy: water feedback uses the confirmed "+1 water · Sustainability access until Tue 3 p.m."; nourish reads "+1 nutrient · Sustainability access until Tue 3 p.m." to match the Nutrients stat (Cassius, Nov 23). The locked prompt keeps the confirmed copy without the final period that Figma adds. The failed-throw marker is a button (tap or Enter retries); the other markers are status messages for screen readers.</p>
+    </section>
+
+    <!-- Phase 6 · Panels -->
+    <section id="panels" aria-labelledby="panels-title">
+      <header><h2 id="panels-title" class="t-heading-l">Panels</h2><span class="t-label-s">Phase 6 · catalog.mjs · seed-form.mjs · plant-detail.mjs · panel.mjs · panels.css</span></header>
+      <p>The Seed Catalog, New seed form and Plant detail, restyled as drawn in Screens · World &amp; Panels (11:8). They are new modules that take data and callbacks, so they replace <code>#seed-catalog</code>, <code>#catalog-seed</code>, <code>#plant-dialog</code> and <code>#idea-dialog</code> without editing <code>index.html</code> or <code>style.css</code>. Pick a state; the Figma frame below switches to match.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Live</span>
+        <div class="g-hud-controls">
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-pn="catalog"><span class="ui-btn__label">Seed Catalog</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-pn="filtered"><span class="ui-btn__label">Catalog from Unlock access</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-pn="seed"><span class="ui-btn__label">New seed</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-pn="adopted"><span class="ui-btn__label">Planting an adopted seed</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-pn="plant"><span class="ui-btn__label">Plant detail</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-pn="dormant"><span class="ui-btn__label">Dormant plant</span></button>
+          <span class="t-label-s" id="pn-log" aria-live="polite"></span>
+        </div>
+        <div class="g-hud-scroll">
+          <div class="g-hud" id="pn-frame">
+            <div class="g-hud-tl">
+              <button type="button" class="ui-icon-btn" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+              <div class="ui-island-chip ui-island-health">
+                <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+                <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+                <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
+              </div>
+            </div>
+            <div class="g-joystick" aria-hidden="true"><i></i></div>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus g-hud-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
+          </div>
+        </div>
+      </div>
+      <div class="g-panel" style="margin-top:16px">
+        <span class="t-label-s" id="pn-ref-label">Figma</span>
+        <div class="g-ref"><img id="pn-ref" src="figma-ref/wp-catalog.png" alt="Figma frame for comparison." width="844" height="390" style="max-width:100%;height:auto"></div>
+      </div>
+      <p class="g-note">Kept from the current app because Figma does not draw them: the adopted-seed confirmation ("Plant “…” here to begin connecting the islands."), the idea's short description on Plant detail (shown in grey above the open question; Figma shows only the question), and "Cancel reply". New copy for states Figma does not cover: "Add a title.", "Add an open question.", "Add a short description.", "Write a comment first.", "No comments yet. A comment nourishes this plant.", "Reply to {ID} · nourish", "Following", "No seeds from other islands yet." and "No {island} seeds yet."</p>
+      <p class="g-note">Choices against Figma: the Water bar uses the plant's island hue (Figma draws Sustainability green on a Health plant, as in the email); the three stat bars stay full length as drawn, so the numbers carry the progress. The Panel Header accent is the home island on the catalog and the landing island on the new seed form. On screens taller than a phone, Plant detail keeps its two columns centered at up to 560 px tall so the discussion has room.</p>
+    </section>
+
+    <!-- Plant lists and email -->
+    <section id="lists" aria-labelledby="lists-title">
+      <header><h2 id="lists-title" class="t-heading-l">Plant lists and email</h2><span class="t-label-s">plant-row.mjs · followed-plants.mjs · island-plants.mjs · email-settings.mjs</span></header>
+      <p>Followed plants (menu 03), Email and reminders (menu 05) and Island plants, which opens from the island chip as marked in Figma 31:1150 and replaces <code>#browse-plants</code>. In the live frame the chip and the menu open them too. Pick a state; the Figma frame below switches to match.</p>
+      <div class="g-panel">
+        <span class="t-label-s">Live</span>
+        <div class="g-hud-controls">
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ls="followed"><span class="ui-btn__label">Followed plants</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ls="followed-empty"><span class="ui-btn__label">Followed, empty</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ls="email"><span class="ui-btn__label">Email, not set up</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ls="email-saved"><span class="ui-btn__label">Email, saved</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ls="island"><span class="ui-btn__label">Island plants</span></button>
+          <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-ls="island-empty"><span class="ui-btn__label">Island plants, empty</span></button>
+          <span class="t-label-s" id="ls-log" aria-live="polite"></span>
+        </div>
+        <div class="g-hud-scroll">
+          <div class="g-hud" id="ls-frame">
+            <div class="g-hud-tl">
+              <button type="button" class="ui-icon-btn" aria-label="World View" title="World View"><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>
+              <button type="button" class="ui-island-chip ui-island-health" id="ls-chip" aria-haspopup="dialog" aria-label="Health &amp; Wellbeing, home island. Show island plants">
+                <span class="ui-icon ui-icon--home" aria-hidden="true"></span>
+                <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+                <span class="ui-island-chip__text"><span class="ui-island-chip__context">Home island</span><span class="ui-island-chip__name">Health &amp; Wellbeing</span></span>
+              </button>
+            </div>
+            <div class="g-joystick" aria-hidden="true"><i></i></div>
+            <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus g-hud-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
+          </div>
+        </div>
+      </div>
+      <div class="g-panel" style="margin-top:16px">
+        <span class="t-label-s" id="ls-ref-label">Figma</span>
+        <div class="g-ref"><img id="ls-ref" src="figma-ref/pv-followed.png" alt="Figma frame for comparison." width="844" height="390" style="max-width:100%;height:auto"></div>
+      </div>
+      <div class="g-compare" style="margin-top:16px">
+        <div class="g-panel"><span class="t-label-s">Code · createPlantRow(): New activity, Up to date, Dormant</span><div class="g-stage g-stage--canvas" id="ls-rows" style="display:grid;gap:10px;justify-items:stretch;max-width:440px"></div></div>
+        <div class="g-panel"><span class="t-label-s">Figma · Plant Row 30:273</span><div class="g-ref"><img src="figma-ref/plant-row.png" alt="Figma plant rows: new activity, up to date, dormant." width="442" height="320"></div></div>
+      </div>
+      <p class="g-note">New copy for states Figma does not draw: "Up to date" (Followed plants subtitle when nothing is new), "1 new reply" and "1 contributor" (singulars), "No plants here yet. Plant the first idea with +." (Island plants empty), "Email removed." (announced to screen readers), and the menu meta lines "Reminders on" and "Reminders off". Island plants with no ideas says "No ideas yet", never 0%. A filter with no plants is disabled rather than showing an empty list.</p>
+    </section>
+
+    <!-- Phase 6 · World View -->
+    <section id="world-view" aria-labelledby="wv-title">
+      <header><h2 id="wv-title" class="t-heading-l">World View labels</h2><span class="t-label-s">Phase 6 · world-labels.mjs · 23:3 · World Island Label 16:416</span></header>
+      <p>Home is inverse with a home icon, an open island shows its time left, a locked one shows a lock and "Locked". Maturity sits under every name, or "No ideas yet", never 0%. The game positions the labels over the islands.</p>
+      <div class="g-compare">
+        <div class="g-panel"><span class="t-label-s">Code · createWorldLabel(), createWorldLegend() at the Figma positions</span><div class="g-hud-scroll"><div class="g-hud" id="wv-frame"></div></div></div>
+        <div class="g-panel"><span class="t-label-s">Figma · World View 23:3</span><div class="g-hud-scroll"><img src="figma-ref/wp-world.png" alt="Figma World View." width="844" height="390" style="display:block;margin:0 auto"></div></div>
+      </div>
+      <div class="g-panel" style="margin-top:16px"><span class="t-label-s">Figma · World Island Label 16:416</span><div class="g-ref"><img class="fit" src="figma-ref/world-labels.png" alt="Figma world island labels: home, open, locked." width="676" height="101"></div></div>
+    </section>
+
+    <!-- Motion -->
+    <section id="motion" aria-labelledby="motion-title">
+      <header><h2 id="motion-title" class="t-heading-l">Motion</h2><span class="t-label-s">motion.css · motion.mjs · tokens in tokens.css</span></header>
+      <p>Quick, precise, graphic. Every curve decelerates into place or accelerates away, with no overshoot. Effects that belong in the 3D scene are mocked in 2D here, with a note on who hooks them up. To check reduced motion, turn on Reduce Motion in your OS (or emulate it in DevTools): slides become fades, decorative effects switch off, and values jump to the new number.</p>
+      <div class="g-motion">
+
+        <!-- Panels -->
+        <article class="g-demo" id="demo-panel">
+          <header>
+            <div><h3 class="t-heading-s">Panel slide in</h3><span class="t-label-s">base 200 ms · ease-out · backdrop fades · exit fast 150 ms</span></div>
+            <div class="g-demo__controls"><button type="button" class="ui-btn ui-btn--s" data-act="open"><span class="ui-btn__label">Open</span></button></div>
+          </header>
+          <div class="g-demo__stage g-demo__stage--scene">
+            <span class="t-label-s">Player View</span>
+            <div class="ui-layer ui-layer--contained" data-state="closed">
+              <div class="ui-backdrop" data-act="close"></div>
+              <aside class="ui-panel" aria-label="Island Access" style="width:min(260px,80%)">
+                <div class="g-mock-panel-body">
+                  <header><h4 class="t-heading-m" style="margin:0">Island Access</h4>
+                    <button type="button" class="ui-icon-btn" aria-label="Close Island Access" title="Close" data-act="close" style="width:44px;height:44px;border:0;background:none"><span class="ui-icon ui-icon--close" aria-hidden="true"></span></button></header>
+                  <span class="t-label-m">Home · Health &amp; Wellbeing</span>
+                  <p class="t-body-s" style="margin:0">Adopt, water, or nourish ideas to unlock other islands and extend your visits.</p>
+                </div>
+              </aside>
+            </div>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Celena):</b> wrap each panel in <code>.ui-layer</code> with a <code>.ui-backdrop</code> and <code>.ui-panel</code>, then call <code>openPanel(layer)</code> and <code>closePanel(layer)</code>. Same for Island Access, Seed Catalog, Notifications and plant detail.</p>
+        </article>
+
+        <!-- Menu -->
+        <article class="g-demo" id="demo-menu">
+          <header>
+            <div><h3 class="t-heading-s">Menu drop down</h3><span class="t-label-s">fast 150 ms · ease-out · button to black in 80 ms</span></div>
+            <div class="g-demo__controls"><span class="t-label-s">Tap the menu button</span></div>
+          </header>
+          <div class="g-demo__stage g-demo__stage--scene" style="place-items:start end;min-height:300px">
+            <div class="g-menu-anchor">
+              <button type="button" class="ui-icon-btn" aria-label="Menu" title="Menu" aria-expanded="false" aria-controls="demo-menu-list" data-act="menu"><span class="ui-icon ui-icon--menu" aria-hidden="true"></span></button>
+              <div class="ui-menu" id="demo-menu-list" data-state="closed">
+                <button type="button" class="g-menu-item"><span class="t-label-s">01</span>Seed Catalog</button>
+                <button type="button" class="g-menu-item"><span class="t-label-s">02</span>Island Access</button>
+                <button type="button" class="g-menu-item"><span class="t-label-s">03</span>Followed plants</button>
+                <button type="button" class="g-menu-item"><span class="t-label-s">04</span>How to play</button>
+                <div class="g-menu-foot"><span class="t-mono-id">MOSSY-FERN-4821</span><button type="button" class="ui-btn ui-btn--ghost ui-btn--s"><span class="ui-btn__label">Log out</span></button></div>
+              </div>
+            </div>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Celena):</b> <code>toggleMenu(button, menu)</code>. The button's <code>aria-expanded</code> drives the black state. Items are a stub here; the real Menu component (14:68) comes in Phase 2.</p>
+        </article>
+
+        <!-- Plus -->
+        <article class="g-demo" id="demo-plus">
+          <header>
+            <div><h3 class="t-heading-s">Plus to ×</h3><span class="t-label-s">fast 150 ms · ease-out · rotate 45°</span></div>
+            <div class="g-demo__controls"><span class="t-label-s">Tap the button</span></div>
+          </header>
+          <div class="g-demo__stage g-demo__stage--scene">
+            <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false" data-act="plus"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Celena):</b> add <code>ui-plus</code> to the seed button and call <code>setPlusReady(button, true/false)</code>. The existing <code>#seed-mode</code> already rotates its icon 45° with <code>aria-pressed</code>, so this is the same behavior on the new timing.</p>
+        </article>
+
+        <!-- Toast -->
+        <article class="g-demo" id="demo-toast">
+          <header>
+            <div><h3 class="t-heading-s">Toast</h3><span class="t-label-s">in 200 ms ease-out · hold 3 s · out 200 ms ease-in</span></div>
+            <div class="g-demo__controls">
+              <button type="button" class="ui-btn ui-btn--s" data-act="gain"><span class="ui-btn__label">+48 hours</span></button>
+              <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-act="full"><span class="ui-btn__label">Access full</span></button>
+            </div>
+          </header>
+          <div class="g-demo__stage g-demo__stage--scene">
+            <div class="ui-toast-region ui-toast-region--contained" aria-live="polite"></div>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Celena):</b> one <code>.ui-toast-region</code> in the HUD, then <code>showToast(region, toast)</code>. It removes the toast when it's done.</p>
+        </article>
+
+        <!-- Ring and numeral -->
+        <article class="g-demo" id="demo-ring">
+          <header>
+            <div><h3 class="t-heading-s">Access ring and numeral</h3><span class="t-label-s">count 600 ms · ease-out · fixed 120 h scale</span></div>
+            <div class="g-demo__controls">
+              <button type="button" class="ui-btn ui-btn--s" data-act="add"><span class="ui-btn__label">+24 hours</span></button>
+              <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-act="six"><span class="ui-btn__label">6 h</span></button>
+              <button type="button" class="ui-btn ui-btn--s ui-btn--ghost" data-act="reset"><span class="ui-btn__label">Reset</span></button>
+            </div>
+          </header>
+          <div class="g-demo__stage">
+            <div class="g-card ui-island-sustainability">
+              <span class="t-label-s">Sustainability</span>
+              <div class="g-card__ring">
+                <svg class="ui-ring" viewBox="0 0 80 80" style="--ring:40" aria-hidden="true">
+                  <circle class="ui-ring__track" cx="40" cy="40" r="34"/>
+                  <circle class="ui-ring__arc" cx="40" cy="40" r="34" pathLength="100"/>
+                </svg>
+                <img class="ui-badge" src="badges/sustainability.svg" alt="">
+              </div>
+              <span class="ui-numeral" style="--num:48" aria-hidden="true"></span>
+              <span class="g-card__label" aria-live="polite"><span class="ui-icon ui-icon--clock" aria-hidden="true"></span><span data-label>2 days left</span></span>
+            </div>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Phase 3, then Celena):</b> <code>setRing(svg, hours)</code> and <code>setNumeral(el, hours)</code>. The full Access Card (14:268) is built in Phase 3; this card is a stub to show the motion. Capping at 120 h is the server's job; the demo caps to show "Access full".</p>
+        </article>
+
+        <!-- Water and nourish -->
+        <article class="g-demo" id="demo-fx">
+          <header>
+            <div><h3 class="t-heading-s">Water ripple and nourish pulse</h3><span class="t-label-s">ripple 700 ms · pulse 600 ms · ease-out · 2D mock</span></div>
+            <div class="g-demo__controls">
+              <button type="button" class="ui-btn ui-btn--s" data-act="water"><span class="ui-icon ui-icon--water" aria-hidden="true"></span><span class="ui-btn__label">Water</span></button>
+              <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-act="nourish"><span class="ui-icon ui-icon--nourish" aria-hidden="true"></span><span class="ui-btn__label">Nourish</span></button>
+            </div>
+          </header>
+          <div class="g-demo__stage g-demo__stage--scene">
+            <div class="g-ground ui-island-sustainability">
+              <span class="ui-fx ui-fx--water" aria-hidden="true"><i></i><i></i></span>
+              <span class="ui-fx ui-fx--nourish" aria-hidden="true"><i></i><i></i></span>
+              <span class="ui-plant"><img class="ui-stage" src="stages/young.svg" alt="Young plant"></span>
+            </div>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Celena now, Ray later):</b> plants are drawn on the 2D canvas over the three.js scene, so for now <code>scene.mjs</code> draws two expanding ellipses (water) or a swelling disc (nourish) at the plant's base, timed with <code>motionMs('--motion-duration-ripple')</code> in the plant's origin island hue (thin rings for water, a filled disc for nourish). Once plants move into three.js, Ray can use a flat ring decal with the same timing. The feedback prompt ("+1 water · ...") stays the text signal.</p>
+        </article>
+
+        <!-- Landing -->
+        <article class="g-demo" id="demo-landing">
+          <header>
+            <div><h3 class="t-heading-s">Landing marker</h3><span class="t-label-s">valid: scale in 200 ms ease-out · invalid: shake 280 ms once</span></div>
+            <div class="g-demo__controls">
+              <button type="button" class="ui-btn ui-btn--s" data-act="valid"><span class="ui-btn__label">Valid</span></button>
+              <button type="button" class="ui-btn ui-btn--s ui-btn--secondary" data-act="invalid"><span class="ui-btn__label">Invalid</span></button>
+            </div>
+          </header>
+          <div class="g-demo__stage g-demo__stage--ground">
+            <div class="g-row">
+              <div class="ui-landing ui-landing--valid"><img class="ui-landing__marker" src="markers/valid.svg" alt=""><span class="ui-landing__label">Open grass</span></div>
+              <div class="ui-landing ui-landing--invalid" role="status"><img class="ui-landing__marker" src="markers/invalid.svg" alt=""><span class="ui-landing__label">Aim at open soil</span></div>
+            </div>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Celena):</b> the marker sits at the landing point in the scene. Either position this element over the projected point, or draw the marker on the canvas and scale or shake it with the same tokens.</p>
+        </article>
+
+        <!-- Stage change -->
+        <article class="g-demo" id="demo-grow">
+          <header>
+            <div><h3 class="t-heading-s">Stage change</h3><span class="t-label-s">grow 400 ms ease-out from the base · old stage out 150 ms</span></div>
+            <div class="g-demo__controls"><button type="button" class="ui-btn ui-btn--s" data-act="next"><span class="ui-btn__label">Next stage</span></button></div>
+          </header>
+          <div class="g-demo__stage">
+            <div class="g-row" style="flex-direction:column;gap:8px">
+              <span class="ui-plant g-plant-lg"><img class="ui-stage" src="stages/seed.svg" alt="Seed planted"></span>
+              <span class="t-label-m" data-stage-label aria-live="polite">Seed planted</span>
+            </div>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Ray, then Celena):</b> in the scene, Ray's next-stage model scales up from its base over <code>--motion-duration-grow</code> while the old one fades. Celena triggers it when a plant's stage changes. In panels and the catalog, <code>swapStage(plant, src, alt)</code> handles the thumbnail.</p>
+        </article>
+
+        <!-- Dormant -->
+        <article class="g-demo" id="demo-dormant">
+          <header>
+            <div><h3 class="t-heading-s">Dormant and revive</h3><span class="t-label-s">600 ms · ease-in-out · scale 0.7, grayscale</span></div>
+            <div class="g-demo__controls"><button type="button" class="ui-btn ui-btn--s" data-act="dormant" aria-pressed="false"><span class="ui-btn__label">Go dormant</span></button></div>
+          </header>
+          <div class="g-demo__stage">
+            <div class="g-row" style="flex-direction:column;gap:8px">
+              <span class="ui-plant g-plant-lg"><img class="ui-stage" src="stages/mature.svg" alt="Mature plant"></span>
+              <span class="t-label-m" data-dormant-label aria-live="polite">Mature plant</span>
+            </div>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Ray, then Celena):</b> Ray's dormant variant or a uniform scale to 0.7 plus a desaturated material, over <code>--motion-duration-dormant</code>. One interaction reverses it. The dormant label (Phase 5) carries the meaning in text.</p>
+        </article>
+
+        <!-- Bridge -->
+        <article class="g-demo" id="demo-bridge">
+          <header>
+            <div><h3 class="t-heading-s">Bridge unlock</h3><span class="t-label-s">lock drops 200 ms ease-in · line draws 500 ms ease-in-out</span></div>
+            <div class="g-demo__controls">
+              <button type="button" class="ui-btn ui-btn--s" data-act="unlock"><span class="ui-btn__label">Unlock</span></button>
+              <button type="button" class="ui-btn ui-btn--s ui-btn--ghost" data-act="lock"><span class="ui-btn__label">Lock again</span></button>
+            </div>
+          </header>
+          <div class="g-demo__stage">
+            <svg class="ui-bridge ui-island-games" viewBox="0 0 320 90" role="img" aria-label="Bridge from Health and Wellbeing to Games and Play, locked" style="max-width:360px">
+              <path class="ui-bridge__locked" d="M44 45 C 120 10, 200 10, 276 45"/>
+              <path class="ui-bridge__open" d="M44 45 C 120 10, 200 10, 276 45" pathLength="100"/>
+              <image href="badges/health.svg" x="12" y="29" width="32" height="32"/>
+              <image href="badges/games.svg" x="276" y="29" width="32" height="32"/>
+              <g class="ui-bridge__lock">
+                <rect x="148" y="10" width="24" height="24" fill="#FFFFFF" stroke="#111111" stroke-width="1"/>
+                <image href="icons/lock.svg" x="152" y="14" width="16" height="16"/>
+              </g>
+            </svg>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Celena for World View, Ray for 3D):</b> World View bridges can use this SVG approach or the same dash animation on the canvas. In Player View, Ray's bridge model needs locked and open materials; the draw-in can be a sweep of the island color along the deck over <code>--motion-duration-draw</code>.</p>
+        </article>
+
+        <!-- Unread dot -->
+        <article class="g-demo" id="demo-dot">
+          <header>
+            <div><h3 class="t-heading-s">Unread dot</h3><span class="t-label-s">pulse 600 ms · ease-out · once, then still</span></div>
+            <div class="g-demo__controls"><button type="button" class="ui-btn ui-btn--s" data-act="notify"><span class="ui-btn__label">New notification</span></button></div>
+          </header>
+          <div class="g-demo__stage g-demo__stage--scene">
+            <button type="button" class="ui-icon-btn" aria-label="Notifications" title="Notifications" data-bell><span class="ui-icon ui-icon--bell" aria-hidden="true"></span><img class="ui-icon-btn__dot" src="icons/unread-dot.svg" alt="" hidden></button>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Celena):</b> when a notification arrives over Server-Sent Events, unhide the dot, update the bell's <code>aria-label</code> ("Notifications, 1 unread"), and call <code>replay(dot)</code>.</p>
+        </article>
+
+        <!-- Tutorial -->
+        <article class="g-demo" id="demo-tutorial">
+          <header>
+            <div><h3 class="t-heading-s">Tutorial highlight and card</h3><span class="t-label-s">box draws 400 ms ease-in-out · card rises 200 ms after</span></div>
+            <div class="g-demo__controls"><button type="button" class="ui-btn ui-btn--s" data-act="replay"><span class="ui-btn__label">Replay</span></button></div>
+          </header>
+          <div class="g-demo__stage g-demo__stage--scene" style="min-height:320px">
+            <div class="g-row" style="flex-direction:column;gap:16px">
+              <span class="g-coach-target">
+                <button type="button" class="ui-icon-btn ui-icon-btn--l ui-icon-btn--active ui-plus" aria-label="Plant a seed" title="Plant a seed (Q)" aria-pressed="false"><span class="ui-icon ui-icon--plus" aria-hidden="true"></span></button>
+                <svg class="ui-highlight" viewBox="0 0 70 70" preserveAspectRatio="none" aria-hidden="true"><rect x="1" y="1" width="68" height="68" pathLength="100" vector-effect="non-scaling-stroke"/></svg>
+              </span>
+              <div class="g-coach ui-coach-card" role="dialog" aria-label="Tutorial step 2 of 6">
+                <span class="t-label-s">Step 2 of 6</span>
+                <div class="g-coach__bar" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></div>
+                <h4 class="t-heading-m">Plant your first idea</h4>
+                <p class="t-body-s">Tap + to ready an acorn, face open grass, then tap anywhere to throw.</p>
+                <footer><button type="button" class="ui-btn ui-btn--ghost ui-btn--s"><span class="ui-btn__label">Skip tutorial</span></button><button type="button" class="ui-btn ui-btn--s"><span class="ui-icon ui-icon--arrow-right" aria-hidden="true"></span><span class="ui-btn__label">Next</span></button></footer>
+              </div>
+            </div>
+          </div>
+          <p class="g-demo__hook"><b>Hook-up (Phase 4):</b> the full Tutorial Card (16:389) and coach marks are built in Phase 4. This shows the timing: replay the highlight on the target, then the card.</p>
+        </article>
+
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { openPanel, closePanel, toggleMenu, setPlusReady, showToast, setRing, setNumeral, replay, swapStage, setDormant, ACCESS_CAP_HOURS } from './motion.mjs';
+
+    const on = (demo, act, fn) => document.querySelectorAll(`#${demo} [data-act="${act}"]`).forEach(b => b.addEventListener('click', fn));
+
+    // Panel
+    const layer = document.querySelector('#demo-panel .ui-layer');
+    on('demo-panel', 'open', () => openPanel(layer));
+    on('demo-panel', 'close', () => closePanel(layer));
+    layer.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(layer); });
+
+    // Menu
+    const menuBtn = document.querySelector('#demo-menu [data-act="menu"]');
+    const menu = document.getElementById('demo-menu-list');
+    menuBtn.addEventListener('click', () => {
+      const open = menu.dataset.state !== 'open';
+      toggleMenu(menuBtn, menu, open);
+    });
+
+    // Plus
+    on('demo-plus', 'plus', e => { const b = e.currentTarget; setPlusReady(b, b.getAttribute('aria-pressed') !== 'true'); });
+
+    // Toast
+    const region = document.querySelector('#demo-toast .ui-toast-region');
+    const toast = (title, detail) => {
+      const t = document.createElement('div');
+      t.className = 'ui-toast ui-island-games';
+      t.setAttribute('role', 'status');
+      t.innerHTML = `<span class="ui-toast__stripe" aria-hidden="true"></span><div class="ui-toast__text"><p class="ui-toast__title">${title}</p><p class="ui-toast__detail">${detail}</p></div>`;
+      return t;
+    };
+    on('demo-toast', 'gain', () => showToast(region, toast('+48 hours', 'Games &amp; Play access · 4d 00h left')));
+    on('demo-toast', 'full', () => showToast(region, toast('Access full', 'Games &amp; Play · 5 days (cap)')));
+
+    // Ring and numeral
+    const ring = document.querySelector('#demo-ring .ui-ring');
+    const num = document.querySelector('#demo-ring .ui-numeral');
+    const label = document.querySelector('#demo-ring .g-card__label');
+    let hours = 48;
+    const labelFor = h => h <= 0 ? 'Access expired' : h >= 48 ? `${Math.floor(h / 24)} days left` : `${Math.ceil(h)} hours left`;
+    const renderRing = () => {
+      setRing(ring, hours);
+      setNumeral(num, hours);
+      label.querySelector('[data-label]').textContent = labelFor(hours);
+      label.classList.toggle('is-alert', hours > 0 && hours <= 6);
+    };
+    on('demo-ring', 'add', () => { hours = Math.min(ACCESS_CAP_HOURS, hours + 24); renderRing(); });
+    on('demo-ring', 'six', () => { hours = 6; renderRing(); });
+    on('demo-ring', 'reset', () => { hours = 48; renderRing(); });
+
+    // Water and nourish
+    on('demo-fx', 'water', () => replay(document.querySelector('#demo-fx .ui-fx--water')));
+    on('demo-fx', 'nourish', () => replay(document.querySelector('#demo-fx .ui-fx--nourish')));
+
+    // Landing
+    on('demo-landing', 'valid', () => replay(document.querySelector('#demo-landing .ui-landing--valid')));
+    on('demo-landing', 'invalid', () => replay(document.querySelector('#demo-landing .ui-landing--invalid')));
+
+    // Stage change
+    const stages = [['seed', 'Seed planted'], ['sprout', 'Sprout'], ['young', 'Young plant'], ['mature', 'Mature plant']];
+    let stage = 0;
+    const growPlant = document.querySelector('#demo-grow .ui-plant');
+    on('demo-grow', 'next', async () => {
+      stage = (stage + 1) % stages.length;
+      const [file, name] = stages[stage];
+      document.querySelector('#demo-grow [data-stage-label]').textContent = name;
+      await swapStage(growPlant, `stages/${file}.svg`, name);
+    });
+
+    // Dormant
+    on('demo-dormant', 'dormant', e => {
+      const b = e.currentTarget;
+      const dormant = b.getAttribute('aria-pressed') !== 'true';
+      b.setAttribute('aria-pressed', String(dormant));
+      b.querySelector('.ui-btn__label').textContent = dormant ? 'Revive' : 'Go dormant';
+      setDormant(document.querySelector('#demo-dormant .ui-plant'), dormant);
+      document.querySelector('#demo-dormant [data-dormant-label]').textContent = dormant ? 'Dormant · one interaction revives it' : 'Mature plant';
+    });
+
+    // Bridge
+    const bridge = document.querySelector('#demo-bridge .ui-bridge');
+    on('demo-bridge', 'unlock', () => {
+      bridge.classList.add('is-unlocked');
+      replay(bridge);
+      bridge.setAttribute('aria-label', 'Bridge from Health and Wellbeing to Games and Play, open');
+    });
+    on('demo-bridge', 'lock', () => {
+      bridge.classList.remove('is-unlocked', 'is-playing');
+      bridge.setAttribute('aria-label', 'Bridge from Health and Wellbeing to Games and Play, locked');
+    });
+
+    // Unread dot
+    on('demo-dot', 'notify', () => {
+      const bell = document.querySelector('#demo-dot [data-bell]');
+      const dot = bell.querySelector('.ui-icon-btn__dot');
+      dot.hidden = false;
+      bell.setAttribute('aria-label', 'Notifications, 1 unread');
+      replay(dot);
+    });
+
+    // Tutorial
+    const playTutorial = () => {
+      replay(document.querySelector('#demo-tutorial .ui-highlight'));
+      replay(document.querySelector('#demo-tutorial .ui-coach-card'));
+    };
+    on('demo-tutorial', 'replay', playTutorial);
+    playTutorial();
+  </script>
+
+  <script type="module">
+    // Phase 2: live HUD, menu, options, and state grid.
+    import { createTopRight, MENU_ITEMS } from './hud.mjs';
+    import { createMenu } from './menu.mjs';
+    import { toastRegion, accessToast, plantedToast } from './toast.mjs';
+    import { setPlusReady } from './motion.mjs';
+
+    const frame = document.getElementById('hud-frame');
+    const log = document.getElementById('hud-log');
+    const say = text => { log.textContent = text; };
+
+    const hud = createTopRight({
+      playerId: 'Mossy-Fern-4821',
+      unread: 1,
+      onSelect: id => { say(`Opened: ${MENU_ITEMS.find(i => i.id === id)?.title}`); hud.menu.setCurrent(id); },
+      onNotifications: () => say('Opened: Notifications'),
+      onLogout: () => say('Log out'),
+    });
+    hud.menu.setMeta('access', '1 island open · 3d left');
+    hud.menu.setMeta('followed', '2 new replies');
+    frame.append(hud.element);
+
+    const region = toastRegion(frame);
+    region.classList.add('ui-toast-region--contained');
+
+    let unread = 1;
+    const act = (name, fn) => document.querySelector(`[data-hud="${name}"]`).addEventListener('click', fn);
+    act('notify', () => { unread += 1; hud.bell.setUnread(unread, { pulse: true }); say(`${unread} unread`); });
+    act('read', () => { unread = 0; hud.bell.setUnread(0); say('All read'); });
+    act('gain', () => accessToast(region, { island: 2, addedHours: 48, hoursLeft: 76 }));
+    act('full', () => accessToast(region, { island: 2, capped: true }));
+    act('planted', () => plantedToast(region, { island: 0, title: 'Haptics for calm breathing' }));
+
+    const plus = document.getElementById('hud-plus');
+    const hint = document.getElementById('hud-hint');
+    plus.addEventListener('click', () => {
+      const ready = plus.getAttribute('aria-pressed') !== 'true';
+      setPlusReady(plus, ready);
+      hint.hidden = !ready;
+    });
+
+    // Static menu matching the Figma frame (Island Access selected).
+    const staticMenu = createMenu({ items: MENU_ITEMS.slice(0, 4), playerId: 'Mossy-Fern-4821', onLogout: () => {} });
+    staticMenu.setMeta('access', '1 island open · 3d left');
+    staticMenu.setMeta('followed', '2 new replies');
+    staticMenu.setCurrent('access');
+    staticMenu.menu.dataset.state = 'open';
+    staticMenu.menu.style.cssText = 'position:static;animation:none';
+    staticMenu.button.remove();
+    document.getElementById('menu-static').append(staticMenu.element);
+
+    // Menu content options for Cassius.
+    const options = [
+      { name: 'A · As drawn in Figma', note: 'Four items. Followed plants and How to play get their own rows.', items: MENU_ITEMS.slice(0, 4),
+        meta: { access: '1 island open · 3d left', followed: '2 new replies' } },
+      { name: 'B · Lean', note: 'Only what a judge needs in the first two minutes. Followed-plant updates arrive through the bell instead.',
+        items: [MENU_ITEMS[0], MENU_ITEMS[1], MENU_ITEMS[3]], meta: { access: '1 island open · 3d left' } },
+      { name: 'C · With settings (chosen)', note: 'A plus a home for the email opt-in, the expiry reminder checkbox, and unsubscribe, which context.md requires somewhere.',
+        items: MENU_ITEMS,
+        meta: { access: '1 island open · 3d left', followed: '2 new replies' } },
+    ];
+    const host = document.getElementById('menu-options');
+    for (const option of options) {
+      const m = createMenu({ items: option.items, playerId: 'Mossy-Fern-4821', onLogout: () => {} });
+      for (const [id, text] of Object.entries(option.meta)) m.setMeta(id, text);
+      m.menu.dataset.state = 'open';
+      m.menu.style.cssText = 'position:static;animation:none';
+      m.button.remove();
+      const card = document.createElement('article');
+      card.className = 'g-option';
+      card.innerHTML = `<header><h4 class="t-heading-s">${option.name}</h4><p class="t-body-s">${option.note}</p></header><div></div>`;
+      card.querySelector('div').append(m.element);
+      host.append(card);
+    }
+
+    // State grid.
+    const grid = document.getElementById('state-grid');
+    const states = [['Default', ''], ['Hover', 'is-hover'], ['Focus', 'is-focus'], ['Pressed', 'is-pressed'], ['Selected', 'sel'], ['Disabled', 'dis']];
+    grid.innerHTML = '<span></span>' + states.map(([n]) => `<span class="t-label-s">${n}</span>`).join('');
+    const rowsDef = [
+      ['HUD M', (cls, sel, dis) => `<button type="button" class="ui-icon-btn ${cls}" aria-label="World View" title="World View" ${sel ? 'aria-pressed="true"' : ''} ${dis ? 'disabled' : ''}><span class="ui-icon ui-icon--globe" aria-hidden="true"></span></button>`],
+      ['Primary', (cls, sel, dis) => `<button type="button" class="ui-btn ui-btn--s ${cls}" ${dis ? 'disabled' : ''}><span class="ui-btn__label">Visit island</span></button>`],
+      ['Secondary', (cls, sel, dis) => `<button type="button" class="ui-btn ui-btn--s ui-btn--secondary ${cls}" ${dis ? 'disabled' : ''}><span class="ui-btn__label">Got it</span></button>`],
+      ['Ghost', (cls, sel, dis) => `<button type="button" class="ui-btn ui-btn--s ui-btn--ghost ${cls}" ${dis ? 'disabled' : ''}><span class="ui-icon ui-icon--arrow-right" aria-hidden="true"></span><span class="ui-btn__label">View idea</span></button>`],
+    ];
+    for (const [label, render] of rowsDef) {
+      grid.insertAdjacentHTML('beforeend', `<span class="t-label-s">${label}</span>` + states.map(([n, c]) => {
+        if (c === 'sel' && label !== 'HUD M') return '<span class="t-label-s">n/a</span>';
+        return render(c.startsWith('is-') ? c : '', c === 'sel', c === 'dis');
+      }).join(''));
+    }
+  </script>
+
+  <script type="module">
+    // Gallery helpers only: build the swatch and icon grids from lists.
+    const swatches = [
+      'bg-canvas', 'bg-surface', 'bg-muted', 'bg-inverse',
+      'text-primary', 'text-secondary', 'text-inverse', 'border-default', 'border-subtle',
+      'action-primary', 'action-on-primary', 'status-alert', 'ring-track',
+      'island-health', 'island-sustainability', 'island-games', 'island-muted',
+      'world-sky-top', 'world-sky-bottom', 'world-ground', 'world-stone',
+    ];
+    const root = getComputedStyle(document.documentElement);
+    document.getElementById('swatches').innerHTML = swatches.map(name => {
+      const v = '--color-' + name;
+      return `<div class="g-swatch"><i style="background:var(${v})"></i><span class="t-body-strong">${name.replace('-', '/')}</span><code>var(${v}) · ${root.getPropertyValue(v).trim()}</code></div>`;
+    }).join('');
+
+    const icons = ['globe', 'bell', 'menu', 'close', 'plus', 'copy', 'home', 'seed', 'access', 'arrow-right', 'arrow-left', 'reticle',
+      'water', 'nourish', 'follow', 'lock', 'unlock', 'clock', 'paperclip', 'rotate', 'check', 'user', 'mail', 'eye',
+      'bridge', 'info', 'judge', 'file', 'reply', 'leaf', 'hand', 'joystick'];
+    document.getElementById('icon-grid').innerHTML = icons.map(n =>
+      `<figure><span class="ui-icon ui-icon--${n}" aria-hidden="true"></span><figcaption>${n}</figcaption></figure>`).join('');
+  </script>
+  <script type="module">
+    // Phase 3: Island Access.
+    import { createAccessCard, createAccessRow } from './access-ring.mjs';
+    import { createAccessPanel } from './access-panel.mjs';
+    import { toastRegion, accessToast } from './toast.mjs';
+
+    const H = 3600 * 1000;
+    const CAP = 120;
+    // Fixed clock so the 72 h card reads "Access ends Nov 24 at 3:30 p.m." as in Figma.
+    const NOW = new Date(2026, 10, 21, 15, 30).getTime();
+
+    // Static card and row states.
+    const cardStates = [
+      { islandId: 0, isHome: true, maturity: { mature: 3, total: 9 } },
+      { islandId: 1, expiresAt: NOW + 120 * H, maturity: { mature: 4, total: 12 } },
+      { islandId: 1, expiresAt: NOW + 72 * H, maturity: { mature: 4, total: 12 }, selected: true },
+      { islandId: 1, expiresAt: NOW + 48 * H, maturity: { mature: 4, total: 12 } },
+      { islandId: 1, expiresAt: NOW + 24 * H, maturity: { mature: 4, total: 12 } },
+      { islandId: 1, expiresAt: NOW + 6 * H, maturity: { mature: 4, total: 12 } },
+      { islandId: 2, expiresAt: NOW - H, maturity: { mature: 0, total: 0 } },
+      { islandId: 2, expiresAt: null, maturity: { mature: 2, total: 5 } },
+    ];
+    const cardHost = document.getElementById('card-states');
+    for (const s of cardStates) {
+      const card = createAccessCard({ ...s, now: NOW });
+      if (s.selected) card.setSelected(true);
+      cardHost.append(card.element);
+    }
+    const rowStates = [
+      { islandId: 0, isHome: true, maturity: { mature: 3, total: 9 } },
+      { islandId: 1, expiresAt: NOW + 72 * H, maturity: { mature: 4, total: 12 }, selected: true },
+      { islandId: 2, expiresAt: NOW + 6 * H, maturity: { mature: 2, total: 5 } },
+      { islandId: 2, expiresAt: NOW - H, maturity: { mature: 0, total: 0 } },
+    ];
+    const rowHost = document.getElementById('row-states');
+    for (const s of rowStates) {
+      const row = createAccessRow({ ...s, now: NOW });
+      if (s.selected) row.setSelected(true);
+      rowHost.append(row.element);
+    }
+
+    // Live panel with a simulated clock.
+    const frame = document.getElementById('acc-frame');
+    const log = document.getElementById('acc-log');
+    let clock = NOW;
+    const start = () => [
+      { islandId: 0, isHome: true, maturity: { mature: 3, total: 9 } },
+      { islandId: 1, expiresAt: NOW + 72 * H, maturity: { mature: 4, total: 12 } },
+      { islandId: 2, expiresAt: NOW - H, maturity: { mature: 0, total: 0 } },
+    ];
+    let islands = start();
+    const panel = createAccessPanel({
+      homeIsland: 0,
+      islands,
+      contained: true,
+      layout: 'cards',
+      now: () => clock,
+      onVisit: id => { log.textContent = `Visit: turn toward island ${id}'s bridge`; },
+      onUnlock: id => { log.textContent = `Unlock: open the catalog filtered to island ${id}`; },
+      onOpenCatalog: () => { log.textContent = 'Open Seed Catalog'; },
+    });
+    frame.append(panel.layer);
+    const region = toastRegion(frame);
+    region.classList.add('ui-toast-region--contained');
+
+    // Access math mirrors the confirmed rule: min(max(expiry, now) + d, now + 120 h).
+    function earn(id, hours) {
+      islands = islands.map(i => {
+        if (i.islandId !== id) return i;
+        const base = Math.max(i.expiresAt ?? clock, clock);
+        const next = Math.min(base + hours * H, clock + CAP * H);
+        const capped = next === clock + CAP * H;
+        accessToast(region, capped ? { island: id, capped: true } : { island: id, addedHours: hours, hoursLeft: (next - clock) / H });
+        return { ...i, expiresAt: next };
+      });
+      panel.update(islands);
+    }
+
+    const on = (name, fn) => document.querySelectorAll(`[data-acc="${name}"]`).forEach(b => b.addEventListener('click', fn));
+    on('open', () => panel.open());
+    on('water', () => earn(1, 24));
+    on('adopt', () => earn(2, 48));
+    on('time', () => { clock += 6 * H; panel.update(islands); log.textContent = 'Six hours later'; });
+    on('empty', () => { islands = islands.map(i => i.isHome ? i : { ...i, expiresAt: null }); panel.update(islands); });
+    on('reset', () => { clock = NOW; islands = start(); panel.update(islands); log.textContent = ''; });
+    const size = s => {
+      frame.dataset.size = s;
+      panel.setLayout(s === 'phone' ? 'rows' : 'cards');
+      document.querySelector('[data-acc="wide"]').setAttribute('aria-pressed', String(s === 'wide'));
+      document.querySelector('[data-acc="phone"]').setAttribute('aria-pressed', String(s === 'phone'));
+    };
+    on('wide', () => size('wide'));
+    on('phone', () => size('phone'));
+  </script>
+  <script type="module">
+    // Phase 4: onboarding, rotate prompt, fields, tutorial.
+    import { createOnboarding } from './onboarding.mjs';
+    import { createRotatePrompt } from './rotate-prompt.mjs';
+    import { createField, createCheckbox } from './fields.mjs';
+    import { createTutorial } from './tutorial.mjs';
+    import { createTopRight } from './hud.mjs';
+
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const log = document.getElementById('ob-log');
+    const refs = {
+      enter: ['ob-enter', 'Enter 18:21'], reveal: ['ob-id', 'ID reveal 18:128'], secure: ['ob-secure', 'Secure your ID 18:218'],
+      signin: ['ob-signin', 'Sign in 18:323'], judge: ['ob-judge', 'Judge session 18:423'], home: ['ob-home', 'Choose home island 18:519'],
+    };
+    const ob = createOnboarding({
+      contained: true,
+      islandStats: { 0: { residents: 12, ideas: 9 }, 1: { residents: 15, ideas: 12 }, 2: { residents: 4, ideas: 0 } },
+      createAccount: async () => { await wait(300); log.textContent = 'Session created'; return { id: 'Mossy-Fern-4821' }; },
+      setPassword: async ({ email, remind }) => { await wait(300); log.textContent = `Password set${email ? `, email ${email}, reminders ${remind ? 'on' : 'off'}` : ', no email'}`; return { ok: true }; },
+      signIn: async ({ password }) => { await wait(300); return password === 'wrong' ? { ok: false } : { ok: true }; },
+      startJudge: async () => { await wait(300); return { id: 'Quiet-Kelp-7310' }; },
+      onSignedIn: () => { log.textContent = 'Signed in: into the game'; },
+      onChooseIsland: async id => { await wait(300); log.textContent = `Home island ${id}: start the tutorial`; },
+      onForgotPassword: () => { log.textContent = 'Forgot password: no screen designed yet'; },
+    });
+    ob.setPlayerId('Mossy-Fern-4821');
+    document.getElementById('ob-frame').append(ob.element);
+    const setRef = name => {
+      const [file, label] = refs[name];
+      document.getElementById('ob-ref').src = `figma-ref/${file}.png`;
+      document.getElementById('ob-ref-label').textContent = `Figma · ${label}`;
+    };
+    // Keep the Figma reference in step with the live screen.
+    new MutationObserver(() => {
+      const visible = [...ob.element.children].findIndex(s => !s.hidden);
+      setRef(Object.keys(refs)[visible] ?? 'enter');
+    }).observe(ob.element, { attributes: true, subtree: true, attributeFilter: ['hidden'] });
+    document.querySelectorAll('[data-ob]').forEach(b => b.addEventListener('click', () => {
+      if (b.dataset.ob === 'judge') { ob.setPlayerId('Quiet-Kelp-7310'); ob.setPath('judge'); }
+      if (b.dataset.ob === 'home' || b.dataset.ob === 'reveal' || b.dataset.ob === 'secure') ob.setPath('new');
+      ob.show(b.dataset.ob);
+    }));
+
+    // Rotate prompt
+    const rotate = createRotatePrompt({ contained: true });
+    rotate.setVisible(true);
+    document.getElementById('rotate-frame').append(rotate.element);
+
+    // Field states
+    const host = document.getElementById('field-states');
+    const help = 'You need this and your ID to log back in.';
+    const f1 = createField({ label: 'Password', type: 'password', placeholder: 'At least 6 characters', help });
+    const f2 = createField({ label: 'Password', type: 'password', value: '••••', help });
+    const f3 = createField({ label: 'Password', type: 'password', value: '••••', help });
+    f3.setError('Use at least 6 characters.');
+    host.append(f1.element, f2.element, f3.element,
+      createCheckbox({ label: 'Email me when island access is about to expire.', checked: true }).element,
+      createCheckbox({ label: 'Email me when island access is about to expire.' }).element);
+
+    // Tutorial over a live HUD
+    const frame = document.getElementById('tut-frame');
+    const hud = createTopRight({ playerId: 'Mossy-Fern-4821', unread: 1 });
+    frame.append(hud.element);
+    const tlog = document.getElementById('tut-log');
+    const tut = createTutorial({
+      contained: true,
+      targets: {
+        joystick: () => document.getElementById('tut-joystick'),
+        plus: () => document.getElementById('tut-plus'),
+        menu: () => hud.menu.button,
+        landing: { x: 350, y: 178, width: 100, height: 90 },
+        plant: { x: 480, y: 232, width: 90, height: 110 },
+        bridge: { x: 220, y: 110, width: 230, height: 90 },
+      },
+      onDone: kind => { tlog.textContent = kind === 'skip' ? 'Skipped' : 'Start playing'; },
+    });
+    frame.append(tut.element);
+    document.querySelector('[data-tut="start"]').addEventListener('click', () => tut.start());
+    document.querySelectorAll('[data-tut]:not([data-tut="start"])').forEach(b => b.addEventListener('click', () => tut.start(Number(b.dataset.tut))));
+  </script>
+  <script type="module">
+    // Phase 5: notifications, email, in-world feedback.
+    import { createNotificationPanel } from './notifications.mjs';
+    import { createTopRight } from './hud.mjs';
+    import { toastRegion, accessToast } from './toast.mjs';
+    import { createViewIdeaPill, createLandingMarker, createEdgePrompt, createLockedPrompt, createActionFeedback } from './world-feedback.mjs';
+
+    const min = 60000, hour = 60 * min;
+    const sample = () => [
+      { id: 'n1', type: 'reply', island: 0, plant: 'Haptics for calm breathing', quote: 'Could this work for group breathing?', at: Date.now() - 2 * min, unread: true },
+      { id: 'n4', type: 'comment', island: 0, plant: 'Haptics for calm breathing', quote: 'We tried this in our lab, happy to share.', at: Date.now() - 60 * min, unread: false },
+      { id: 'n2', type: 'access', island: 1, hoursLeft: 6, at: Date.now() - 5 * hour, unread: true },
+      { id: 'n3', type: 'thirsty', island: 2, plant: 'Play as research', idleDays: 12, at: Date.now() - 26 * hour, unread: false },
+    ];
+
+    // Notifications over a live HUD
+    const nframe = document.getElementById('notes-frame');
+    const nlog = document.getElementById('notes-log');
+    let hasEmail = false;
+    const notes = createNotificationPanel({
+      contained: true,
+      items: sample(),
+      onSelect: item => { nlog.textContent = item.type === 'access' ? 'Open Island Access' : `Open plant: ${item.plant}`; hud.bell.setUnread(notes.unread); },
+      onAddEmail: () => { nlog.textContent = 'Open menu: Email and reminders'; },
+    });
+    const hud = createTopRight({ playerId: 'Mossy-Fern-4821', unread: notes.unread, onNotifications: () => notes.open() });
+    nframe.append(hud.element, notes.layer);
+    const setItems = (items, email = hasEmail) => { hasEmail = email; hud.bell.setUnread(notes.update(items, { email })); };
+    document.querySelectorAll('[data-notes]').forEach(b => b.addEventListener('click', () => {
+      const k = b.dataset.notes;
+      if (k === 'list') setItems(sample(), false);
+      if (k === 'empty') setItems([], false);
+      if (k === 'empty-email') setItems([], true);
+      if (k === 'arrive') {
+        const items = [{ id: `n${Date.now()}`, type: 'comment', island: 0, plant: 'Haptics for calm breathing', quote: 'We tried this with a vibrating wristband.', at: Date.now(), unread: true }, ...sample()];
+        hud.bell.setUnread(notes.update(items), { pulse: true });
+        nlog.textContent = 'New comment: the bell dot pulses';
+        return;
+      }
+      notes.open();
+    }));
+
+    // Email preview with the Figma sample
+    const fill = { subject: 'TIDAL-OAK-0193 replied to you', lead: 'TIDAL-OAK-0193 replied to your comment on Haptics for calm breathing.',
+      quote: 'We ran something similar with paced audio. Happy to compare notes.', island_hex: '#F05A3C', action_url: '#', action_label: 'Open the plant',
+      note: 'Replying keeps the conversation, and the plant, growing.', player_id: 'MOSSY-FERN-4821', unsubscribe_url: '#', preferences_url: '#' };
+    fetch('email-notification.html').then(r => r.text()).then(html => {
+      document.getElementById('email-frame').srcdoc = html.replace(/\{\{(\w+)\}\}/g, (m, k) => fill[k] ?? m);
+    });
+
+    // In-world states at the Figma positions
+    const wframe = document.getElementById('world-frame');
+    const wlog = document.getElementById('world-log');
+    const reticle = document.getElementById('world-reticle');
+    const region = toastRegion(wframe);
+    region.classList.add('ui-toast-region--contained');
+    wframe.append(createTopRight({ playerId: 'Mossy-Fern-4821', unread: 1 }).element);
+    const layer = document.createElement('div');
+    wframe.append(layer);
+    const place = (node, x, y) => { node.style.cssText += `;position:absolute;left:${x}px;top:${y}px`; layer.append(node); return node; };
+    const tue3pm = (() => { const d = new Date(); d.setDate(d.getDate() + ((9 - d.getDay()) % 7 || 7)); d.setHours(15, 0, 0, 0); return d; })();
+    const refs = {
+      view: ['player-default', 'Default 20:3'], valid: ['pv-landing-valid', 'Landing valid 20:437'], invalid: ['pv-landing-invalid', 'Landing invalid 20:555'],
+      failed: ['pv-failed', 'Failed throw 20:673'], edge: ['pv-edge', 'Edge prompt 20:962'], locked: ['pv-locked', 'Locked bridge 20:1086'],
+      water: ['pv-water', 'Water feedback 20:1223'], nourish: ['pv-water', 'Water feedback 20:1223 (nourish has no frame)'], dormant: ['pv-dormant', 'Dormant plant 20:1355'],
+    };
+    const pill = createViewIdeaPill({ onOpen: () => { wlog.textContent = 'Open plant'; } });
+    const marker = createLandingMarker('valid', { onRetry: () => { wlog.textContent = 'Retry: pick the acorn back up'; } });
+    function show(k) {
+      layer.replaceChildren();
+      wlog.textContent = '';
+      reticle.hidden = !['view', 'water', 'nourish', 'dormant'].includes(k);
+      if (k === 'view' || k === 'dormant') {
+        pill.hide();
+        pill.set(k === 'view' ? { stage: 'young', island: 0, title: 'Haptics for calm breathing' } : { dormant: true, island: 0, title: 'Play as research method' });
+        place(pill.element, 198, 198);
+      }
+      // Positions from each Figma frame (marker and label are centered on each other).
+      const at = { valid: [386, 251], invalid: [370, 151], failed: [340, 264] };
+      if (at[k]) { marker.set(k); place(marker.element, ...at[k]); }
+      if (k === 'edge') place(createEdgePrompt().element, 305, 240);
+      if (k === 'locked') place(createLockedPrompt({ island: 2, onUnlock: () => { wlog.textContent = 'Open Seed Catalog filtered to Games & Play'; } }).element, 276, 121);
+      if (k === 'water' || k === 'nourish') {
+        place(createActionFeedback({ kind: k, island: 1, until: tue3pm }).element, 249, 250);
+        accessToast(region, { island: 1, addedHours: 24, hoursLeft: 76 });
+      }
+      const [file, label] = refs[k];
+      document.getElementById('world-ref').src = `figma-ref/${file}.png`;
+      document.getElementById('world-ref-label').textContent = `Figma · ${label}`;
+    }
+    document.querySelectorAll('[data-world]').forEach(b => b.addEventListener('click', () => show(b.dataset.world)));
+    show('view');
+  </script>
+  <script type="module">
+    // Phase 6: panels and World View labels.
+    import { createSeedCatalog } from './catalog.mjs';
+    import { createSeedForm } from './seed-form.mjs';
+    import { createPlantDetail } from './plant-detail.mjs';
+    import { createWorldLabel, createWorldLegend } from './world-labels.mjs';
+    import { createTopRight } from './hud.mjs';
+
+    const frame = document.getElementById('pn-frame');
+    const log = document.getElementById('pn-log');
+    frame.append(createTopRight({ playerId: 'Mossy-Fern-4821', unread: 1 }).element);
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const min = 60000, hour = 60 * min;
+
+    const seeds = [
+      { id: 's1', island: 2, title: 'Play as research method', idea: 'Using game jams to prototype study protocols with participants.', stage: 'seed' },
+      { id: 's2', island: 2, title: 'Play as research method', idea: 'Using game jams to prototype study protocols with participants.', stage: 'mature', growing: true },
+      { id: 's4', island: 2, title: 'Play as research method', idea: 'Using game jams to prototype study protocols with participants.', stage: 'seed', planted: true },
+      { id: 's3', island: 1, title: 'Repair cafés as design studios', idea: 'Fixing things together as a way to talk about materials and waste.', stage: 'young', growing: true },
+    ];
+    const catalog = createSeedCatalog({
+      contained: true, homeIsland: 0, seeds,
+      isLocked: id => id === 2,
+      onAdopt: seed => { log.textContent = `Adopt: ${seed.title}. Close the catalog and ready the acorn`; },
+      onView: seed => { log.textContent = `View idea: ${seed.title}`; },
+    });
+    const form = createSeedForm({
+      contained: true,
+      onSubmit: async data => { await wait(300); log.textContent = data.adoption ? `Planted adopted seed ${data.adoption.title}` : `Planted ${data.title}${data.file ? ` with ${data.file.name}` : ''}`; return { ok: true }; },
+    });
+    const plant = {
+      id: 'p1', island: 0, author: 'MOSSY-FERN-4821', title: 'Haptics for calm breathing', stage: 'young', plantedOn: [0, 1],
+      idea: 'A wristband that pulses slowly to pace breathing during stressful moments.',
+      question: 'could one haptic pattern sync a whole group’s breathing?',
+      water: { count: 3, goal: 6 }, nutrients: { count: 4, goal: 8 }, contributors: { count: 3, goal: 4 },
+      likes: 3, following: false, paperUrl: '#', canWater: true,
+    };
+    const comments = [
+      { id: 'c1', author: 'MOSSY-FERN-4821', authorIsland: 0, at: Date.now() - 2 * hour, text: 'Could the haptic pattern sync across a group, like a shared breath?',
+        replies: [{ id: 'c2', author: 'TIDAL-OAK-0193', authorIsland: 1, at: Date.now() - 2 * hour, text: 'We ran something similar with paced audio. Happy to compare notes.' }] },
+    ];
+    let current = { ...plant };
+    let thread = comments.map(c => ({ ...c, replies: [...c.replies] }));
+    const detail = createPlantDetail({
+      contained: true,
+      onWater: async p => { await wait(150); log.textContent = 'Watered: +1 water'; return { ...p, likes: p.likes + 1, water: { ...p.water, count: Math.min(p.water.goal, p.water.count + 1) } }; },
+      onFollow: async (p, on) => { log.textContent = on ? 'Following' : 'Unfollowed'; return { ...p, following: on }; },
+      onPost: async ({ text, replyTo }) => {
+        await wait(200);
+        const c = { id: `c${Date.now()}`, author: 'MOSSY-FERN-4821', authorIsland: 0, at: Date.now(), text };
+        if (replyTo) thread.find(t => t.id === replyTo)?.replies.push(c); else thread.push({ ...c, replies: [] });
+        detail.update(current, thread);
+        log.textContent = replyTo ? 'Reply posted: +1 nutrient' : 'Comment posted: +1 nutrient';
+        return { ok: true };
+      },
+    });
+    frame.append(catalog.layer, form.layer, detail.layer);
+
+    const refs = {
+      catalog: ['wp-catalog', 'Seed Catalog 23:134'], filtered: ['wp-catalog-filtered', 'Seed Catalog filtered 23:282'],
+      seed: ['pv-seed-form', 'New seed form 20:791'], adopted: ['pv-seed-form', 'New seed form 20:791 (adopted seed is not drawn)'],
+      plant: ['wp-plant', 'Plant detail 23:426'], dormant: ['wp-plant', 'Plant detail 23:426 (dormant is not drawn)'],
+    };
+    const closeAll = () => { for (const p of [catalog, form, detail]) { p.layer.dataset.state = 'closed'; } };
+    function show(k) {
+      closeAll();
+      log.textContent = '';
+      if (k === 'catalog') catalog.open();
+      if (k === 'filtered') catalog.open({ island: 2 });
+      if (k === 'seed') form.open({ island: 0 });
+      if (k === 'adopted') form.open({ island: 0, adoption: { title: 'Play as research method' } });
+      if (k === 'plant') { current = { ...plant }; thread = comments.map(c => ({ ...c, replies: [...c.replies] })); detail.open(current, thread); }
+      if (k === 'dormant') { current = { ...plant, title: 'Play as research method', island: 2, author: 'QUIET-KELP-7310', dormant: true, plantedOn: [2] }; detail.open(current, []); }
+      const [file, label] = refs[k];
+      document.getElementById('pn-ref').src = `figma-ref/${file}.png`;
+      document.getElementById('pn-ref-label').textContent = `Figma · ${label}`;
+    }
+    document.querySelectorAll('[data-pn]').forEach(b => b.addEventListener('click', () => show(b.dataset.pn)));
+    show('catalog');
+
+    // World View at the Figma positions
+    const wv = document.getElementById('wv-frame');
+    const place = (node, x, y) => { node.style.cssText += `;position:absolute;left:${x}px;top:${y}px`; wv.append(node); };
+    place(createWorldLabel({ island: 0, access: 'home', maturity: { mature: 3, total: 9 } }).element, 150, 140);
+    place(createWorldLabel({ island: 1, access: 'open', maturity: { mature: 4, total: 12 }, hoursLeft: 76 }).element, 290, 22);
+    place(createWorldLabel({ island: 2, access: 'locked', maturity: { mature: 0, total: 0 } }).element, 560, 140);
+    place(createWorldLegend().element, 20, 340);
+  </script>
+  <script type="module">
+    // Plant lists and email
+    import { createFollowedPlants, followedMenuMeta } from './followed-plants.mjs';
+    import { createIslandPlants } from './island-plants.mjs';
+    import { createEmailSettings, emailMenuMeta } from './email-settings.mjs';
+    import { createPlantRow } from './plant-row.mjs';
+    import { createTopRight } from './hud.mjs';
+
+    const frame = document.getElementById('ls-frame');
+    const log = document.getElementById('ls-log');
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const now = Date.now(), hour = 3600000, day = 24 * hour;
+    const sample = [
+      { id: 'p1', island: 0, title: 'Haptics for calm breathing', stage: 'young', at: now - 2 * hour, newReplies: 2, contributors: 3 },
+      { id: 'p2', island: 2, title: 'Play as research method', stage: 'mature', at: now - day, newReplies: 0, contributors: 7 },
+      { id: 'p3', island: 1, title: 'Soil sensors for campus gardens', stage: 'young', dormant: true, at: now - 16 * day, contributors: 2 },
+    ];
+    const islandSample = [
+      ...sample,
+      { id: 'p4', island: 0, title: 'Walking meetings for focus', stage: 'sprout', at: now - 3 * hour, contributors: 2 },
+      { id: 'p5', island: 0, title: 'Sleep diaries by voice', stage: 'mature', at: now - 2 * day, contributors: 5 },
+      { id: 'p6', island: 0, title: 'Peer check-ins for first-years', stage: 'seed', at: now - 5 * hour, contributors: 1 },
+      { id: 'p7', island: 1, title: 'Repair cafés as design studios', stage: 'mature', at: now - 4 * day, contributors: 6 },
+      { id: 'p8', island: 0, title: 'Calm corners in libraries', stage: 'young', at: now - 6 * day, contributors: 3 },
+      { id: 'p9', island: 0, title: 'Breathing apps for exam weeks', stage: 'sprout', at: now - 8 * day, contributors: 2 },
+    ];
+    const onOpen = p => { log.textContent = `Open plant: ${p.title}`; };
+
+    let emailState = { email: '', remindAccess: true, remindReplies: true };
+    const islandPlants = createIslandPlants({ contained: true, island: 0, plants: islandSample, onOpen, now });
+    const followed = createFollowedPlants({ contained: true, plants: sample, onOpen, now,
+      onBrowse: () => { followed.layer.dataset.state = 'closed'; islandPlants.open(); log.textContent = 'Browse island plants'; } });
+    const email = createEmailSettings({ contained: true, settings: emailState,
+      onSave: async next => { await wait(300); emailState = next; hud.menu.setMeta('settings', emailMenuMeta(next)); log.textContent = `Saved ${next.email}`; return { ok: true }; },
+      onRemove: async () => { await wait(200); emailState = { email: '' }; hud.menu.setMeta('settings', emailMenuMeta(emailState)); log.textContent = 'Email removed'; return { ok: true }; } });
+    const panels = [followed, islandPlants, email];
+    const closeAll = () => { for (const p of panels) p.layer.dataset.state = 'closed'; };
+
+    const hud = createTopRight({ playerId: 'Mossy-Fern-4821', unread: 1,
+      onSelect: id => { closeAll(); if (id === 'followed') followed.open(); if (id === 'settings') email.open(); } });
+    hud.menu.setMeta('followed', followedMenuMeta(sample));
+    frame.append(hud.element, ...panels.map(p => p.layer));
+    document.getElementById('ls-chip').addEventListener('click', () => { closeAll(); islandPlants.open(); });
+
+    const refs = {
+      followed: ['pv-followed', 'Followed plants 31:486'], 'followed-empty': ['pv-followed-empty', 'Followed plants, empty 31:693'],
+      email: ['pv-email', 'Email and reminders 31:834'], 'email-saved': ['pv-email-saved', 'Email and reminders, saved 31:995'],
+      island: ['pv-island-plants', 'Island plants 31:1150'], 'island-empty': ['pv-island-plants', 'Island plants 31:1150 (empty is not drawn)'],
+    };
+    function show(k) {
+      closeAll();
+      log.textContent = '';
+      if (k === 'followed') { followed.update(sample); followed.open(); }
+      if (k === 'followed-empty') { followed.update([]); followed.open(); }
+      if (k === 'email') { email.update({ email: '', remindAccess: true, remindReplies: true }); email.open(); }
+      if (k === 'email-saved') { email.update({ email: 'you@university.edu', remindAccess: true, remindReplies: false }); email.open(); }
+      if (k === 'island') islandPlants.open({ island: 0, plants: islandSample });
+      if (k === 'island-empty') islandPlants.open({ island: 2, plants: [] });
+      const [file, label] = refs[k];
+      document.getElementById('ls-ref').src = `figma-ref/${file}.png`;
+      document.getElementById('ls-ref-label').textContent = `Figma · ${label}`;
+    }
+    document.querySelectorAll('[data-ls]').forEach(b => b.addEventListener('click', () => show(b.dataset.ls)));
+    show('followed');
+
+    document.getElementById('ls-rows').append(...sample.map(p => createPlantRow(p, { onOpen, now })));
+  </script>
+</body>
+</html>

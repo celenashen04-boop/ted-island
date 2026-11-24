@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Rendering mood preview · CHI Island</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="panels.css">
+  <style>
+    /* Phase 7 preview only. Nothing here is loaded by the game. */
+    html, body { margin: 0; height: 100%; background: #111; }
+    body { font: 400 13px/1.4 var(--font-sans); color: var(--color-text-primary); overflow: hidden; }
+    .ui-mood__stage { position: fixed; inset: 0; touch-action: none; cursor: grab; }
+    .ui-mood__stage:active { cursor: grabbing; }
+    .ui-mood__canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    .ui-mood__bar {
+      position: absolute;
+      left: max(var(--space-12), env(safe-area-inset-left));
+      right: max(var(--space-12), env(safe-area-inset-right));
+      bottom: max(var(--space-12), env(safe-area-inset-bottom));
+      display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-16);
+      padding: var(--space-8) var(--space-12);
+      background: rgb(255 255 255 / .82);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--color-border-default);
+      cursor: default;
+    }
+    .ui-mood__group { display: flex; align-items: center; gap: var(--space-8); }
+    .ui-mood__label { font: 700 10px/1 var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--color-text-secondary); }
+    .ui-mood__fieldset { border: 0; margin: 0; padding: 0; }
+    .ui-mood__legend { float: left; margin-right: var(--space-8); padding: 0; }
+    .ui-mood__layers { display: flex; gap: var(--space-12); }
+    .ui-mood__layers label { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; cursor: pointer; }
+    .ui-mood__layers input { width: 16px; height: 16px; margin: 0; accent-color: var(--color-bg-inverse); }
+    .ui-mood__layers input:disabled + span { color: var(--color-text-secondary); }
+    .ui-mood__fps { margin-left: auto; font: 400 11px/1 var(--font-mono); }
+    .ui-mood__tag {
+      position: absolute; top: max(var(--space-12), env(safe-area-inset-top)); left: max(var(--space-12), env(safe-area-inset-left));
+      padding: 6px 10px; background: var(--color-bg-inverse); color: var(--color-text-inverse);
+      font: 700 12px/1 var(--font-sans);
+    }
+    .ui-mood__note {
+      position: absolute; top: max(var(--space-12), env(safe-area-inset-top)); right: max(var(--space-12), env(safe-area-inset-right));
+      max-width: 240px; margin: 0; padding: 6px 10px; background: rgb(255 255 255 / .82);
+      font: 400 11px/1.35 var(--font-sans);
+    }
+    .ui-mood--bare .ui-mood__bar, .ui-mood--bare .ui-mood__note { display: none; }
+    @media (max-width: 900px) { .ui-mood__note { display: none; } }
+  </style>
+</head>
+<body>
+  <main class="ui-mood__stage" aria-label="Rendering mood preview. Drag to look around.">
+    <p class="ui-mood__tag" data-mood-name>Current</p>
+    <p class="ui-mood__note">Preview only. Plants are low-poly stand-ins until Ray's plant models are in the scene.</p>
+    <div class="ui-mood__bar">
+      <div class="ui-mood__group">
+        <span class="ui-mood__label" id="ui-mood-l">Mood</span>
+        <div class="ui-filters" role="group" aria-labelledby="ui-mood-l">
+          <button type="button" class="ui-filter" data-mood="current" aria-pressed="true">Current</button>
+          <button type="button" class="ui-filter" data-mood="morning" aria-pressed="false">A</button>
+          <button type="button" class="ui-filter" data-mood="noon" aria-pressed="false">B</button>
+          <button type="button" class="ui-filter" data-mood="dusk" aria-pressed="false">C</button>
+        </div>
+      </div>
+      <div class="ui-mood__group">
+        <span class="ui-mood__label" id="ui-view-l">View</span>
+        <div class="ui-filters" role="group" aria-labelledby="ui-view-l">
+          <button type="button" class="ui-filter" data-view="player" aria-pressed="true">Player</button>
+          <button type="button" class="ui-filter" data-view="close" aria-pressed="false">Close</button>
+          <button type="button" class="ui-filter" data-view="world" aria-pressed="false">World</button>
+        </div>
+      </div>
+      <fieldset class="ui-mood__group ui-mood__fieldset">
+        <legend class="ui-mood__label ui-mood__legend">Layers</legend>
+        <div class="ui-mood__layers">
+          <label><input type="checkbox" data-layer="sky" checked><span>Sky</span></label>
+          <label><input type="checkbox" data-layer="fog" checked><span>Fog</span></label>
+          <label><input type="checkbox" data-layer="tint" checked><span>Tint</span></label>
+          <label><input type="checkbox" data-layer="shadows" checked><span>Shadows</span></label>
+        </div>
+      </fieldset>
+      <output class="ui-mood__fps" data-fps aria-live="off"></output>
+    </div>
+  </main>
+  <script type="module" src="mood-preview.mjs"></script>
+</body>
+</html>

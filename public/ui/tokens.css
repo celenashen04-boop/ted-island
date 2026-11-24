@@ -1,0 +1,133 @@
+/*
+ * CHI Island design tokens · Direction G · Poster Signal
+ * Source of truth: Figma file 6QNXwAjpDU1niZin1aiWby, page Foundations (11:3).
+ * Names match the Figma variables' WEB code syntax. Do not rename.
+ *
+ * Load order: tokens.css, then components.css. Both are additive and do not
+ * restyle anything in style.css on their own.
+ */
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Space+Mono&display=swap");
+
+:root {
+  /* Color · surfaces */
+  --color-bg-canvas: #F4F4F1;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-muted: #ECECE8;
+  --color-bg-inverse: #111111;
+
+  /* Color · text and lines */
+  --color-text-primary: #111111;
+  --color-text-secondary: #8E8E8E;
+  --color-text-inverse: #FFFFFF;
+  --color-border-default: #111111;
+  --color-border-subtle: #D0D0CC;
+
+  /* Color · action and status */
+  --color-action-primary: #111111;
+  --color-action-on-primary: #FFFFFF;
+  --color-status-alert: #FF4A1C; /* unread dot and alerts only */
+  --color-ring-track: #E2E2E2;
+
+  /* Color · islands (the only hues on screen) */
+  --color-island-health: #F05A3C;
+  --color-island-sustainability: #1E9E6A;
+  --color-island-games: #3358E0;
+  --color-island-muted: #BDBDBD; /* expired, locked */
+
+  /* Color · world (3D scene) */
+  --color-world-sky-top: #E6E8E6;
+  --color-world-sky-bottom: #FAFAF8;
+  --color-world-ground: #D9DCD6;
+  --color-world-stone: #9A9E99;
+
+  /*
+   * Translucent surfaces used by components over the 3D scene.
+   * These are not separate Figma variables: they are the fills on the
+   * HUD components (Icon Button, Island Chip, Prompt, ID Label).
+   */
+  --color-bg-surface-hud: rgb(255 255 255 / 0.9);
+  --color-bg-surface-prompt: rgb(255 255 255 / 0.92);
+  --color-bg-inverse-hud: rgb(17 17 17 / 0.78);
+  --blur-hud: 8px;
+
+  /* Spacing (4-based) */
+  --space-2: 2px;
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-48: 48px;
+
+  /* Shape */
+  --radius-none: 0;
+  --size-touch: 44px;
+  --stroke-hairline: 1px;
+
+  /* Type families */
+  --font-sans: "Archivo", system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, monospace;
+
+  /*
+   * Motion · Poster Signal: quick, precise, graphic.
+   * Not in Figma (the file is static). Every curve decelerates or
+   * accelerates with no overshoot: no bounce, no spring.
+   * Canvas and three.js code can read these with motionMs() in motion.mjs.
+   */
+  --motion-duration-instant: 80ms;   /* color swaps: menu button to black */
+  --motion-duration-fast: 150ms;     /* menu drop, plus rotate, small fades */
+  --motion-duration-base: 200ms;     /* panels, toasts in and out, landing */
+  --motion-duration-shake: 280ms;    /* invalid landing, once */
+  --motion-duration-grow: 400ms;     /* plant stage change, highlight draw */
+  --motion-duration-draw: 500ms;     /* bridge unlock line */
+  --motion-duration-count: 600ms;    /* access ring arc and numeral count */
+  --motion-duration-pulse: 600ms;    /* unread dot, nourish pulse */
+  --motion-duration-ripple: 700ms;   /* water ripple */
+  --motion-duration-dormant: 600ms;  /* shrink to dormant and revive */
+  --motion-toast-hold: 3000ms;       /* toast stays on screen */
+  --motion-stagger: 120ms;           /* second ring, card after highlight */
+
+  --motion-ease-out: cubic-bezier(0.2, 0, 0, 1);      /* enter: fast start, hard stop */
+  --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);       /* exit */
+  --motion-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1); /* state changes in place */
+  --motion-ease-linear: linear;                       /* shake, progress */
+
+  /* Travel distances. Set to 0 under reduced motion, which turns slides into fades. */
+  --motion-shift-panel: 100%;
+  --motion-shift-toast: -100%;
+  --motion-shift-menu: -6px;
+  --motion-shift-card: 8px;
+
+  /*
+   * Water and nourish effects use the plant's origin island hue (--island),
+   * so island color stays the only color on screen. Shape tells them apart:
+   * thin rings for water, a filled disc for nourish. (Decided Nov 22.)
+   */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-shift-panel: 0px;
+    --motion-shift-toast: 0px;
+    --motion-shift-menu: 0px;
+    --motion-shift-card: 0px;
+  }
+}
+
+/*
+ * Text styles (Figma text styles). Apply as classes, or copy the
+ * declarations into a component rule.
+ * Figma letter spacing is in percent, so -4% becomes -0.04em.
+ */
+.t-display-xl   { font: 800 72px/1 var(--font-sans); letter-spacing: -0.04em; }
+.t-display-num  { font: 800 44px/1 var(--font-sans); letter-spacing: -0.05em; }
+.t-heading-l    { font: 800 28px/1.1 var(--font-sans); letter-spacing: -0.03em; }
+.t-heading-m    { font: 700 20px/1.2 var(--font-sans); letter-spacing: -0.02em; }
+.t-heading-s    { font: 600 15px/1.25 var(--font-sans); letter-spacing: -0.01em; }
+.t-body-m       { font: 400 15px/1.45 var(--font-sans); }
+.t-body-s       { font: 400 13px/1.45 var(--font-sans); }
+.t-body-strong  { font: 500 13px/1.4 var(--font-sans); }
+.t-label-m      { font: 400 11px/1.3 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
+.t-label-s      { font: 400 9px/1.3 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
+.t-mono-id      { font: 400 12px/1.3 var(--font-mono); letter-spacing: 0.04em; }

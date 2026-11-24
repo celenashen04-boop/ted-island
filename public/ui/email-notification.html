@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="light">
+<title>{{subject}}</title>
+<!--
+  CHI Island notification email (Figma 21:1302), built as drawn.
+  Plain HTML with inline styles and table layout so it renders in Gmail,
+  Apple Mail and Outlook. No scripts, no CSS variables, no images: the
+  arrow is a text glyph and the rules are table cells.
+
+  Placeholders (fill on the server; escape every value as HTML):
+    {{subject}}         e.g. TIDAL-OAK-0193 replied to you
+    {{lead}}            e.g. TIDAL-OAK-0193 replied to your comment on Haptics for calm breathing.
+    {{quote}}           the comment text, without quotation marks (the template adds them)
+    {{island_hex}}      the plant's origin island hue: #F05A3C Health, #1E9E6A Sustainability, #3358E0 Games
+    {{action_url}}      link back to the plant (or the Island Access panel)
+    {{action_label}}    e.g. Open the plant
+    {{note}}            e.g. Replying keeps the conversation, and the plant, growing.
+    {{player_id}}       the recipient's ID, e.g. MOSSY-FERN-4821
+    {{unsubscribe_url}}, {{preferences_url}}
+
+  For emails without a quote (access reminders), remove the quote row.
+
+  Copy per type. Reply is in Figma; comment and access are placeholders
+  Cassius approved on Nov 23 and is checking with the team:
+    reply    subject "{id} replied to you"
+             lead    "{id} replied to your comment on {plant}."
+             action  "Open the plant"   note "Replying keeps the conversation, and the plant, growing."
+    comment  subject "{id} commented on your seed"
+             lead    "{id} commented on {plant}."
+             action  "Open the plant"   note "Replying keeps the conversation, and the plant, growing."
+    access   subject "{island} access ends in 6 hours"
+             lead    "Your access to {island} ends at {time}. Water or nourish a {island} plant to stay longer."
+             action  "Open Island Access"   (no quote row)
+
+  Figma draws the rule accent in Health red and the quote bar in
+  Sustainability green for a Health plant. Here both use {{island_hex}}.
+-->
+<style>
+  /* Only for clients that support it; everything also works without. */
+  @import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Space+Mono&display=swap");
+  @media (max-width: 600px) {
+    .ci-outer { padding: 16px !important; }
+    .ci-card { padding: 24px !important; }
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background:#F4F4F1;">
+  <div style="display:none;max-height:0;overflow:hidden;">{{lead}}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F4F4F1;">
+    <tr>
+      <td class="ci-outer" align="center" style="padding:40px;">
+        <table role="presentation" width="520" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:520px;background:#FFFFFF;border:1px solid #111111;">
+          <tr>
+            <td class="ci-card" style="padding:32px;font-family:Archivo,Helvetica,Arial,sans-serif;color:#111111;">
+
+              <!-- Subject line -->
+              <p style="margin:0 0 20px;font-family:'Space Mono','Courier New',monospace;font-size:11px;line-height:1.3;letter-spacing:0.06em;text-transform:uppercase;color:#8E8E8E;">Subject: {{subject}}</p>
+
+              <!-- Rule: black, grey, island hue (250 / 160 / 46 of 456) -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;">
+                <tr>
+                  <td width="55%" height="3" style="height:3px;font-size:0;line-height:0;background:#111111;">&nbsp;</td>
+                  <td width="35%" height="3" style="height:3px;font-size:0;line-height:0;background:#8E8E8E;">&nbsp;</td>
+                  <td width="10%" height="3" style="height:3px;font-size:0;line-height:0;background:{{island_hex}};">&nbsp;</td>
+                </tr>
+              </table>
+
+              <h1 style="margin:0 0 20px;font-family:Archivo,Helvetica,Arial,sans-serif;font-size:28px;line-height:1.1;font-weight:800;letter-spacing:-0.03em;color:#111111;">CHI Island</h1>
+
+              <p style="margin:0 0 20px;font-size:15px;line-height:1.5;color:#111111;">{{lead}}</p>
+
+              <!-- Quote: island bar and the comment text -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;">
+                <tr>
+                  <td width="3" style="width:3px;background:{{island_hex}};font-size:0;line-height:0;">&nbsp;</td>
+                  <td style="padding-left:12px;font-size:15px;line-height:1.5;color:#111111;">&ldquo;{{quote}}&rdquo;</td>
+                </tr>
+              </table>
+
+              <!-- Primary button (44 px tall) -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;">
+                <tr>
+                  <td style="background:#111111;">
+                    <a href="{{action_url}}" style="display:inline-block;padding:12px 16px;font-family:Archivo,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;letter-spacing:-0.01em;color:#FFFFFF;text-decoration:none;">&rarr;&nbsp;&nbsp;{{action_label}}</a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 20px;font-size:13px;line-height:1.45;color:#8E8E8E;">{{note}}</p>
+
+              <!-- Footer: why you got this, unsubscribe -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr><td height="1" style="height:1px;font-size:0;line-height:0;background:#D0D0CC;">&nbsp;</td></tr>
+                <tr>
+                  <td style="padding-top:6px;font-family:'Space Mono','Courier New',monospace;font-size:9px;line-height:1.3;letter-spacing:0.06em;text-transform:uppercase;color:#8E8E8E;">You get this because you added an email to {{player_id}}. Your email is never shown to other players.</td>
+                </tr>
+                <tr>
+                  <td style="padding-top:6px;font-family:'Space Mono','Courier New',monospace;font-size:9px;line-height:1.3;letter-spacing:0.06em;text-transform:uppercase;color:#111111;">
+                    <a href="{{unsubscribe_url}}" style="color:#111111;text-decoration:underline;">Unsubscribe</a> &middot; <a href="{{preferences_url}}" style="color:#111111;text-decoration:underline;">Email preferences</a>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
