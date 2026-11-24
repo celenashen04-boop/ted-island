@@ -45,7 +45,7 @@ function stats(s) {
 
 export function createOnboarding({
   createAccount, setPassword, signIn, startJudge, onChooseIsland, onSignedIn, onForgotPassword,
-  islandStats = {}, contained = false, start = 'enter',
+  islandStats = {}, deliveryAvailable = () => true, contained = false, start = 'enter',
 }) {
   const element = el('div', { class: `ui-onboard${contained ? ' ui-onboard--contained' : ''}` });
   const screens = {};
@@ -63,16 +63,21 @@ export function createOnboarding({
     const newBtn = button('I’m new here', { block: true });
     const idBtn = button('I have an ID', { variant: 'ui-btn--secondary', iconName: 'user' });
     const judgeBtn = button('Login as Judge', { variant: 'ui-btn--secondary', iconName: 'judge' });
+    const error = el('p', { class: 'error', role: 'alert' });
     newBtn.addEventListener('click', () => busy(newBtn, async () => {
       const result = await createAccount?.();
-      playerId = result?.id ?? playerId;
+      error.textContent = result?.error ?? '';
+      if (!result?.id) return;
+      playerId = result.id;
       path = 'new';
       show('reveal');
     }));
     idBtn.addEventListener('click', () => show('signin'));
     judgeBtn.addEventListener('click', () => busy(judgeBtn, async () => {
       const result = await startJudge?.();
-      playerId = result?.id ?? playerId;
+      error.textContent = result?.error ?? '';
+      if (!result?.id) return;
+      playerId = result.id;
       path = 'judge';
       show('judge');
     }));
@@ -82,11 +87,11 @@ export function createOnboarding({
         el('h1', { class: 'ui-onboard__title', id: 'ui-ob-enter', tabindex: '-1' }, 'Plant an idea. Cross a bridge.'),
         el('p', { class: 'ui-onboard__lede' }, 'A shared garden where first-time attendees meet through research ideas, not small talk.'),
         el('div', { class: 'ui-onboard__spacer' }),
-        el('div', { class: 'ui-onboard__enter-actions' }, newBtn,
+        error, el('div', { class: 'ui-onboard__enter-actions' }, newBtn,
           el('div', { class: 'ui-onboard__row ui-onboard__row--split' }, idBtn, judgeBtn))));
   }
 
-  /* ID reveal (18:128). Confirmed copy keeps its em dash (flagged in UI-CONTEXT section 11). */
+  /* ID reveal (18:128). */
   {
     const idText = el('p', { class: 'ui-id-block__id' });
     const copyLabel = el('span', {}, 'Copy');
@@ -105,7 +110,7 @@ export function createOnboarding({
         el('p', { class: 'ui-eyebrow' }, 'Step 1 of 3 · Your ID'), rule(),
         el('h1', { class: 'ui-onboard__title', id: 'ui-ob-reveal', tabindex: '-1' }, 'This is you on CHI Island'),
         el('div', { class: 'ui-id-block' }, idText, copy),
-        el('p', { class: 'ui-onboard__body' }, 'Save this ID — you’ll need it to log back in.'),
+        el('p', { class: 'ui-onboard__body' }, 'Save this ID. You’ll need it to log back in.'),
         el('p', { class: 'ui-onboard__lede', style: 'max-width:456px' }, 'It is your only public name: it shows on your seeds and comments. No real names.'),
         el('div', { class: 'ui-onboard__spacer' }),
         next));
@@ -118,11 +123,15 @@ export function createOnboarding({
     const email = createField({ label: 'Email (optional)', type: 'email', name: 'email', placeholder: 'you@university.edu', autocomplete: 'email', inputmode: 'email', spellcheck: false });
     const remind = createCheckbox({ label: 'Email me when island access is about to expire.', name: 'remind', checked: true });
     const warning = infoLine('Without an email, a forgotten password can’t be recovered.');
-    const syncWarning = () => { warning.hidden = email.value.trim() !== ''; };
+    const delivery = infoLine('Email delivery and password reset are unavailable on this server.');
+    const syncWarning = () => {
+      warning.hidden = email.value.trim() !== '' || !deliveryAvailable();
+      delivery.hidden = deliveryAvailable();
+    };
     email.input.addEventListener('input', syncWarning);
     const submit = button('Continue', { type: 'submit' });
     const form = el('form', { class: 'ui-onboard__col ui-onboard__col--form', novalidate: true },
-      password.element, email.element, remind.element, warning, submit);
+      password.element, email.element, remind.element, warning, delivery, submit);
     form.addEventListener('submit', event => {
       event.preventDefault();
       if (password.value.length < MIN_PASSWORD) {
@@ -140,6 +149,8 @@ export function createOnboarding({
       busy(submit, async () => {
         const result = await setPassword?.({ id: playerId, password: password.value, email: email.value.trim(), remind: remind.checked });
         if (result && result.ok === false) { password.setError(result.error ?? 'Something went wrong. Try again.'); return; }
+        password.input.value = '';
+        email.input.value = '';
         show('home');
       });
     });
@@ -159,7 +170,7 @@ export function createOnboarding({
     id.input.setAttribute('autocapitalize', 'characters');
     const password = createField({ label: 'Password', type: 'password', name: 'password', autocomplete: 'current-password' });
     const submit = button('Sign in', { type: 'submit' });
-    const forgot = el('button', { type: 'button', class: 'ui-btn ui-btn--ghost ui-btn--s ui-onboard__push', onclick: () => onForgotPassword?.() },
+    const forgot = el('button', { type: 'button', class: 'ui-btn ui-btn--ghost ui-btn--s ui-onboard__push', onclick: () => onForgotPassword?.(id.value.trim()) },
       el('span', { class: 'ui-btn__label' }, 'Forgot password?'));
     const form = el('form', { class: 'ui-onboard__col', style: 'width:100%', novalidate: true },
       id.element, password.element, el('div', { class: 'ui-onboard__row' }, submit, forgot));
@@ -175,6 +186,7 @@ export function createOnboarding({
           return;
         }
         password.setError(null);
+        password.input.value = '';
         onSignedIn?.();
       });
     });
@@ -182,7 +194,7 @@ export function createOnboarding({
       el('div', { class: 'ui-onboard__panel' },
         el('p', { class: 'ui-eyebrow' }, 'Welcome back'), rule(),
         el('h1', { class: 'ui-onboard__title', id: 'ui-ob-signin', tabindex: '-1' }, 'Sign in'),
-        form));
+        form, button('Back', { variant: 'ui-btn--ghost', onclick: () => show('enter') })));
   }
 
   /* Judge session (18:423) */
@@ -224,16 +236,17 @@ export function createOnboarding({
     const fieldset = el('fieldset', { class: 'ui-home__options' }, el('legend', { class: 'ui-sr-only' }, 'Home island'), options);
 
     const enter = button('Enter island', { type: 'submit' });
+    const error = el('p', { class: 'error', role: 'alert' });
     const form = el('form', { class: 'ui-home', 'aria-labelledby': 'ui-ob-home' },
       eyebrow,
       el('h1', { class: 'ui-home__title', id: 'ui-ob-home', tabindex: '-1' }, 'Choose your ', term),
-      fieldset,
+      fieldset, error,
       el('div', { class: 'ui-home__foot' }, el('p', { class: 'ui-home__hint' }, 'Pick the domain closest to your work.'), enter),
       explainer);
     form.addEventListener('submit', event => {
       event.preventDefault();
       const choice = Number(new FormData(form).get('home-island'));
-      busy(enter, async () => { await onChooseIsland?.(choice); });
+      busy(enter, async () => { error.textContent = (await onChooseIsland?.(choice))?.error ?? ''; });
     });
     form.addEventListener('keydown', event => { if (event.key === 'Escape' && !explainer.hidden) { setExplainer(false); term.focus(); } });
     form.addEventListener('pointerdown', event => { if (!explainer.hidden && !explainer.contains(event.target) && event.target !== term) setExplainer(false); });

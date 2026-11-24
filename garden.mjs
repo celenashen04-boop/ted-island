@@ -115,13 +115,11 @@ export function createGarden(db) {
   const cards = db.prepare(`SELECT p.id,p.title,p.idea,p.question,p.island AS originalIsland,
     p.owner=? AS mine,length(p.pdf)>0 AS hasArticle,COALESCE(author.public_id,'Player '||r.seq) AS creator,
     p.owner AS owner,activityClock.last_activity AS lastActivity,
-    CASE WHEN profile.share_linkedin=1 THEN NULLIF(profile.linkedin,'') END AS authorLinkedin,
     (SELECT count(*) FROM watering WHERE plant=p.id) AS likes,
     (SELECT count(*) FROM comments WHERE seed=p.id) AS commentCount,
     EXISTS(SELECT 1 FROM watering WHERE plant=p.id AND player=?) AS watered,
     EXISTS(SELECT 1 FROM follows WHERE seed=p.id AND player=?) AS following
     FROM plants p LEFT JOIN residents r ON r.player=p.owner
-    LEFT JOIN resident_profiles profile ON profile.player=p.owner
     LEFT JOIN accounts author ON author.player=p.owner
     JOIN plant_activity activityClock ON activityClock.plant=p.id
     WHERE EXISTS(SELECT 1 FROM placements WHERE seed=p.id) ORDER BY p.planted_at,p.id`);
@@ -138,6 +136,20 @@ export function createGarden(db) {
     FROM activity a JOIN residents r ON r.player=a.player LEFT JOIN accounts author ON author.player=a.player
     WHERE a.kind IN ('like','comment')
     UNION SELECT DISTINCT w.plant,r.island,COALESCE(author.public_id,'Player '||r.seq),w.player FROM watering w JOIN residents r ON r.player=w.player LEFT JOIN accounts author ON author.player=w.player`);
+  db.exec(`CREATE TABLE IF NOT EXISTS followed_seen (
+    seed TEXT NOT NULL, player TEXT NOT NULL, comment INTEGER NOT NULL,
+    PRIMARY KEY (seed, player),
+    FOREIGN KEY (seed, player) REFERENCES follows(seed, player) ON DELETE CASCADE
+  )`);
+  const followedSeeds = db.prepare(`SELECT f.seed,
+    (SELECT count(*) FROM comments c WHERE c.seed=f.seed AND c.player<>f.player
+      AND c.id>COALESCE(seen.comment,0)) AS newReplies
+    FROM follows f LEFT JOIN followed_seen seen ON seen.seed=f.seed AND seen.player=f.player
+    WHERE f.player=?`);
+  const latestComment = db.prepare('SELECT COALESCE(max(id),0) AS latest FROM comments WHERE seed=? AND id<=?');
+  const saveSeen = db.prepare(`INSERT INTO followed_seen VALUES (?,?,?) ON CONFLICT(seed,player)
+    DO UPDATE SET comment=max(followed_seen.comment,excluded.comment)`);
+  const isFollowing = db.prepare('SELECT 1 FROM follows WHERE seed=? AND player=?');
   const follow = db.prepare('INSERT OR IGNORE INTO follows VALUES (?,?)');
   const unfollow = db.prepare('DELETE FROM follows WHERE seed=? AND player=?');
   const followers=db.prepare('SELECT player FROM follows WHERE seed=? AND player<>?');
@@ -198,6 +210,15 @@ export function createGarden(db) {
           id,title,idea,question,originalIsland,growth,plantedHere:plantedOn.includes(island)
         })),
       plants:visiblePlants.map(({seed,...location})=>({...bySeed.get(seed),...location})),
+      followed:followedSeeds.all(player).flatMap(({seed,newReplies})=>{
+        const card = bySeed.get(seed);
+        if (!card) return [];
+        const placement = visiblePlants.find(item=>item.seed===seed && item.island===position.island)
+          ?? visiblePlants.find(item=>item.seed===seed);
+        return [{ id: seed, title: card.title, originalIsland: card.originalIsland, growth: card.growth,
+          dormant: card.dormant, lastActivity: card.lastActivity, participantCount: card.participantCount,
+          plantedOn: card.plantedOn, island: placement?.island ?? null, newReplies }];
+      }),
       notifications:notifications.list(player),
       updates:updates.all(player,player).filter(item=>readableSeeds.has(item.seed))
     };
@@ -244,8 +265,12 @@ export function createGarden(db) {
   }
   function setFollow(player,id,island,enabled) {
     if(!placement.get(id,island)||!canVisit(player,island))return {status:404,error:'This plant is unavailable.'};
-    (enabled?follow:unfollow).run(id,player);
-    return {ok:true};
+    return transaction(()=>{
+      if (enabled) {
+        if (follow.run(id,player).changes) saveSeen.run(id,player,latestComment.get(id,Number.MAX_SAFE_INTEGER).latest);
+      } else unfollow.run(id,player);
+      return {ok:true};
+    });
   }
   function canRead(player,id){
     return db.prepare('SELECT island FROM placements WHERE seed=?').all(id)
@@ -263,6 +288,11 @@ export function createGarden(db) {
   return {
     exportPlant,
     runMaintenance(now){return transaction(()=>notifications.process(now));},
+    seeDiscussion(player,id,through){
+      if (!canRead(player,id) || !isFollowing.get(id,player)) return false;
+      saveSeen.run(id,player,latestComment.get(id,through).latest);
+      return true;
+    },
     markNotification(player,id){return notifications.markRead(player,id);},
     cross(player,island){return access.cross(player,home(player).island,island);},
     savePose(player,island,pose){return access.savePose(player,home(player).island,island,pose);},

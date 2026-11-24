@@ -44,42 +44,25 @@
   pointer-events: none;
 }
 .ui-plant-detail__origin { min-width: 0; overflow-wrap: anywhere; }
-.ui-panel--plant [href*="linkedin"] { width: fit-content; margin-block-start: var(--space-12); }
 .ui-layer[data-state="closing"] { pointer-events: none; }
 
 #onboarding {
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-border-default);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
   border-radius: 0;
-  background: var(--color-bg-surface);
-  font-family: var(--font-sans);
+  overflow: hidden;
+  background: transparent;
 }
-#onboarding::backdrop { background: rgb(17 17 17 / 0.45); }
-#onboarding h1 {
-  font: 800 clamp(1.45rem, 5vh, 2rem)/1.1 var(--font-sans);
-  letter-spacing: -.03em;
-  padding-bottom: .55rem;
-  border-bottom: 3px solid var(--color-border-default);
-}
-#onboarding input:not([type="radio"], [type="checkbox"]), #onboarding button {
-  min-height: 44px;
-  border: 1px solid var(--color-border-default);
-  border-radius: 0;
-  background: var(--color-bg-surface);
-  color: var(--color-text-primary);
-}
-#onboarding button.primary { background: var(--color-bg-inverse); color: var(--color-text-inverse); }
-#onboarding .domain-card {
-  border-radius: 0;
-  border-color: var(--color-border-subtle);
-  border-left-color: var(--domain-color);
-  background: var(--color-bg-surface);
-}
-#onboarding .domain-card:has(:checked) {
-  border-color: var(--color-border-default);
-  border-left-color: var(--domain-color);
-  background: var(--color-bg-muted);
-}
+#onboarding::backdrop { background: transparent; }
+.is-onboarding #toggle-dashboard, .is-onboarding .ui-world-label, .is-onboarding .ui-world-legend { display: none; }
+.game-account-utility { overflow: auto; }
+
 .ui-tutorial-card {
   background: rgb(255 255 255 / .87);
   backdrop-filter: blur(12px);

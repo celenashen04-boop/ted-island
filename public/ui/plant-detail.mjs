@@ -50,13 +50,12 @@ export function createPlantDetail({ onWater, onFollow, onPost, onClose, containe
   const followLabel = el('span', { class: 'ui-btn__label' });
   const follow = el('button', { type: 'button', class: 'ui-btn ui-btn--secondary ui-btn--s', 'aria-pressed': 'false' }, icon('follow'), followLabel);
   const paper = el('a', { class: 'ui-btn ui-btn--ghost ui-btn--s', target: '_blank', rel: 'noopener' }, icon('file'), el('span', { class: 'ui-btn__label' }, 'Paper (PDF)'));
-  const author = el('a', { class: 'ui-btn ui-btn--secondary ui-btn--s', target: '_blank', rel: 'noopener noreferrer', hidden: true }, 'Connect to author');
   const ideaCol = el('section', { class: 'ui-plant-detail__idea-col' },
     el('div', { class: 'ui-plant-detail__origin' }, badge, byline),
     title,
     el('div', { class: 'ui-plant-detail__stage' }, stageImg, el('div', {}, stageTitle, stageMeta)),
     idea, question, stats,
-    el('div', { class: 'ui-plant-detail__actions' }, water, follow, paper), author);
+    el('div', { class: 'ui-plant-detail__actions' }, water, follow, paper));
 
   /* Discussion column */
   const discussionTitle = el('h3', { class: 'ui-plant-detail__discussion-title' });
@@ -134,9 +133,6 @@ export function createPlantDetail({ onWater, onFollow, onPost, onClose, containe
     follow.setAttribute('aria-pressed', String(Boolean(plant.following)));
     paper.hidden = !plant.paperUrl;
     if (plant.paperUrl) paper.href = plant.paperUrl;
-    author.hidden = !plant.authorLinkedin;
-    if (plant.authorLinkedin) author.href = plant.authorLinkedin;
-    else author.removeAttribute('href');
 
     const total = comments.reduce((n, c) => n + 1 + (c.replies?.length ?? 0), 0);
     discussionTitle.textContent = `Shared discussion · ${total}`;

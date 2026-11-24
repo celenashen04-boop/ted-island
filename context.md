@@ -26,9 +26,9 @@ Scenery plants on the islands must not be confused with idea plants. Remove scen
 
 ## Login and identity
 
-- The first visit opens **Sign up**. Players choose a public username of 3–24 letters, numbers, hyphens, or underscores and a password of at least six characters. Existing players can still sign in with their assigned username, such as `Mossy-Fern-4821`.
-- After registration, switch to **Sign in** and prefill the username. The browser may save credentials through its password manager. The game stores a password hash on the server and keeps a signed-in player’s session in a cookie. After sign-out, the browser can remember the last username for the next sign-in.
-- The username is the account’s public name. Show it on the main page, on seeds and plants, and in comments.
+- On the first visit, choose **I’m new here**, **I have an ID**, or **Login as Judge**. New players receive a generated ID such as `Mossy-Fern-4821`, copy it, set a password of at least six characters, and choose their home island.
+- Returning players enter their ID and password. Existing accounts retain their IDs and passwords. The game stores a password hash on the server and keeps the session in a cookie. Regular accounts can add an email address for recovery and independently opt into access or discussion reminders.
+- The player ID is the account’s public name. Show it in the HUD, on planted ideas, and in comments.
 - Email is optional and private. It is used only for notifications and password reset. Encourage players to add it, and warn players without an email that a forgotten password cannot be recovered. Provide consent, notification preferences, and an unsubscribe option.
 - **Login as Judge** creates a random ID without a password. Judges choose an island and play as regular players. Each judge session is unique, synchronizes in real time across browsers and devices, survives a refresh, and lasts for the browser session.
 - The CHI website’s entry button is a regular link to the game and passes no attendee data.
@@ -36,9 +36,8 @@ Scenery plants on the islands must not be confused with idea plants. Remove scen
 ## Onboarding and tutorial
 
 - New residents choose a domain from the three islands. The chosen domain becomes their home island. Selecting **home island** on the Welcome screen explains what a home island means and does. An existing resident completing onboarding can choose their home island. Previously planted seeds stay on their original islands.
-- Residents can add an optional LinkedIn URL and choose whether to share it through their research. Previously uploaded profile photos stay visible only to the resident who supplied them.
 - The Welcome screen does not link to Island Studio.
-- After the home island is chosen, a tutorial covers walking, creating a seed, using the Seed Catalog, and adopting and planting a seed. It also covers watering and nourishing, and shows each plant stage. It ends with the sequence that opens another island: adopt a seed from that island, water or nourish it, and the bridge opens.
+- After the home island is chosen, a tutorial covers walking, creating a seed, using the Seed Catalog, and adopting and planting a seed. It also covers watering and nourishing, and shows each plant stage. It ends by explaining that planting an adopted seed opens 48 hours of bridge access and that watering and nourishing can extend that access.
 
 ## Instruction overlays
 
@@ -60,7 +59,7 @@ Scenery plants on the islands must not be confused with idea plants. Remove scen
 - Show the other islands and the bridges leading to them in the distance, using the same relative direction and height as World View. Use the island the player is standing on as the reference point.
 - Use the left joystick to move and drag on the right side to change the viewing direction.
 - Provide a circular globe button to switch to World View.
-- Show the player’s username and a notification bell at the top right. One dropdown button opens the **Seed Catalog** and **Island Access**. Cassius (UI) decides its final contents and layout.
+- Show the player’s copyable ID and a notification bell at the top right. The menu opens **Seed Catalog**, **Island Access**, **Followed plants**, **How to play**, and **Email and reminders**, with **Sign out** in the footer.
 - Ready an acorn with the bottom-right plus button. It rotates into an × that cancels the throw. Show “Tap to throw.” A tap or click anywhere in the scene sends the acorn the same short distance in the direction the player faces, unless it hits an obstacle first. Frame the flight and hold briefly on the landing. Dragging adjusts the camera while the acorn is ready. After a failed throw, the player can retry by selecting the seed where it landed, without pressing the plus button again. Keep the earlier slingshot control in the scene code as an alternative.
 - Let residents select plants in the garden. Liking another resident’s plant waters it. Leaving a comment nourishes it. Each action plays an animation and shows how it contributes to growth and access.
 - Residents adopt seeds from other islands through the Seed Catalog. They discover seeds that originated on their own island in the physical garden. Those seeds appear in the catalogs of residents on other islands.
@@ -70,11 +69,10 @@ Scenery plants on the islands must not be confused with idea plants. Remove scen
 - Every resident can create and plant an idea seed on their home island by readying an acorn and tapping the scene to throw it.
 - A seed can start from an article title, a research idea, or an uploaded paper or poster. Include a short description and an open question to invite discussion.
 - Once planted, the seed appears on its original island and enters the catalogs of residents on other islands.
-- Each seed retains its creator and original home island. On the shelf, each packet shows only the research title. Selecting a packet opens a centered overlay with its description, open question, adoption action or planting status, and the access that adoption earns. Catalog and planted seed popups show the original island in a pill and keep the close button visible while the content scrolls. Clicking or tapping outside either popup closes it.
-- When a player selects a planted seed or plant in the 3D scene and its creator has chosen to share their LinkedIn, show **Connect to author** at the bottom of the popup. Residents can change sharing from their own island badge. Sharing is off by default, including for existing profiles.
+- Each seed retains its creator and original home island. Catalog cards show the title, description, open question, origin island, growth stage, and adoption action or planting status. The planted-idea detail keeps its close button visible while the discussion scrolls. Selecting outside the panel closes it.
 - Residents can select a seed from another island in the catalog and plant it on their home island.
 - Show all eligible seed packets together under All islands, with a shelf beneath each row. Color each packet by its original island. Residents can filter to a single island. Packets lift on mouse hover or keyboard focus, and give the same feedback on press on touchscreens.
-- The first time the Seed Catalog opens in a browser, show a dismissible tip explaining how to adopt and plant a seed, and that adopting opens 48 hours of access to the seed’s island.
+- The tutorial and catalog explain that planting an adopted seed opens 48 hours of access to the seed’s origin island.
 - The catalog is the only place to adopt seeds. Each seed can be planted only once per island. Visiting an island gives no ability to collect or replant its seeds there, or to bring them home directly.
 
 ## Plant growth and shared discussion
@@ -168,4 +166,4 @@ Each like gives one water, and each comment or reply gives one nutrient. Count d
 ## Continued participation
 
 - Residents can continue contributing to shared plants at any time.
-- Residents can follow plants and receive updates, so they can return to the conversation after their first interaction or after the conference.
+- The **Followed plants** list shows all followed plants and counts new discussion since the player last opened each one. Players can open the discussion from an accessible planting. If they have left every island where it grows, the list keeps the plant and directs them to Island Access.

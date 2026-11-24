@@ -5,6 +5,8 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
+import { createAccounts } from '../accounts.mjs';
+import { createEmailDelivery } from '../email.mjs';
 import { test } from 'node:test';
 import { islandScale } from '../public/islands.mjs';
 import { canPlantOnIsland } from '../public/island-kit/navigation.mjs';
@@ -36,7 +38,7 @@ test('isolated sessions, island access, live events and persistence on restart',
 
   async function start(){
     server=spawn(process.execPath,['server.mjs'],{
-      env:{...process.env,PORT:'0',HOST:'127.0.0.1',VERCEL:'0',TED_SECURE_COOKIE:'0',
+      env:{...process.env,PORT:'0',HOST:'127.0.0.1',VERCEL:'0',TED_SECURE_COOKIE:'0',RESEND_API_KEY:'',
         TED_DATA_DIR:railway?'':directory,
         RAILWAY_SERVICE_ID:railway?'test-service':'',
         RAILWAY_VOLUME_MOUNT_PATH:railway?directory:'',
@@ -139,6 +141,28 @@ test('isolated sessions, island access, live events and persistence on restart',
   assert.equal((await a('/api/garden')).status,403);
   const aId=await register(a,0);
   assert.equal((await newBrowser('/api/auth/register',{username:'Garden_PILOT',password})).status,409);
+  const signup = client();
+  const generated = (await signup('/api/auth/start', {})).data.id;
+  assert.match(generated, /^[A-Za-z]+-[A-Za-z]+-\d{4}$/);
+  assert.equal((await signup('/api/auth/secure', { password: 'short' })).status, 400);
+  const address = 'private@example.test';
+  const secured = await signup('/api/auth/secure', { password, email: address, remind: true });
+  assert.equal(secured.data.id, generated);
+  assert.equal(secured.data.needsPassword, false);
+  assert.deepEqual((await signup('/api/email-settings')).data, { email: address, remindAccess: true, remindReplies: true });
+  assert.deepEqual((await signup('/api/email-settings', { email: address, remindAccess: false, remindReplies: true })).data,
+    { email: address, remindAccess: false, remindReplies: true });
+  const recoveryDb = new DatabaseSync(join(directory, 'garden.sqlite'));
+  try {
+    const { token } = createAccounts(recoveryDb).createReset(generated);
+    assert.equal((await signup('/api/auth/reset-password', { token, password: 'recovered-testing' })).status, 200);
+    assert.equal((await signup('/api/auth')).data.account, null);
+    assert.equal((await signup('/api/auth/reset-password', { token, password })).status, 400);
+    assert.equal((await signup('/api/auth/login', { id: generated.toLowerCase(), password: 'recovered-testing' })).data.id, generated);
+    assert.equal((await signup('/api/email-settings', { email: '' })).data.email, '');
+    assert.equal(createAccounts(recoveryDb).createReset(generated), null);
+  } finally { recoveryDb.close(); }
+
   const temporary=client();
   const judgeSession=await temporary('/api/auth/start',{judge:true});
   const staleCookie=judgeSession.setCookie.split(';')[0];
@@ -152,23 +176,44 @@ test('isolated sessions, island access, live events and persistence on restart',
   const live=await events(b);
   assert.equal((await live()).worldBridges.length,3);
   const original=await plant(a,0);
+  assert.equal((await a('/api/email-settings', { email:'author@example.test', remindReplies:true })).status,200);
   assert.equal((await live()).catalog[0].id,original.id);
   const adopt=await plant(b,1,original.id);
   assert.equal(adopt.access.addedHours,48);
   assert.equal((await live()).plants[0].id,original.id);
   assert.equal((await plant(b,1,original.id)).unchanged,true);
+  assert.equal((await a('/api/plants/'+original.id+'/follow',{island:0,enabled:true})).status,200);
   assert.equal((await b('/api/cross',{island:0})).status,200);
   const comment=await b('/api/plants/'+original.id+'/comment',{island:0,text:'Judges can participate.'});
   assert.ok(Math.abs(comment.data.access.addedHours-36)<.001);
-  assert.equal((await b('/api/plants/'+original.id+'/comment',{island:0,text:'A second thought.'})).data.access,null);
+  assert.equal((await b('/api/plants/'+original.id+'/comment',{island:0,text:'<em>A second thought.</em>'})).data.access,null);
   assert.ok(Math.abs((await b('/api/plants/'+original.id+'/water',{island:0})).data.access.addedHours-24)<.001);
   assert.equal((await b('/api/plants/'+original.id+'/water',{island:0})).data.changed,false);
   let view=(await a('/api/garden')).data;
-  assert.equal(view.notifications[0].type,'comment');
+  const commentNotice = view.notifications.find(item => item.type === 'comment');
+  assert.ok(commentNotice);
   assert.equal(view.plants[0].growth,1);
   assert.equal(view.plants[0].comments[0].resident,bId);
+  assert.equal(view.followed[0].newReplies, 2);
+  assert.equal((await a('/api/followed/seen',{id:original.id,through:view.plants[0].comments[0].id})).status,200);
+  assert.equal((await a('/api/garden')).data.followed[0].newReplies, 1);
+  const mailDb = new DatabaseSync(join(directory, 'garden.sqlite'));
+  const emails = [];
+  try {
+    const mail = createEmailDelivery(mailDb, {
+      origin:'https://chi.example.test', key:'test', from:'garden@example.test',
+      send:async (_, request)=>{emails.push(JSON.parse(request.body)); return new Response(null,{status:200});},
+    });
+    await mail.flush();
+    await mail.flush();
+    assert.equal(emails.length, 2);
+    assert.ok(emails.every(message => message.to[0]==='author@example.test'));
+    assert.ok(emails.some(message => message.html.includes('&lt;em&gt;A second thought.&lt;/em&gt;')));
+    assert.ok(emails.every(message => message.html.includes('/#unsubscribe=')));
+  } finally { mailDb.close(); }
+
   assert.ok(!('player' in view.plants[0].contributors[0]));
-  assert.equal((await b('/api/notifications/read',{id:view.notifications[0].id})).status,404);
+  assert.equal((await b('/api/notifications/read',{id:commentNotice.id})).status,404);
   assert.equal((await a('/api/plants/'+original.id+'/export')).data.discussion.length,2);
   const pose=soil(0);
   assert.equal((await b('/api/position',{island:0,x:pose.x*islandScale,z:pose.z*islandScale,yaw:0,pitch:0})).status,200);

@@ -1,4 +1,5 @@
 import { createServer } from 'node:http';
+import { createEmailDelivery } from './email.mjs';
 import { createAccounts } from './accounts.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
@@ -87,6 +88,9 @@ if(ownerIsUnique){
 }
 const accounts = createAccounts(db,{secureCookies});
 const garden = createGarden(db);
+const emailDelivery = createEmailDelivery(db, {
+  origin: publicOrigin, key: process.env.RESEND_API_KEY, from: process.env.CHI_EMAIL_FROM,
+});
 const databaseHealth = db.prepare('SELECT 1');
 const getPDF = db.prepare('SELECT pdf FROM plants WHERE id=?');
 const clients = new Map();
@@ -295,7 +299,11 @@ export async function handleRequest(req, res) {
       res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-cache' });
       return res.end(data);
     }
-    if (req.method==='GET' && path==='/api/auth')return json(res,200,{account:accounts.current(req)});
+    if (req.method === 'GET' && path === '/api/email-settings') {
+      const player = accounts.player(req);
+      return player ? json(res, 200, accounts.email(player)) : json(res, 401, { error: 'Sign in first.' });
+    }
+    if (req.method==='GET' && path==='/api/auth')return json(res,200,{account:accounts.current(req), emailAvailable:emailDelivery.available});
     if (req.method==='GET' && path==='/api/profile'){
       const player=accounts.player(req);
       return player ? json(res,200,garden.profile(player)) : json(res,401,{error:'Sign in to the garden.'});
@@ -357,6 +365,18 @@ export async function handleRequest(req, res) {
           if(!acceptRequest('register:'+req.socket.remoteAddress,60))return json(res,429,{error:'Try again in a minute.'});
           result=await accounts.register(req,res,body);
         }
+        else if (path === '/api/auth/secure') result = await accounts.secure(req, res, body);
+        else if (path === '/api/auth/reset-request') {
+          if (!emailDelivery.available) return json(res, 503, { error: 'Password reset email is unavailable on this server.' });
+          const id = typeof body.id === 'string' ? body.id.trim().toLowerCase() : '';
+          if (acceptRequest('reset-ip:' + req.socket.remoteAddress, 8) && acceptRequest('reset-id:' + id, 2)) {
+            const reset = accounts.createReset(id);
+            if (reset) void emailDelivery.reset(reset).catch(error => console.error('CHI Island password email:', error.message));
+          }
+          result = { ok: true };
+        }
+        else if (path === '/api/auth/reset-password') result = await accounts.resetPassword(body);
+        else if (path === '/api/auth/unsubscribe') result = accounts.unsubscribe(body.token);
         else if(path==='/api/auth/login')result=await accounts.login(req,res,body);
         else if(path==='/api/auth/logout'){
           const player=accounts.player(req);
@@ -368,6 +388,12 @@ export async function handleRequest(req, res) {
       const player = accounts.player(req);
       if (!player)return json(res,401,{error:'Sign in to the garden.'});
       if (path === '/api/profile') return await onboard(req,res,player);
+      if (path === '/api/email-settings') {
+        const input = await smallJSON(req);
+        if (!input || typeof input.email !== 'string') return json(res, 400, { error: 'Enter an email address.' });
+        const result = accounts.saveEmail(player, input);
+        return json(res, result.status ?? 200, result.error ? { error: result.error } : result);
+      }
       if (!garden.profile(player).completed) return json(res,403,{error:'Complete your player profile first.'});
       if (path === '/api/profile/linkedin-sharing') {
         const body=await smallJSON(req);
@@ -375,6 +401,14 @@ export async function handleRequest(req, res) {
         const profile=garden.setLinkedinSharing(player,body.enabled);
         if(!profile)return json(res,400,{error:'Add a LinkedIn URL before choosing to share it.'});
         json(res,200,profile);
+        broadcast();
+        return;
+      }
+      if(path==='/api/followed/seen'){
+        const body=await smallJSON(req);
+        const valid = typeof body?.id === 'string' && Number.isSafeInteger(body.through) && body.through >= 0;
+        if (!valid || !garden.seeDiscussion(player,body.id,body.through)) return json(res,404,{error:'Discussion unavailable.'});
+        json(res,200,{ok:true});
         broadcast();
         return;
       }
@@ -444,6 +478,7 @@ if (startedDirectly) {
   const maintenance=setInterval(()=>{
     try {if(garden.runMaintenance())broadcast();}
     catch(error){console.error('Garden maintenance failed:',error.message);}
+    void emailDelivery.flush().catch(error => console.error('CHI Island email maintenance:', error.message));
   },60_000);
   maintenance.unref();
   server.listen(Number(process.env.PORT ?? 4173), process.env.HOST ?? (railway?'0.0.0.0':'127.0.0.1'), () => {

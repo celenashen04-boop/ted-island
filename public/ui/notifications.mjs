@@ -44,7 +44,7 @@ const TYPES = {
   'follow-like': { icon: 'water', eyebrow: n => n.plant, title: () => 'A plant you follow was watered', body: () => '' },
   'follow-comment': { icon: 'nourish', eyebrow: n => n.plant, title: () => 'New discussion on a plant you follow', body: () => '' },
   'follow-plant': { icon: 'seed', eyebrow: n => n.plant, title: () => 'A plant you follow was adopted', body: n => islandUi(n.island).name },
-  retention: { icon: 'file', eyebrow: n => n.plant, title: () => 'Plant scheduled for removal', body: () => 'Inactive for 30 days' },
+  retention: { icon: 'file', eyebrow: n => n.plant, title: () => 'Plant scheduled for removal', body: () => 'Scheduled for deletion in 30 days if it stays inactive' },
   thirsty: {
     icon: 'water',
     eyebrow: n => n.plant,
@@ -146,5 +146,5 @@ export function createNotificationPanel({
   layer.addEventListener('keydown', event => { if (event.key === 'Escape') hide(); });
 
   update();
-  return { layer, panel, open, close: hide, update, get unread() { return data.filter(n => n.unread).length; } };
+  return { layer, panel, open, close: hide, update, setEmail(email) { update(data, { email }); }, get unread() { return data.filter(n => n.unread).length; } };
 }

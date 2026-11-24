@@ -12,7 +12,9 @@ import { createAccessPanel } from './ui/access-panel.mjs';
 import { createIslandPlants } from './ui/island-plants.mjs';
 import { createFollowedPlants, followedMenuMeta } from './ui/followed-plants.mjs';
 import { createNotificationPanel } from './ui/notifications.mjs';
-import { createPanelShell } from './ui/panel.mjs';
+import { createOnboarding } from './ui/onboarding.mjs';
+import { createEmailSettings, emailMenuMeta } from './ui/email-settings.mjs';
+import { createField } from './ui/fields.mjs';
 import { createTutorial, TUTORIAL_STEPS } from './ui/tutorial.mjs';
 import { createRotatePrompt } from './ui/rotate-prompt.mjs';
 import { createViewIdeaPill, createLandingMarker, createLockedPrompt, createEdgePrompt, createActionFeedback } from './ui/world-feedback.mjs';
@@ -35,7 +37,10 @@ const stageNames = ['seed', 'sprout', 'young', 'tree', 'mature'];
 const growthGoals = [[1, 0, 1], [2, 2, 2], [6, 8, 4]];
 const islandName = id => islands.find(island => island.id === id)?.name ?? 'Unknown island';
 const isLocked = id => id !== state?.home && !state?.access.some(item => item.island === id && item.active);
-let state, account, catalog, access;
+const entryLink = new URL(location.href);
+const privateLink = new URLSearchParams(entryLink.hash.slice(1));
+let state, account, catalog, access, emailPreferences;
+let emailAvailable = false;
 let currentIsland = null;
 let plants = [];
 let selectedAdoption, pendingPlant, openPlant, activePanel;
@@ -46,7 +51,7 @@ let plantWaitingForLandscape = false;
 let messageTimer, promptTimer, focusedPlant, sceneTargets;
 const sceneFeedback = el('div', { class: 'game-scene-feedback' });
 const prompt = el('div', { class: 'game-scene-prompt' });
-const ideaPill = createViewIdeaPill({ onOpen: () => focusedPlant && showIdea(focusedPlant.id, currentIsland, true) });
+const ideaPill = createViewIdeaPill({ onOpen: () => focusedPlant && showIdea(focusedPlant.id, currentIsland) });
 const landing = createLandingMarker('valid');
 landing.element.hidden = true;
 sceneFeedback.append(ideaPill.element, landing.element, prompt);
@@ -88,10 +93,6 @@ function updateSceneFeedback(frame) {
   }
 }
 
-function element(tag, label, className) {
-  return el(tag, { class: className }, label);
-}
-
 function announce(text) {
   message.textContent = text;
   clearTimeout(messageTimer);
@@ -102,7 +103,8 @@ const scene = createScene(map, {
   artwork,
   islandRenderer,
   isVisible: () => worldView.hidden,
-  onPlant(id) { showIdea(id, currentIsland, true); },
+  isFeedbackVisible: () => !activePanel,
+  onPlant(id) { showIdea(id, currentIsland); },
   onFrame: updateSceneFeedback,
   async onCross(destination, position) {
     if (crossing || !live) return;
@@ -194,23 +196,48 @@ const actions = {
   access: () => openPanel(access, [], 'access'),
   followed: () => openPanel(followed, [], 'followed'),
   'how-to-play': () => startTutorial(),
-  settings: () => openPanel(settings, [], 'settings'),
+  settings: () => loadEmailSettings(),
 };
 const hud = createTopRight({
   playerId: '',
-  items: MENU_ITEMS.map(item => item.id === 'settings' ? { ...item, title: 'Settings', meta: '' } : item),
+  items: MENU_ITEMS,
   onSelect: id => state && actions[id]?.(),
   onNotifications: () => state && openPanel(notes),
   onLogout: signOut,
 });
 playerView.append(hud.element);
 
-const settings = createPanelShell({ title: 'Settings', onClose: () => panelClosed(settings) });
-const shareLinkedin = el('button', {
-  type: 'button', id: 'share-resident-linkedin', class: 'ui-btn ui-btn--secondary', 'aria-pressed': 'false', hidden: true,
-}, 'Share LinkedIn');
-settings.body.append(shareLinkedin);
-settings.body.append(el('p', {}, 'Email reminders and password reset are unavailable in this prototype.'));
+const settings = createEmailSettings({
+  onSave: saveEmailPreferences,
+  onRemove: () => saveEmailPreferences({ email: '' }),
+  onClose: () => panelClosed(settings),
+  deliveryAvailable: () => emailAvailable,
+});
+
+async function saveEmailPreferences(input) {
+  try {
+    emailPreferences = await post('/api/email-settings', input);
+    renderEmailState();
+    return { ok: true };
+  } catch (error) { return { ok: false, error: error.message }; }
+}
+
+async function loadEmailSettings() {
+  if (account?.judge) { announce('Email preferences are available with a regular account.'); return; }
+  try {
+    const response = await fetch('/api/email-settings', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Could not load your email preferences.');
+    emailPreferences = await response.json();
+    renderEmailState();
+    settings.update(emailPreferences);
+    openPanel(settings, [], 'settings');
+  } catch (error) { announce(error.message); }
+}
+
+function renderEmailState() {
+  hud.menu.setMeta('settings', account?.judge ? 'Regular accounts only' : emailMenuMeta(emailPreferences));
+  notes.setEmail(Boolean(emailPreferences?.email) || Boolean(account?.judge));
+}
 
 const seedForm = createSeedForm({
   onClose: () => panelClosed(seedForm),
@@ -256,7 +283,13 @@ const detail = createPlantDetail({
   },
 });
 const followed = createFollowedPlants({
-  onOpen: plant => showIdea(plant.id, plant.placementIsland),
+  onOpen(plant) {
+    if (plant.placementIsland !== null) showIdea(plant.id, plant.placementIsland);
+    else {
+      openPanel(access, [], 'access');
+      announce('Visit an island where this plant grows to read its discussion.');
+    }
+  },
   onBrowse: openIslandPlants,
   onClose: () => panelClosed(followed),
 });
@@ -265,6 +298,7 @@ const islandPlants = createIslandPlants({
   onClose: () => panelClosed(islandPlants),
 });
 const notes = createNotificationPanel({
+  onAddEmail: loadEmailSettings,
   async onSelect(item) {
     try { await post('/api/notifications/read', { id: item.id }); }
     catch (error) { announce(error.message); }
@@ -403,7 +437,6 @@ function plantDetail(plant) {
     likes: plant.likes, following: Boolean(plant.following), watered: plant.watered, mine: plant.mine,
     canWater: live && !plant.mine && !plant.watered,
     paperUrl: plant.hasArticle ? '/api/plants/' + plant.id + '/article' : null,
-    authorLinkedin: openPlant?.fromScene ? plant.authorLinkedin : null,
   };
 }
 
@@ -411,7 +444,7 @@ function threads(comments) {
   const roots = [];
   const byComment = new Map();
   for (const item of comments) {
-    const comment = { id: item.id, author: item.resident, authorIsland: item.island, at: item.created, text: item.body };
+    const comment = { id: item.id, author: item.resident, authorIsland: item.island, at: Date.parse(item.created), text: item.body };
     const parent = byComment.get(item.replyTo);
     if (parent) {
       comment.replyAuthor = item.replyResident;
@@ -426,11 +459,14 @@ function threads(comments) {
   return roots;
 }
 
-function showIdea(id, island, fromScene = false) {
+function showIdea(id, island) {
   const plant = findPlant(id, island);
   if (!plant) return;
-  openPlant = { id, island: plant.island, fromScene };
+  openPlant = { id, island: plant.island };
   openPanel(detail, [plantDetail(plant), threads(plant.comments)]);
+  if (plant.following) {
+    post('/api/followed/seen', { id, through: plant.comments.at(-1)?.id ?? 0 }).catch(() => {});
+  }
   for (const note of state.notifications) {
     if (!note.read && note.plant === id && ['reply', 'comment', 'follow-comment'].includes(note.type)) {
       post('/api/notifications/read', { id: note.id }).catch(() => {});
@@ -446,6 +482,9 @@ async function changePlant(plant, action, details = {}, throwError = false) {
   changingPlant = true;
   try {
     const response = await post('/api/plants/' + plant.id + '/' + action, { island: plant.placementIsland, ...details });
+    if (response.changed && (action === 'water' || action === 'comment')) {
+      scene.showContribution(plant.id, action === 'water' ? 'water' : 'nourish');
+    }
     if (response.access) {
       reportAccess(response.access);
       if (action === 'water' || action === 'comment') {
@@ -509,8 +548,9 @@ function renderPanels() {
   }))));
   changedData(access, accessRows(), list => access.update(list));
   changedData(islandPlants, plants.map(plantRow), list => islandPlants.update(list));
-  const followedRows = [...new Map(state.plants.filter(plant => plant.following)
-    .map(plant => [plant.id, plantRow(plant)])).values()];
+  const followedRows = state.followed.map(plant => ({
+    ...plantRow(plant), newReplies: plant.newReplies,
+  }));
   changedData(followed, followedRows, list => followed.update(list));
   hud.menu.setMeta('followed', followedMenuMeta(followedRows));
   hud.menu.setMeta('access', state.access.filter(item => item.active).length + ' other islands open');
@@ -521,6 +561,9 @@ function renderPanels() {
     plant: item.title ?? 'Your plant', plantId: item.plant, at: item.created, unread: !item.read,
     exportUrl: item.type === 'retention' ? '/api/plants/' + item.plant + '/export' : null,
     quote: findPlant(item.plant)?.comments.find(comment => comment.id === item.comment)?.body.slice(0, 180),
+    hoursLeft: item.type === 'access-ending'
+      ? Math.max(0, Math.ceil(((state.access.find(entry => entry.island === item.island)?.expiry ?? Date.now()) - Date.now()) / 3_600_000))
+      : undefined,
   }));
   changedData(notes, notificationRows, items => notes.update(items));
   hud.bell.setUnread(notes.unread);
@@ -549,8 +592,22 @@ function receiveGarden(next, { restorePosition = true } = {}) {
   if (!worldView.hidden) world.update(state);
   if (expired) announce('Your access ended. Water or nourish a plant here to renew access to its origin island.');
   if (firstArrival) {
-    try { if (!localStorage.getItem(tutorialKey())) startTutorial(); }
-    catch { startTutorial(); }
+    const panel = entryLink.searchParams.get('panel');
+    const plantId = entryLink.searchParams.get('plant');
+    if (panel) consumeEntry('panel');
+    if (plantId) consumeEntry('plant');
+    if (panel === 'access' || panel === 'settings') actions[panel]();
+    else if (plantId) {
+      const plant = findPlant(plantId);
+      if (plant) showIdea(plant.id, plant.island);
+      else {
+        actions.access();
+        announce('Visit the plant’s island to open its discussion.');
+      }
+    } else {
+      try { if (!localStorage.getItem(tutorialKey())) startTutorial(); }
+      catch { startTutorial(); }
+    }
   }
 }
 
@@ -611,185 +668,163 @@ function connectGarden() {
   },15000);
 }
 
-const onboarding = byId('onboarding');
-const onboardingForm = byId('onboarding-form');
-const onboardingFields = byId('onboarding-fields');
-const join = byId('join-island');
-const retry = byId('retry-profile');
-const onboardingError = byId('onboarding-error');
-const shareResidentLinkedin = byId('share-resident-linkedin');
+const accountDialog = byId('onboarding');
+const onboarding = createOnboarding({
+  contained: true,
+  createAccount: () => startAccount(false),
+  startJudge: () => startAccount(true),
+  async setPassword(credentials) {
+    try {
+      account = await post('/api/auth/secure', credentials);
+      return { ok: true };
+    } catch (error) { return { ok: false, error: error.message }; }
+  },
+  async signIn(credentials) {
+    try {
+      account = await post('/api/auth/login', credentials);
+      onboarding.setPlayerId(account.id);
+      return { ok: true };
+    } catch (error) { return { ok: false, error: error.message }; }
+  },
+  onSignedIn: continueAccount,
+  async onChooseIsland(island) {
+    const body = new FormData();
+    body.set('island', String(island));
+    try {
+      await post('/api/profile', body);
+      enterGarden();
+    } catch (error) { return { error: error.message }; }
+  },
+  onForgotPassword: id => showPasswordForm({ id }),
+  deliveryAvailable: () => emailAvailable,
+});
+accountDialog.append(onboarding.element);
+accountDialog.addEventListener('cancel', event => event.preventDefault());
 
-function enterGarden(profile) {
+async function startAccount(judge) {
+  try {
+    account = await post('/api/auth/start', { judge });
+    return account;
+  } catch (error) { return { error: error.message }; }
+}
+
+async function continueAccount() {
+  try {
+    const response = await fetch('/api/profile', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Could not load your island. Reload to try again.');
+    if ((await response.json()).completed) enterGarden();
+    else {
+      onboarding.setPath(account.judge ? 'judge' : 'new');
+      showAccountScreen(account.judge ? 'judge' : 'home');
+    }
+  } catch (error) { showAccountNotice(error.message, () => continueAccount(), 'Try again'); }
+}
+
+function enterGarden() {
   hud.setPlayerId(account.id);
-  if (profile.linkedin) {
-    shareResidentLinkedin.hidden = false;
-    shareResidentLinkedin.setAttribute('aria-pressed', String(profile.shareLinkedin));
-  }
+  worldView.classList.remove('is-onboarding');
+  worldView.hidden = true;
   playerView.inert = false;
-  if (onboarding.open) onboarding.close();
+  accountDialog.close();
+  if (!account.judge) {
+    fetch('/api/email-settings', { cache: 'no-store' }).then(async response => {
+      if (response.ok) { emailPreferences = await response.json(); renderEmailState(); }
+    }).catch(() => {});
+  } else renderEmailState();
   connectGarden();
   map.focus({ preventScroll: true });
 }
 
-const signInForm=byId('sign-in-form');
-const signUpForm=byId('sign-up-form');
-const signInUsername=byId('sign-in-username');
-const accountStatus=byId('account-status');
-const lastUsernameKey='chi-last-username';
-
-function rememberUsername(username) {
-  try {localStorage.setItem(lastUsernameKey,username);}
-  catch { /* The account still works if browser storage is unavailable. */ }
-}
-
-function showAccountForm(signIn,{username='',message='',focus=true}={}){
-  signInForm.hidden=!signIn;
-  signUpForm.hidden=signIn;
-  byId('show-sign-in').hidden=signIn;
-  byId('show-sign-up').hidden=!signIn;
-  byId('account-error').textContent='';
-  accountStatus.textContent=message;
-  accountStatus.hidden=!message;
-  if(username)signInUsername.value=username;
-  if(focus)(signIn?(username?byId('sign-in-password'):signInUsername):byId('sign-up-username')).focus();
-}
-
-function accountStep(next) {
-  account=next;
-  const hasAccess=next && !next.needsPassword;
-  byId('account-entry').hidden=Boolean(hasAccess);
-  onboardingForm.hidden=!hasAccess;
-  onboarding.setAttribute('aria-labelledby',hasAccess?'onboarding-title':'account-title');
-  if(hasAccess){
-    if(!next.judge)rememberUsername(next.id);
-    loadProfile();
-  }else if(next?.needsPassword){
-    showAccountForm(false,{focus:false});
-  }
-}
-
-let accountPending=false;
-async function requestAccount(path,body) {
-  if(accountPending)return;
-  accountPending=true;
-  const error=byId('account-error');
-  error.textContent='';
-  accountStatus.hidden=true;
-  try {
-    const result=await post('/api/auth/'+path,body);
-    if(path==='register'){
-      rememberUsername(result.id);
-      signUpForm.reset();
-      showAccountForm(true,{username:result.id,message:'Account created. Sign in to continue.'});
-    }else{
-      signInForm.reset();
-      accountStep(result);
-    }
-  }catch(failure){error.textContent=failure.message;}
-  finally{accountPending=false;}
-}
-
-byId('show-sign-in').addEventListener('click',()=>showAccountForm(true));
-byId('show-sign-up').addEventListener('click',()=>showAccountForm(false));
-byId('judge-account').addEventListener('click',()=>requestAccount('start',{judge:true}));
-for(const [form,action] of [[signInForm,'login'],[signUpForm,'register']]){
-  form.addEventListener('submit',event=>{
-    event.preventDefault();
-    requestAccount(action,Object.fromEntries(new FormData(form)));
-  });
-}
 async function signOut() {
-  if (accountPending) return;
-  accountPending = true;
   try {
-    if(!account?.judge&&account?.id)rememberUsername(account.id);
-    await post('/api/auth/logout',{});
+    await post('/api/auth/logout', {});
     location.reload();
-  }catch(error){
-    announce(error.message || 'Could not sign out. Try again.');
-  } finally {
-    accountPending = false;
+  } catch (error) { announce(error.message); }
+}
+
+function showAccountUtility(title, ...content) {
+  onboarding.element.hidden = true;
+  accountDialog.querySelector('.game-account-utility')?.remove();
+  const heading = el('h1', { tabindex: '-1', class: 'ui-onboard__title' }, title);
+  const panel = el('section', { class: 'game-account-utility ui-onboard__panel' }, heading, ...content);
+  accountDialog.append(panel);
+  heading.focus();
+  return panel;
+}
+
+function showAccountNotice(message, next, label = 'Continue') {
+  showAccountUtility('CHI Island', el('p', { role: 'status' }, message),
+    el('button', { type: 'button', onclick: next, class: 'ui-btn' }, label));
+}
+
+function showAccountScreen(name) {
+  accountDialog.querySelector('.game-account-utility')?.remove();
+  onboarding.element.hidden = false;
+  onboarding.show(name);
+}
+
+function showPasswordForm({ id = '', token = '' } = {}) {
+  if (!token && !emailAvailable) {
+    showAccountNotice('Password reset email is unavailable on this server.', () => showAccountScreen('signin'), 'Back to sign in');
+    return;
   }
+  const field = token
+    ? createField({ label: 'New password', type: 'password', name: 'password', autocomplete: 'new-password', maxlength: 128, required: true })
+    : createField({ label: 'Your ID', name: 'id', autocomplete: 'username', value: id, required: true });
+  const submit = el('button', { type: 'submit', class: 'ui-btn' }, token ? 'Set password' : 'Send reset link');
+  const error = el('p', { class: 'error', role: 'alert' });
+  const form = el('form', { class: 'ui-onboard__col' }, field.element, error, submit);
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    submit.disabled = true;
+    error.textContent = '';
+    try {
+      if (token) await post('/api/auth/reset-password', { token, password: field.value });
+      else await post('/api/auth/reset-request', { id: field.value.trim() });
+      showAccountNotice(token ? 'Password saved. Sign in with your new password.'
+        : 'If that account has an email address, a reset link will be sent.',
+      () => showAccountScreen('signin'), 'Back to sign in');
+    } catch (failure) { error.textContent = failure.message; }
+    finally { submit.disabled = false; }
+  });
+  showAccountUtility('Reset your password', form,
+    el('button', { type: 'button', class: 'ui-btn ui-btn--ghost', onclick: () => showAccountScreen('signin') }, 'Back to sign in'));
+}
+
+function consumeEntry(name) {
+  const value = privateLink.get(name) ?? entryLink.searchParams.get(name);
+  if (privateLink.has(name)) {
+    privateLink.delete(name);
+    entryLink.hash = privateLink.toString();
+  }
+  entryLink.searchParams.delete(name);
+  history.replaceState(null, '', entryLink);
+  return value;
 }
 
 async function loadAccount() {
-  try{
-    const response=await fetch('/api/auth',{cache:'no-store'});
-    if(!response.ok)throw new Error('Could not load your account.');
-    const {account:next}=await response.json();
-    if(!next){
-      let username='';
-      try {username=localStorage.getItem(lastUsernameKey)??'';}
-      catch { /* Browser storage is optional. */ }
-      if(username)showAccountForm(true,{username,focus:false});
+  try {
+    const response = await fetch('/api/auth', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Could not load your account.');
+    ({ account, emailAvailable } = await response.json());
+    if (privateLink.has('unsubscribe') || entryLink.searchParams.has('unsubscribe')) {
+      const token = consumeEntry('unsubscribe');
+      const confirm = el('button', { type: 'button', class: 'ui-btn', onclick: async () => {
+        try {
+          await post('/api/auth/unsubscribe', { token });
+          showAccountNotice('Email reminders are off.', () => location.reload());
+        } catch (error) { announce(error.message); }
+      } }, 'Turn off email reminders');
+      showAccountUtility('Email reminders', confirm);
+    } else if (privateLink.has('reset') || entryLink.searchParams.has('reset')) {
+      showPasswordForm({ token: consumeEntry('reset') });
+    } else if (account) {
+      onboarding.setPlayerId(account.id);
+      if (account.needsPassword) onboarding.show('reveal');
+      else await continueAccount();
     }
-    accountStep(next);
-  }catch(error){byId('account-error').textContent=error.message;}
+  } catch (error) { showAccountNotice(error.message, () => loadAccount(), 'Try again'); }
 }
-
-async function loadProfile() {
-  onboardingError.textContent = '';
-  retry.hidden = true;
-  try {
-    const response = await fetch('/api/profile', {cache:'no-store'});
-    if (!response.ok) throw new Error('Could not load your player profile.');
-    const profile = await response.json();
-    if (profile.completed) return enterGarden(profile);
-    const options = byId('domain-options');
-    options.replaceChildren();
-    for (const island of islands) {
-      const name = element('strong', island.name);
-      const input = element('input');
-      input.type = 'radio'; input.name = 'island'; input.value = String(island.id); input.required = true;
-      input.checked = profile.island === island.id;
-      const card = element('label', null, 'domain-card');
-      card.style.setProperty('--domain-color', island.color);
-      card.append(input, name);
-      options.append(card);
-    }
-    onboardingFields.disabled = false;
-    join.disabled = false;
-    (options.querySelector('input:checked') ?? options.querySelector('input')).focus();
-  } catch (error) {
-    onboardingError.textContent = error.message || 'Could not load your player profile.';
-    retry.hidden = false;
-  }
-}
-
-shareResidentLinkedin.addEventListener('click', async () => {
-  const enabled = shareResidentLinkedin.getAttribute('aria-pressed') !== 'true';
-  shareResidentLinkedin.disabled = true;
-  try {
-    const profile = await post('/api/profile/linkedin-sharing', {enabled});
-    shareResidentLinkedin.setAttribute('aria-pressed', String(profile.shareLinkedin));
-    announce(profile.shareLinkedin ? 'Your seeds and plants now link to your LinkedIn.' : 'Your LinkedIn is private again.');
-  } catch (error) {
-    announce(error.message || 'Could not update LinkedIn sharing.');
-  } finally {
-    shareResidentLinkedin.disabled = false;
-  }
-});
-
-onboardingForm.addEventListener('submit', async event => {
-  event.preventDefault();
-  if (join.disabled) return;
-  const body = new FormData(onboardingForm);
-  onboardingFields.disabled = true;
-  join.disabled = true;
-  join.textContent = 'Setting up…';
-  onboardingError.textContent = '';
-  try {
-    enterGarden(await post('/api/profile', body));
-  } catch (error) {
-    onboardingError.textContent = error.message || 'Could not save your player profile.';
-  } finally {
-    onboardingFields.disabled = false;
-    join.disabled = false;
-    join.textContent = 'Enter island';
-  }
-});
-retry.addEventListener('click', loadProfile);
-onboarding.addEventListener('cancel', event => event.preventDefault());
 
 const mobilePreview = new URLSearchParams(location.search).get('preview') === 'mobile-game';
 const touchLayout = matchMedia('(pointer: coarse)');
@@ -841,6 +876,10 @@ portrait.addEventListener('change', updateOrientation);
 
 installGameDesign(artwork).then(() => { if (!worldView.hidden) world.draw(); });
 playerView.inert = true;
-onboarding.showModal();
+worldView.classList.add('is-onboarding');
+worldView.hidden = false;
+world.update({ islands, home: null, bridges: [] });
+accountDialog.showModal();
+onboarding.show('enter');
 updateOrientation();
 loadAccount();

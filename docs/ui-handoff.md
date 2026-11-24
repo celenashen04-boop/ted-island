@@ -1,6 +1,6 @@
 # CHI Island UI v2 · handoff
 
-> Integration note for `feat/v2-backend`. The game now loads the UI kit directly at `/?preview=mobile`. The original handoff below documents the component branch and remains useful for design references. The integrated version retains username-first signup and optional LinkedIn sharing. Catalog adoption earns access when the seed is planted. Notifications are in-game. Email delivery and password reset are still pending. The noon rendering mood remains opt-in.
+> **Integrated on `feat/v2-backend`.** Open `/?preview=mobile` to play. Generated IDs, PDF planting, access, shared discussion, followed-plant read tracking, and the email preferences UI use the live backend. Email delivery and password reset links require the Railway mail settings in the README. The noon mood remains opt-in pending Ray’s review.
 
 *Branch `ui/v2-look`, November 23, 2026. Owner: Cassius (UI and look). Written for Celena (wiring the UI into the game) and Ray (3D and rendering).*
 
@@ -452,18 +452,18 @@ What each current element in `index.html` becomes.
 ## 12. Wiring checklist
 
 **Celena**
-- [ ] Serve `/ui/`: a static route in `server.mjs` for local play, and the `vercel.json` route in [§13](#13-open-items).
-- [ ] Add the five stylesheets after `style.css` and mount the HUD (§3) in `.world`.
-- [ ] Hook the callbacks to the API: onboarding (account, password, sign-in, judge, home island), catalog adopt, seed form submit with the PDF, water, follow, post, notifications (list, mark read, email flag).
-- [ ] Island Access data per island ([§4](#4-island-access)) and `turnToward(id)` for Visit island.
-- [ ] Followed plants: the player's followed plants in the Plant Row shape, with `newReplies` since they last opened each one, and marking them seen when opened ([§8](#8-panels)).
-- [ ] Island plants: every plant on an island in the Plant Row shape (origin island, stage, dormant, last activity, contributors). Make the island chip a button that opens it.
-- [ ] Email and reminders: read the saved email and both reminder flags, save them (`onSave`) and remove the email (`onRemove`). The second flag (`remindReplies`) is new: replies and comments on the player's plants.
-- [ ] Screen rectangles for tutorial steps 4 to 6 (`landing`, `nearest-plant`, `nearest-bridge`), and a `refresh()` call on resize.
-- [ ] Project world positions into screen positions for the in-world pieces (§7) and the World View labels (§9).
-- [ ] Scene effects on the canvas: water ripple (two expanding ellipses, 700 ms), nourish pulse (swelling disc, 600 ms), in the plant's island hue.
-- [ ] HTML-escape every value in the email template.
-- [ ] Hide or remove the replaced elements in [§11](#11-element-id-map).
+- [x] Serve `/ui/`: a static route in `server.mjs` for local play, and the `vercel.json` route in [§13](#13-open-items).
+- [x] Add the five stylesheets after `style.css` and mount the HUD (§3) in `.world`.
+- [x] Hook the callbacks to the API: onboarding (account, password, sign-in, judge, home island), catalog adopt, seed form submit with the PDF, water, follow, post, notifications (list, mark read, email flag).
+- [x] Island Access data per island ([§4](#4-island-access)) and `turnToward(id)` for Visit island.
+- [x] Followed plants: the player's followed plants in the Plant Row shape, with `newReplies` since they last opened each one, and marking them seen when opened ([§8](#8-panels)).
+- [x] Island plants: every plant on an island in the Plant Row shape (origin island, stage, dormant, last activity, contributors). Make the island chip a button that opens it.
+- [x] Email and reminders: read the saved email and both reminder flags, save them (`onSave`) and remove the email (`onRemove`). Live delivery requires the Railway mail variables. The second flag (`remindReplies`) is new: replies and comments on the player's plants.
+- [x] Screen rectangles for tutorial steps 4 to 6 (`landing`, `nearest-plant`, `nearest-bridge`), with fallback targets before plants and bridges are in view.
+- [x] Project world positions into screen positions for the in-world pieces (§7) and the World View labels (§9).
+- [x] Scene effects on the canvas: water ripple (two expanding ellipses, 700 ms), nourish pulse (swelling disc, 600 ms), in the plant's island hue.
+- [x] HTML-escape every value in the email template.
+- [x] Hide or remove the replaced elements in [§11](#11-element-id-map).
 
 **Ray**
 - [ ] Island icons (SVG) for the badges and the access rings (`iconSvg`). Placeholders are in `public/ui/badges/` and Figma's Island Badge set 12:404.
@@ -478,7 +478,7 @@ What each current element in `index.html` becomes.
 ## 13. Open items
 
 **For Celena**
-- **`/ui/` is not routed on Vercel.** `vercel.json` maps only some paths to `public/`, so `/ui/...` returns 404 on deployments. A route like `{ "src": "/ui/(.*)", "dest": "/public/ui/$1" }` fixes it. Until then, use `/public/ui/...`. The mood preview works that way; the gallery loses its icons and images.
+- **Railway email.** Add the mail variables documented in the README to send real reminders and password reset links.
 - Branch previews sit behind Vercel sign-in. Ray needs a share link, or team access, to open the mood preview on his phone.
 
 **For Ray**

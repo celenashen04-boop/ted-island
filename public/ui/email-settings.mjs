@@ -23,7 +23,7 @@ export function emailMenuMeta({ email, remindAccess, remindReplies } = {}) {
   return remindAccess || remindReplies ? 'Reminders on' : 'Reminders off';
 }
 
-export function createEmailSettings({ settings = {}, onSave, onRemove, onClose, contained = false }) {
+export function createEmailSettings({ settings = {}, onSave, onRemove, onClose, contained = false, deliveryAvailable = () => true }) {
   const shell = createPanelShell({
     title: 'Email and reminders', subtitle: 'Optional · never shown to other players',
     className: 'ui-panel--email', closeLabel: 'Close Email and reminders', contained, onClose,
@@ -35,6 +35,7 @@ export function createEmailSettings({ settings = {}, onSave, onRemove, onClose, 
   const access = createCheckbox({ label: 'Email me when island access is about to expire.', name: 'remindAccess' });
   const replies = createCheckbox({ label: 'Email me when someone replies to me or comments on my plants.', name: 'remindReplies' });
   const warning = infoLine('Without an email, a forgotten password can’t be recovered.');
+  const delivery = el('p', { class: 'ui-info', hidden: true }, 'Email delivery is unavailable on this server. Your preferences can still be saved.');
   const saveLabel = el('span', { class: 'ui-btn__label' });
   const saveIcon = icon('mail');
   const save = el('button', { type: 'submit', class: 'ui-btn' }, saveIcon, saveLabel);
@@ -42,7 +43,7 @@ export function createEmailSettings({ settings = {}, onSave, onRemove, onClose, 
   const error = el('p', { class: 'ui-email__error', role: 'alert' });
   const status = el('p', { class: 'ui-sr-only', role: 'status' });
   const form = el('form', { class: 'ui-email', novalidate: true },
-    field.element, access.element, replies.element, warning,
+    field.element, access.element, replies.element, warning, delivery,
     el('div', { class: 'ui-email__actions' }, save, remove), error, status);
   shell.body.append(form);
 
@@ -57,6 +58,7 @@ export function createEmailSettings({ settings = {}, onSave, onRemove, onClose, 
     savedNote.hidden = !has;
     if (has) field.input.setAttribute('aria-describedby', savedNote.id); else field.input.removeAttribute('aria-describedby');
     warning.hidden = has;
+    delivery.hidden = deliveryAvailable();
     saveIcon.hidden = has;
     saveLabel.textContent = has ? 'Save changes' : 'Save';
     remove.hidden = !has;

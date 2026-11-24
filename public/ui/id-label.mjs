@@ -31,9 +31,9 @@ export function createIdLabel(playerId) {
   let timer = 0;
   const text = el('span', {}, id);
   const status = el('span', { class: 'ui-sr-only', role: 'status' });
-  const element = el('button', { type: 'button', class: 'ui-id-label', title: 'Copy username' }, text, icon('copy'), status);
+  const element = el('button', { type: 'button', class: 'ui-id-label', title: 'Copy your ID' }, text, icon('copy'), status);
 
-  const label = () => element.setAttribute('aria-label', `Your username, ${id}. Copy`);
+  const label = () => element.setAttribute('aria-label', `Your ID, ${id}. Copy`);
   label();
 
   element.addEventListener('click', async () => {
@@ -41,7 +41,7 @@ export function createIdLabel(playerId) {
     clearTimeout(timer);
     element.toggleAttribute('data-copied', ok);
     text.textContent = ok ? 'COPIED' : id;
-    status.textContent = ok ? 'Username copied' : 'Could not copy. Select and copy your username by hand.';
+    status.textContent = ok ? 'ID copied' : 'Could not copy. Select and copy your ID by hand.';
     timer = setTimeout(() => {
       element.removeAttribute('data-copied');
       text.textContent = id;

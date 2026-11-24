@@ -2,7 +2,7 @@ import { islands, islandScale, islandLandmarks, islandSpacing } from './islands.
 import { onIsland, canPlant, tileWidth, tileDepth, bridgePath, bridgeSurfaceHeight, bridgeHalfWidth, oakTreeHeightScale, traceOakConnection } from './plots.mjs';
 import { islandModel, canPlantOnIsland } from './island-kit/navigation.mjs';
 
-export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwControl='tap', onCross=()=>{}, onBridgeLocked=()=>{}, onEdge=()=>{}, onFrame, artwork = new Map(), islandRenderer=null, isVisible=()=>true }) {
+export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwControl='tap', onCross=()=>{}, onBridgeLocked=()=>{}, onEdge=()=>{}, onFrame, artwork = new Map(), islandRenderer=null, isVisible=()=>true, isFeedbackVisible=()=>true }) {
   let plants = [];
   const keys = new Set();
   let model=null;
@@ -572,6 +572,34 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
     ctx.restore();
   }
 
+  const contributions = new Map();
+  const islandColors = ['#F05A3C', '#1E9E6A', '#3358E0'];
+
+  function drawContribution(plant, scale, now) {
+    const effect = contributions.get(plant.id);
+    if (!effect) return;
+    if (!isFeedbackVisible()) return;
+    effect.start ??= now;
+    const age = now - effect.start;
+    const water = effect.kind === 'water';
+    const duration = water ? 700 : 600;
+    if (age >= duration) { contributions.delete(plant.id); return; }
+    ctx.save();
+    ctx.strokeStyle = ctx.fillStyle = islandColors[plant.originalIsland] ?? '#1E9E6A';
+    ctx.lineWidth = 2;
+    for (const delay of water ? [0, 110] : [0]) {
+      const progress = (age - delay) / (duration - delay);
+      if (progress < 0) continue;
+      const radius = clamp(scale * .36, 18, 112) * (.2 + .8 * progress);
+      ctx.globalAlpha = (1 - progress) * (water ? .8 : .45);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, radius, radius * .32, 0, 0, Math.PI * 2);
+      if (water) ctx.stroke();
+      else ctx.fill();
+    }
+    ctx.restore();
+  }
+
   function drawPlant(project,plant,scale,now) {
     const ground=plant.y??0;
     const [sx,sy]=project([plant.x,ground+.016,plant.z]);
@@ -587,6 +615,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
     const soilSize=plant.growth?1:.66;
     ctx.beginPath();ctx.ellipse(0,0,.12*scale*soilSize,.055*scale*soilSize,0,0,Math.PI*2);
     ctx.fillStyle='#715642';ctx.fill();
+    drawContribution(plant, scale, now);
     if(!plant.growth){
       ctx.restore();
       drawSeed(seedX,seedScreenY,clamp(.061*scale,5,24),-.45);
@@ -755,7 +784,13 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
         x:landing.x/islandScale,z:landing.z/islandScale
       } : landing);
     }
-    if(!isVisible())return;
+    if (!isVisible()) {
+      contributions.clear();
+      return;
+    }
+    for (const [id, effect] of contributions) {
+      if (effect.start !== null && now - effect.start > 700) contributions.delete(id);
+    }
     const bounds=canvas.getBoundingClientRect();
     width=bounds.width;height=bounds.height;
     if(!width||!height)return;
@@ -1075,7 +1110,13 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
   window.addEventListener('blur',resetInput);
   requestAnimationFrame(draw);
   return {
+    showContribution(plantId, kind) {
+      if (!reducedMotion?.matches && plants.some(plant => plant.id === plantId)) {
+        contributions.set(plantId, { kind, start: null });
+      }
+    },
     update(next,islandId,links=[]){
+      if (currentIsland !== islandId) contributions.clear();
       setIsland(islandId);
       plants=model ? next.map(plant=>({...plant,x:plant.x*islandScale,z:plant.z*islandScale})) : next;
       growBridgeMeshes(links);
