@@ -3,8 +3,9 @@
 :root{color-scheme:light;font-family:system-ui,sans-serif;color:#243227;background:#f4f5ed;--popover:#faf6ea;--popover-foreground:#293740}
 *{box-sizing:border-box}body{margin:0}button,select,input,textarea{font:inherit}button,select,a,input,textarea{outline-offset:4px}button,a{touch-action:manipulation}
 body{overflow:hidden}
-.mobile-preview{position:fixed;inset:0;overflow:hidden;background:#172b37}
-.mobile-preview iframe{position:absolute;top:50%;left:50%;border:0;transform:translate(-50%,-50%) scale(var(--preview-scale,1))}
+.mobile-preview{position:fixed;inset:0;display:grid;place-items:center;overflow:hidden;background:#172b37;container-type:size}
+.mobile-preview iframe{display:block;width:min(100%,932px);height:min(100%,430px,56vw);border:0}
+@supports (height:1cqw){.mobile-preview iframe{height:min(100%,430px,56cqw)}}
 .world{position:relative;width:100%;height:100dvh;overflow:hidden;background:#91a7d3}
 canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 canvas:focus{outline:none}

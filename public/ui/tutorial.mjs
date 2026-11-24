@@ -80,6 +80,9 @@ export function createTutorial({ targets = {}, steps = TUTORIAL_STEPS, onDone, o
     const bounds = { width: element.clientWidth, height: element.clientHeight };
     const t = rectOf(targets[step.target], element);
 
+    const cw = card.offsetWidth, ch = card.offsetHeight;
+    let x = (bounds.width - cw) / 2;
+    let y = (bounds.height - ch) / 2;
     if (t) {
       const h = { x: t.x - step.pad, y: t.y - step.pad, width: t.width + step.pad * 2, height: t.height + step.pad * 2 };
       svg.style.cssText = `left:${h.x}px;top:${h.y}px;width:${h.width}px;height:${h.height}px`;
@@ -91,8 +94,6 @@ export function createTutorial({ targets = {}, steps = TUTORIAL_STEPS, onDone, o
       svg.style.display = '';
 
       // Card beside the highlight on the preferred side, then kept inside the frame.
-      const cw = card.offsetWidth, ch = card.offsetHeight;
-      let x, y;
       switch (step.side) {
         case 'right': x = h.x + h.width + GAP; y = h.y + h.height - ch; break;
         case 'right-top': x = h.x + h.width + GAP * 2; y = h.y + GAP - 4; break;
@@ -102,17 +103,15 @@ export function createTutorial({ targets = {}, steps = TUTORIAL_STEPS, onDone, o
         case 'below-right': x = h.x + h.width + GAP / 2; y = h.y + h.height - GAP * 2; break;
         default: x = (bounds.width - cw) / 2; y = (bounds.height - ch) / 2;
       }
-      x = Math.min(Math.max(x, MARGIN), bounds.width - cw - MARGIN);
-      y = Math.min(Math.max(y, MARGIN), bounds.height - ch - MARGIN - (step.stages ? 44 : 0));
-      card.style.left = `${x}px`;
-      card.style.top = `${y}px`;
-      stages.style.left = `${x}px`;
-      stages.style.top = `${y + ch + 8}px`;
     } else {
       svg.style.display = 'none';
-      card.style.left = `${(bounds.width - card.offsetWidth) / 2}px`;
-      card.style.top = `${(bounds.height - card.offsetHeight) / 2}px`;
     }
+    x = Math.max(MARGIN, Math.min(x, bounds.width - cw - MARGIN));
+    y = Math.max(MARGIN, Math.min(y, bounds.height - ch - MARGIN - (step.stages ? 44 : 0)));
+    card.style.left = `${x}px`;
+    card.style.top = `${y}px`;
+    stages.style.left = `${x}px`;
+    stages.style.top = `${y + ch + 8}px`;
   }
 
   function render() {

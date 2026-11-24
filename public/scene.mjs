@@ -16,7 +16,8 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
   const near=.055, readyY=.75, gravity=9.8, seedRadius=.055;
   const useSlingshot=throwControl==='slingshot';
   const tapRange=3.2, tapFlightTime=.74, tapLandingPauseMs=160;
-  const focalLength=(width,height)=>Math.max(height*.77,width*.48);
+  // Short landscape viewports need a wider field of view to keep the ground in frame.
+  const focalLength = (width, height) => Math.max(height * .77, Math.min(width * .48, height * 1.04));
   const colliders=[];
 
   function collider(x,y,z,w,h,d){

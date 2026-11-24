@@ -53,7 +53,7 @@
   <dialog id="landscape-required" aria-labelledby="ui-rotate-title" aria-describedby="ui-rotate-body"></dialog>
   <template id="mobile-preview">
     <main class="mobile-preview">
-      <iframe title="CHI Island landscape phone preview" width="844" height="390"></iframe>
+      <iframe title="CHI Island landscape phone preview"></iframe>
     </main>
   </template>
   <script type="module">
@@ -65,12 +65,6 @@
       url.searchParams.set('preview', 'mobile-game');
       frame.src = url;
       document.body.replaceChildren(stage);
-      const fit = () => {
-        const scale = Math.min(1, stage.clientWidth / Number(frame.width), stage.clientHeight / Number(frame.height));
-        frame.style.setProperty('--preview-scale', scale);
-      };
-      fit();
-      new ResizeObserver(fit).observe(stage);
     } else {
       import('/app.mjs');
     }

@@ -1,24 +1,110 @@
 /* Position the handoff components over the playable scene. */
+:root {
+  --game-width: 100vw;
+  --game-height: 100vh;
+  --game-left: 0px;
+  --game-top: 0px;
+  --game-safe-left: env(safe-area-inset-left, 0px);
+  --game-safe-right: env(safe-area-inset-right, 0px);
+  --game-safe-top: env(safe-area-inset-top, 0px);
+  --game-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --game-hud-left: max(12px, var(--game-safe-left));
+  --game-hud-right: max(12px, var(--game-safe-right));
+  --game-hud-top: max(12px, var(--game-safe-top));
+  --game-hud-bottom: max(12px, var(--game-safe-bottom));
+  --game-hud-size: clamp(44px, calc(var(--game-height) * .135), 52px);
+}
+@supports (height: 100dvh) {
+  :root { --game-height: 100dvh; }
+}
+
+body > :is(.world, .world-view, .ui-layer, .ui-tutorial),
+#onboarding,
+#landscape-required {
+  position: fixed;
+  inset: var(--game-top) auto auto var(--game-left);
+  width: var(--game-width);
+  height: var(--game-height);
+}
+body > .ui-layer > .ui-panel {
+  top: var(--game-safe-top);
+  right: var(--game-safe-right);
+  bottom: var(--game-safe-bottom);
+  max-width: calc(100% - var(--game-safe-left) - var(--game-safe-right));
+  padding-right: 0;
+  overflow-x: hidden;
+}
+body > .ui-layer > .ui-panel--plant {
+  left: var(--game-safe-left);
+  height: min(560px, calc(100% - var(--game-safe-top) - var(--game-safe-bottom) - 20px));
+}
+body > .ui-tutorial {
+  top: calc(var(--game-top) + var(--game-safe-top));
+  left: calc(var(--game-left) + var(--game-safe-left));
+  width: calc(var(--game-width) - var(--game-safe-left) - var(--game-safe-right));
+  height: calc(var(--game-height) - var(--game-safe-top) - var(--game-safe-bottom));
+}
+.ui-tutorial-card {
+  max-height: calc(100% - 32px);
+  overflow-y: auto;
+}
+.ui-tutorial:has(.ui-tutorial__stages:not([hidden])) .ui-tutorial-card {
+  max-height: calc(100% - 76px);
+}
+.ui-onboard__panel, .ui-home {
+  padding: max(12px, min(var(--space-32), calc(var(--game-height) * .07)), var(--game-safe-top))
+    max(var(--space-16), var(--game-safe-right))
+    max(var(--space-16), var(--game-safe-bottom))
+    max(var(--space-16), var(--game-safe-left));
+}
+.ui-home__options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 132px), 1fr));
+  width: min(100%, 776px);
+  gap: var(--space-8);
+}
+.ui-home__option { width: 100%; min-width: 0; padding: var(--space-12); }
+.ui-home__foot { flex-wrap: wrap; }
+.ui-onboard__row { flex-wrap: wrap; }
+.ui-catalog__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+}
+.ui-catalog__grid > .ui-seed-card { width: 100%; }
+.ui-seed-card__foot, .ui-seed-form__foot { flex-wrap: wrap; }
+.ui-seed-card__title, .ui-seed-card__idea { overflow-wrap: anywhere; }
+
+.world { container-type: size; }
+
 .move-stick {
   position: absolute;
   display: none;
-  left: max(.75rem, env(safe-area-inset-left));
-  bottom: max(.75rem, env(safe-area-inset-bottom));
-  width: clamp(70px, 24dvh, 104px);
+  left: var(--game-hud-left);
+  bottom: var(--game-hud-bottom);
+  width: clamp(56px, calc(var(--game-height) * .24), 104px);
   touch-action: none;
   user-select: none;
 }
 .mobile-layout .move-stick { display: grid; }
+.mobile-layout .ui-field__input { font-size: 16px; }
 
 #browse-plants {
   position: absolute;
   z-index: 2;
-  top: max(18px, env(safe-area-inset-top));
-  left: max(76px, calc(env(safe-area-inset-left) + 62px));
+  top: var(--game-hud-top);
+  left: calc(var(--game-hud-left) + var(--game-hud-size) + 8px);
+  max-width: calc(100% - var(--game-hud-left) - var(--game-hud-size) - var(--game-hud-right) - 276px);
 }
+#browse-plants .ui-island-chip__text { min-width: 0; }
+#browse-plants .ui-island-chip__name { overflow: hidden; text-overflow: ellipsis; }
+.ui-hud-tr { top: var(--game-hud-top); right: var(--game-hud-right); }
+.ui-hud-tr > .ui-id-label { max-width: 160px; min-width: 0; }
+.ui-hud-tr > .ui-id-label > :first-child { overflow: hidden; text-overflow: ellipsis; }
 #browse-plants[hidden], .ui-btn[hidden], .ui-world-home[hidden] { display: none; }
 #open-world, #toggle-dashboard, #seed-mode {
   position: absolute;
+  width: var(--game-hud-size);
+  height: var(--game-hud-size);
   background: var(--color-bg-surface-hud);
   color: var(--color-text-primary);
   border: 1px solid var(--color-border-default);
@@ -28,17 +114,31 @@
   background: var(--color-bg-inverse);
   color: var(--color-text-inverse);
 }
-#seed-mode { z-index: 3; }
+#open-world { top: var(--game-hud-top); left: var(--game-hud-left); }
+#toggle-dashboard { top: var(--game-hud-top); right: var(--game-hud-right); }
+#seed-mode { z-index: 3; bottom: var(--game-hud-bottom); right: var(--game-hud-right); }
 #message {
   position: fixed;
   z-index: 26;
-  bottom: max(8px, env(safe-area-inset-bottom));
+  left: calc(var(--game-left) + var(--game-width) / 2);
+  top: calc(var(--game-top) + var(--game-height) - max(8px, var(--game-safe-bottom)));
+  bottom: auto;
+  transform: translate(-50%, -100%);
 }
-.ui-toast-region { z-index: 27; }
+.ui-toast-region {
+  z-index: 27;
+  top: calc(var(--game-top) + max(var(--space-16), var(--game-safe-top)));
+  left: calc(var(--game-left) + var(--game-width) / 2);
+}
+.ui-menu {
+  width: min(260px, calc(var(--game-width) - var(--game-hud-left) - var(--game-hud-right)));
+  min-width: 0;
+  max-height: max(0px, calc(var(--game-height) - var(--game-hud-top) - 54px - var(--game-hud-bottom)));
+}
 .ui-world-home, #world-view > .ui-world-label {
   position: absolute;
   z-index: 1;
-  max-width: calc(100% - 16px);
+  max-width: calc(100% - var(--game-safe-left) - var(--game-safe-right) - 16px);
   width: max-content;
 }
 .ui-world-home { margin: 0; padding: 0; border: 0; color: inherit; background: transparent; }
@@ -58,9 +158,6 @@
 .ui-layer[data-state="closing"] { pointer-events: none; }
 
 #onboarding {
-  inset: 0;
-  width: 100%;
-  height: 100%;
   max-width: none;
   max-height: none;
   margin: 0;
@@ -78,10 +175,13 @@
   background: rgb(255 255 255 / .87);
   backdrop-filter: blur(12px);
 }
-@media (max-width: 500px) {
-  .ui-hud-tr { top: 12px; right: 12px; }
+@container (max-width: 680px) {
   .ui-hud-tr .ui-id-label { display: none; }
-  #browse-plants { top: 12px; left: 65px; }
+  #browse-plants { max-width: calc(100% - var(--game-hud-left) - var(--game-hud-size) - var(--game-hud-right) - 116px); }
+}
+@media (max-width: 580px) {
+  .ui-onboard__panel--lg { flex-direction: column; gap: var(--space-12); }
+  .ui-onboard__col--text, .ui-onboard__col--form { flex: none; width: 100%; }
 }
 
 .game-scene-feedback { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
@@ -98,8 +198,6 @@
   background: var(--color-bg-canvas);
 }
 #landscape-required {
-  width: 100%;
-  height: 100%;
   max-width: none;
   max-height: none;
   padding: 0;
@@ -112,5 +210,4 @@
 
 .ui-panel.ui-panel--plant {
   width: min(844px, calc(100% - 24px));
-  height: min(560px, calc(100% - 20px));
 }

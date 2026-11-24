@@ -334,10 +334,11 @@ document.body.append(tutorial.element);
 const tutorialKey = () => 'chi-island.ui-tutorial.' + account.id;
 
 function tutorialRect(point, hit = null) {
-  const rect = map.getBoundingClientRect();
+  const { left, top } = map.getBoundingClientRect();
+  const overlay = tutorial.element.getBoundingClientRect();
   return {
-    x: rect.left + point.x - (hit ? 0 : 12),
-    y: rect.top + point.y - (hit ? 0 : 12),
+    x: left - overlay.left + point.x - (hit ? 0 : 12),
+    y: top - overlay.top + point.y - (hit ? 0 : 12),
     width: hit ? hit.right - hit.left : 24,
     height: hit ? hit.bottom - hit.top : 24,
   };
@@ -839,6 +840,29 @@ landscapeDialog.append(rotatePrompt.element);
 rotatePrompt.element.removeAttribute('role');
 rotatePrompt.element.removeAttribute('aria-modal');
 rotatePrompt.setVisible(true);
+
+let viewportFrame;
+let viewportLayout;
+function fitVisibleViewport() {
+  if (viewportFrame) return;
+  viewportFrame = requestAnimationFrame(() => {
+    viewportFrame = null;
+    const viewport = window.visualViewport;
+    // Let pinch zoom magnify the page without reflowing the game at each scale.
+    if (!viewport || Math.abs(viewport.scale - 1) > .01) return;
+    const next = [viewport.width, viewport.height, viewport.offsetLeft, viewport.offsetTop].map(Math.round);
+    if (next[0] < 1 || next[1] < 1 || next.join() === viewportLayout) return;
+    viewportLayout = next.join();
+    for (const [index, name] of ['width', 'height', 'left', 'top'].entries()) {
+      document.documentElement.style.setProperty('--game-' + name, next[index] + 'px');
+    }
+    if (!tutorial.element.hidden) tutorial.refresh();
+  });
+}
+window.visualViewport?.addEventListener('resize', fitVisibleViewport);
+window.visualViewport?.addEventListener('scroll', fitVisibleViewport);
+window.addEventListener('resize', fitVisibleViewport);
+fitVisibleViewport();
 
 function updateOrientation() {
   const mobile = touchLayout.matches || mobilePreview;

@@ -143,17 +143,21 @@ export function createWorld(canvas, artwork, homeButton, enterHome, islandRender
       drawOaks(island.id);
     }
     const occupied = [];
+    const styles = getComputedStyle(canvas);
+    const safe = side => parseFloat(styles.getPropertyValue('--game-safe-' + side)) || 0;
+    const leftEdge = safe('left') + 8, rightEdge = width - safe('right') - 8;
+    const topEdge = safe('top') + 8, bottomEdge = height - safe('bottom') - 8;
     for (const island of items) {
       const [x, y] = project({ ...island.position, y: island.position.y + .98 });
       const label = island.id === home ? homeButton : labels.get(island.id)?.element;
       if (!label) continue;
       const w = label.offsetWidth;
       const h = label.offsetHeight;
-      const left = Math.max(8, Math.min(width - w - 8, x - w / 2));
-      let top = Math.max(8, Math.min(height - h - 8, y - 24));
+      const left = Math.max(leftEdge, Math.min(rightEdge - w, x - w / 2));
+      let top = Math.max(topEdge, Math.min(bottomEdge - h, y - 24));
       while (occupied.some(box => left < box.left + box.w + 4 && left + w + 4 > box.left &&
           top < box.top + box.h + 4 && top + h + 4 > box.top)) top += h + 4;
-      if (top + h > height - 8) top = Math.max(8, Math.min(height - h - 8, y - 24));
+      if (top + h > bottomEdge) top = Math.max(topEdge, Math.min(bottomEdge - h, y - 24));
       occupied.push({ left, top, w, h });
       label.style.left = left + 'px';
       label.style.top = top + 'px';
