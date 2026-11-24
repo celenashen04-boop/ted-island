@@ -10,15 +10,16 @@ Run `npm start` to play locally. Set `PORT=4180` to run beside the original prot
 
 ## Set up the judging demo
 
-In Railway or Render, create a staging service with one continuously running instance and a persistent volume. Set the Node version to 24 and the start command to `npm start`. Configure the platform health check to GET `/api/health`. In Railway, use the service settings for a new service. See [Railway deployment configuration](https://docs.railway.com/config-as-code) and [persistent volumes](https://docs.railway.com/volumes).
+Use a Railway staging service with one continuously running replica and a fresh persistent volume mounted at `/data`. Use Node.js 24 and the start command `npm start`. Configure the deployment health check to GET `/api/health`. Attach the volume before the first deployment. The server uses Railway's detected mount path and stops at startup if the volume is missing. See [Railway deployment configuration](https://docs.railway.com/config-as-code) and [persistent volumes](https://docs.railway.com/volumes).
 
-| Setting | Value |
+| Setting | Railway behavior |
 | --- | --- |
-| `HOST` | `0.0.0.0` |
-| `PORT` | Use the port provided or expected by the platform |
-| `TED_DATA_DIR` | Absolute mounted volume path, for example `/data` |
-| `TED_SECURE_COOKIE` | `1` when the service uses HTTPS |
-| `TED_ORIGIN` | The public HTTPS origin, without a trailing slash |
+| Listener | Binds to `0.0.0.0` and uses Railway's `PORT` |
+| SQLite directory | Uses `RAILWAY_VOLUME_MOUNT_PATH` |
+| Resident session cookie | Uses `Secure` on Railway |
+| Allowed request origin | Uses the HTTPS Railway public domain. Set `TED_ORIGIN` to override it for a custom domain. |
+
+Generate a Railway public domain for the judging link. Check that `/api/health` reports `railway-volume` before testing accounts and persistence. See [Railway public domains](https://docs.railway.com/networking/domains/working-with-domains).
 
 Run `npm run backup -- /path/to/backup.sqlite` with `TED_DATA_DIR` set to create a consistent SQLite snapshot, including committed changes in the WAL. Use a new destination each time and copy backups off the app volume. Test restoring into a fresh staging volume before judging. Set daily backups, then hourly during the conference.
 
@@ -26,7 +27,7 @@ Before sharing the link, test the deployed site on two different networks. Confi
 
 ## Work still open
 
-- Choose the host account and decide whether to import existing playtest data. Provision staging and schedule an off-volume backup.
+- Provision Railway staging and schedule an off-volume backup. The first staging rehearsal uses a fresh garden.
 - Configure optional email and implement delivery, consent preferences, and password reset before offering email collection in the browser.
 - Replace full state updates with smaller resumable SSE events and run the planned conference-scale load test. The current SSE path sends a fresh snapshot after reconnecting.
 - Move PDF files out of SQLite before heavy upload use. Add moderation, account deletion, and any research consent flow after the team confirms the study requirements.

@@ -12,6 +12,8 @@ import { canPlantOnIsland } from '../public/island-kit/navigation.mjs';
 const hour = 3_600_000;
 const day = 24*hour;
 const password = 'garden-testing-123';
+const railway = process.env.CHI_TEST_RAILWAY === '1';
+const railwayOrigin = 'https://chi-island-test.up.railway.app';
 
 function soil(id) {
   for(let x=-3;x<3;x+=.5)for(let z=-3;z<3;z+=.5)
@@ -34,7 +36,11 @@ test('isolated sessions, island access, live events and persistence on restart',
 
   async function start(){
     server=spawn(process.execPath,['server.mjs'],{
-      env:{...process.env,TED_DATA_DIR:directory,PORT:'0',HOST:'127.0.0.1',VERCEL:'0',TED_SECURE_COOKIE:'0'},stdio:['ignore','pipe','pipe']
+      env:{...process.env,PORT:'0',HOST:'127.0.0.1',VERCEL:'0',TED_SECURE_COOKIE:'0',
+        TED_DATA_DIR:railway?'':directory,
+        RAILWAY_SERVICE_ID:railway?'test-service':'',
+        RAILWAY_VOLUME_MOUNT_PATH:railway?directory:'',
+        RAILWAY_PUBLIC_DOMAIN:railway?new URL(railwayOrigin).host:''},stdio:['ignore','pipe','pipe']
     });
     let errors='';
     server.stderr.setEncoding('utf8').on('data',part=>errors+=part);
@@ -54,6 +60,7 @@ test('isolated sessions, island access, live events and persistence on restart',
       let init={headers,signal:options.signal};
       if(payload!==undefined){
         headers['X-TED-Island']='garden';
+        if(railway)headers.Origin??=railwayOrigin;
         init={...init,method:'POST',body:payload};
         if(!(payload instanceof FormData)){
           headers['Content-Type']='application/json';
@@ -73,6 +80,7 @@ test('isolated sessions, island access, live events and persistence on restart',
     if(judge)assert.doesNotMatch(start.setCookie,/Max-Age/);
     else assert.equal((await client('/api/auth/register',{password})).status,200);
     const form=new FormData();
+    if(railway)assert.match(start.setCookie,/; Secure/);
     form.set('island',island);
     assert.equal((await client('/api/profile',form)).status,201);
     return start.data.id;
@@ -113,7 +121,8 @@ test('isolated sessions, island access, live events and persistence on restart',
 
   await start();
   const a=client(), b=client(), newBrowser=client();
-  assert.equal((await a('/api/health')).data.storage,'sqlite');
+  assert.equal((await a('/api/health')).data.storage,railway?'railway-volume':'sqlite');
+  if(railway)assert.equal((await a('/api/auth/start',{}, {headers:{Origin:'https://other.example'}})).status,403);
   assert.equal((await a('/api/garden')).status,403);
   const aId=await register(a,0);
   const bId=await register(b,1,true);

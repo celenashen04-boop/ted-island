@@ -12,7 +12,14 @@ import { canPlantOnIsland, islandModel } from './public/island-kit/navigation.mj
 
 const startedDirectly = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
 const vercelPreview = process.env.VERCEL === '1' || !startedDirectly;
-const directory = process.env.TED_DATA_DIR ?? (vercelPreview
+const railway = Boolean(process.env.RAILWAY_SERVICE_ID);
+const railwayVolume = process.env.RAILWAY_VOLUME_MOUNT_PATH || undefined;
+if (railway && !railwayVolume) throw new Error('Attach a persistent Railway volume before starting CHI Island.');
+const secureCookies = railway || process.env.TED_SECURE_COOKIE === '1';
+const publicOrigin = process.env.TED_ORIGIN ?? (process.env.RAILWAY_PUBLIC_DOMAIN
+  ? 'https://' + process.env.RAILWAY_PUBLIC_DOMAIN : null);
+const persistentDirectory = railwayVolume ?? process.env.TED_DATA_DIR;
+const directory = persistentDirectory ?? (vercelPreview
   ? join(tmpdir(), 'ted-island')
   : fileURLToPath(new URL('./data/', import.meta.url)));
 mkdirSync(directory, { recursive: true });
@@ -78,7 +85,7 @@ if(ownerIsUnique){
     db.exec('PRAGMA foreign_keys = ON');
   }
 }
-const accounts = createAccounts(db);
+const accounts = createAccounts(db,{secureCookies});
 const garden = createGarden(db);
 const databaseHealth = db.prepare('SELECT 1');
 const getPDF = db.prepare('SELECT pdf FROM plants WHERE id=?');
@@ -255,7 +262,7 @@ export async function handleRequest(req, res) {
   try {
     if(req.method==='GET' && path==='/api/health'){
       databaseHealth.get();
-      return json(res,200,{ok:true,storage:vercelPreview&&!process.env.TED_DATA_DIR?'temporary':'sqlite'});
+      return json(res,200,{ok:true,storage:railway?'railway-volume':vercelPreview&&!persistentDirectory?'temporary':'sqlite'});
     }
     if (!vercelPreview && req.method === 'GET' && /^\/island-kit\/(?:[a-z]+\/)*[a-z0-9.-]+\.m?js$/i.test(path)) {
       let data;
@@ -317,8 +324,8 @@ export async function handleRequest(req, res) {
     }
     if (req.method === 'POST') {
       const origin=req.headers.origin;
-      const expected=process.env.TED_ORIGIN??(req.headers.host
-        ?(vercelPreview||process.env.TED_SECURE_COOKIE==='1'?'https://':'http://')+req.headers.host:null);
+      const expected=publicOrigin??(req.headers.host
+        ?(vercelPreview||secureCookies?'https://':'http://')+req.headers.host:null);
       if (req.headers['x-ted-island'] !== 'garden' || req.headers['sec-fetch-site'] === 'cross-site' ||
         (origin && origin!==expected)) {
         return json(res, 403, { error: 'Open CHI Island to make changes.' });
@@ -421,7 +428,7 @@ if (startedDirectly) {
     catch(error){console.error('Garden maintenance failed:',error.message);}
   },60_000);
   maintenance.unref();
-  server.listen(Number(process.env.PORT ?? 4173), process.env.HOST ?? '127.0.0.1', () => {
+  server.listen(Number(process.env.PORT ?? 4173), process.env.HOST ?? (railway?'0.0.0.0':'127.0.0.1'), () => {
     console.log('CHI Island running at http://' + server.address().address + ':' + server.address().port);
   });
   function shutdown() {

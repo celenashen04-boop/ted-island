@@ -3,10 +3,11 @@ import { dirname, join, resolve } from 'node:path';
 import { backup, DatabaseSync } from 'node:sqlite';
 
 const [, , destination] = process.argv;
-if (!process.env.TED_DATA_DIR || !destination) {
+const directory = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? process.env.TED_DATA_DIR;
+if (!directory || !destination) {
   throw new Error('Set TED_DATA_DIR and pass the backup file path.');
 }
-const source = resolve(join(process.env.TED_DATA_DIR, 'garden.sqlite'));
+const source = resolve(join(directory, 'garden.sqlite'));
 const target = resolve(destination);
 if (source === target) throw new Error('Use a different file path for the backup.');
 try {

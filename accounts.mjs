@@ -10,7 +10,7 @@ const cookie = (req, name) => (req.headers.cookie ?? '').split(';')
   .map(item => item.trim()).find(item => item.startsWith(name + '='))?.slice(name.length + 1);
 const validId = /^[a-z]+-[a-z]+-\d{4}$/i;
 
-export function createAccounts(db) {
+export function createAccounts(db,{secureCookies=false}={}) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS accounts (
       player TEXT PRIMARY KEY, public_id TEXT NOT NULL UNIQUE COLLATE NOCASE,
@@ -47,7 +47,7 @@ export function createAccounts(db) {
     }
   }
   function sessionCookie(res, token, maxAge) {
-    const secure=process.env.TED_SECURE_COOKIE==='1'?'; Secure':'';
+    const secure=secureCookies?'; Secure':'';
     const age=maxAge===undefined?'':'; Max-Age='+maxAge;
     res.setHeader('Set-Cookie','ted-session='+token+'; Path=/; HttpOnly; SameSite=Lax'+age+secure);
   }
