@@ -17,6 +17,11 @@
 @supports (height: 100dvh) {
   :root { --game-height: 100dvh; }
 }
+/* Browsers that keep the page out of the notch area (Chrome on iPhone) paint
+   those side bands with the page background. Match the current scene so both
+   bands blend in instead of showing light on one side and navy on the other. */
+:root { background: #91a7d3; }
+:root:has(#world-view:not([hidden])) { background: #172b37; }
 
 body > :is(.world, .world-view, .ui-layer, .ui-tutorial),
 #onboarding,

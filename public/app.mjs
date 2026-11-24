@@ -863,6 +863,7 @@ window.visualViewport?.addEventListener('resize', fitVisibleViewport);
 window.visualViewport?.addEventListener('scroll', fitVisibleViewport);
 window.addEventListener('resize', fitVisibleViewport);
 fitVisibleViewport();
+if (new URLSearchParams(location.search).get('debug') === 'viewport') import('./ui/viewport-debug.mjs');
 
 function updateOrientation() {
   const mobile = touchLayout.matches || mobilePreview;
