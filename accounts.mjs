@@ -8,7 +8,7 @@ const second = ['Acorn','Birch','Cedar','Clover','Fern','Grove','Heron','Maple',
 const digest = token => createHash('sha256').update(token).digest('hex');
 const cookie = (req, name) => (req.headers.cookie ?? '').split(';')
   .map(item => item.trim()).find(item => item.startsWith(name + '='))?.slice(name.length + 1);
-const validId = /^[a-z]+-[a-z]+-\d{4}$/i;
+const validUsername = /^[a-z0-9_-]{3,24}$/i;
 
 export function createAccounts(db,{secureCookies=false}={}) {
   db.exec(`
@@ -35,7 +35,14 @@ export function createAccounts(db,{secureCookies=false}={}) {
   const fail = db.prepare(`INSERT INTO login_attempts VALUES(?,1,?) ON CONFLICT(scope) DO UPDATE SET
     count=CASE WHEN expires>? THEN count+1 ELSE 1 END,
     expires=CASE WHEN expires>? THEN expires ELSE excluded.expires END`);
-  const updateAccount = db.prepare('UPDATE accounts SET password=?,email=?,email_consent_at=? WHERE player=? AND password IS NULL AND judge=0');
+  const saveAccount = db.prepare(`INSERT OR IGNORE INTO accounts(player,public_id,password,email,email_consent_at,created)
+    VALUES(?,?,?,?,?,?) ON CONFLICT(player) DO UPDATE SET public_id=excluded.public_id,password=excluded.password,
+    email=excluded.email,email_consent_at=excluded.email_consent_at WHERE accounts.password IS NULL AND accounts.judge=0`);
+  const legacy = () => db.prepare('SELECT 1 FROM residents WHERE player=? UNION SELECT 1 FROM plants WHERE owner=? LIMIT 1');
+  function legacyPlayer(req) {
+    const previous=cookie(req,'ted-player');
+    return /^[a-f0-9-]{36}$/.test(previous??'') && legacy().get(previous,previous) ? previous : null;
+  }
   const stats = account => ({
     id: account.public_id, judge: Boolean(account.judge), needsPassword: !account.password && !account.judge
   });
@@ -69,35 +76,48 @@ export function createAccounts(db,{secureCookies=false}={}) {
       const existing=accountFor(req);
       if(existing && (!judge || existing.judge || existing.password))return stats(existing);
       if(existing)remove.run(existing.token);
-      const previous=cookie(req,'ted-player');
-      const legacy = db.prepare('SELECT 1 FROM residents WHERE player=? UNION SELECT 1 FROM plants WHERE owner=? LIMIT 1');
-      if(!judge && /^[a-f0-9-]{36}$/.test(previous??'') && legacy.get(previous,previous)){
+      const previous=!judge&&legacyPlayer(req);
+      if(previous){
         const pending=byPlayer.get(previous);
         if(!pending)return startSession(res,newAccount(previous,false));
         if(!pending.password && !pending.judge)return startSession(res,pending);
       }
       return startSession(res,newAccount(randomUUID(),judge));
     },
-    async register(req,res,{password,email,consent}) {
+    async register(req,res,{username,password,email,consent}) {
       const account=accountFor(req);
-      if(!account || account.password || account.judge)return {status:409,error:'Start a new resident account first.'};
+      if(account?.password || account?.judge)return {status:409,error:'Sign out before creating another account.'};
+      const name=typeof username==='string'?username.trim():'';
+      if(!validUsername.test(name))return {status:400,error:'Use 3–24 letters, numbers, hyphens, or underscores for your username.'};
       if(typeof password!=='string'||password.length<6||password.length>128)return {status:400,error:'Use a password between 6 and 128 characters.'};
       const address=typeof email==='string'?email.trim():'';
       if(address && (address.length>254||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)))return {status:400,error:'Enter a valid email address.'};
       if(consent && !address)return {status:400,error:'Add an email address to opt in.'};
+      const previous=account?null:legacyPlayer(req);
+      const oldAccount=previous&&byPlayer.get(previous);
+      const player=account?.player??(previous&&!oldAccount?.password&&!oldAccount?.judge?previous:randomUUID());
       const salt=randomBytes(16).toString('hex');
       const key=await deriveKey(password,salt,64);
-      if(!updateAccount.run(salt+':'+key.toString('hex'),address||null,consent?Date.now():null,account.player).changes) {
-        return {status:409,error:'This account already has a password.'};
+      let saved;
+      try {
+        saved=saveAccount.run(player,name,salt+':'+key.toString('hex'),address||null,consent?Date.now():null,Date.now());
+      } catch(error) {
+        if(error.errcode!==2067)throw error;
       }
-      remove.run(account.token);
-      return startSession(res,byPlayer.get(account.player));
+      if(!saved?.changes) {
+        return {status:409,error:byPlayer.get(player)?.password?'This account already exists. Sign in to continue.':'That username is taken.'};
+      }
+      // An old sign-up draft must not become a signed-in session when its password is saved.
+      db.prepare('DELETE FROM sessions WHERE player=?').run(player);
+      sessionCookie(res,'',0);
+      return {id:name};
     },
-    async login(req,res,{id,password}) {
-      if(typeof id!=='string'||!validId.test(id.trim())||typeof password!=='string'||password.length>128) {
-        return {status:401,error:'Check your ID and password.'};
+    async login(req,res,{username,id,password}) {
+      const name=username??id;
+      if(typeof name!=='string'||!validUsername.test(name.trim())||typeof password!=='string'||password.length>128) {
+        return {status:401,error:'Check your username and password.'};
       }
-      const normalized=id.trim().toLowerCase();
+      const normalized=name.trim().toLowerCase();
       const scopes=['id:'+normalized,'ip:'+req.socket.remoteAddress];
       const now=Date.now();
       if(scopes.some((scope,index)=>(attempts.get(scope,now)?.count??0)>=(index?40:5))) {
@@ -108,7 +128,7 @@ export function createAccounts(db,{secureCookies=false}={}) {
       const key=await deriveKey(password,salt,64);
       if(!timingSafeEqual(key,Buffer.from(hash,'hex'))||!account?.password){
         for(const scope of scopes)fail.run(scope,now+15*60_000,now,now);
-        return {status:401,error:'Check your ID and password.'};
+        return {status:401,error:'Check your username and password.'};
       }
       const existing=accountFor(req);
       if(existing)remove.run(existing.token);

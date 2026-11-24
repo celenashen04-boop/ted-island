@@ -736,15 +736,41 @@ function enterGarden(profile) {
   map.focus({ preventScroll: true });
 }
 
+const signInForm=byId('sign-in-form');
+const signUpForm=byId('sign-up-form');
+const signInUsername=byId('sign-in-username');
+const accountStatus=byId('account-status');
+const lastUsernameKey='chi-last-username';
+
+function rememberUsername(username) {
+  try {localStorage.setItem(lastUsernameKey,username);}
+  catch { /* The account still works if browser storage is unavailable. */ }
+}
+
+function showAccountForm(signIn,{username='',message='',focus=true}={}){
+  signInForm.hidden=!signIn;
+  signUpForm.hidden=signIn;
+  byId('show-sign-in').hidden=signIn;
+  byId('show-sign-up').hidden=!signIn;
+  byId('account-error').textContent='';
+  accountStatus.textContent=message;
+  accountStatus.hidden=!message;
+  if(username)signInUsername.value=username;
+  if(focus)(signIn?(username?byId('sign-in-password'):signInUsername):byId('sign-up-username')).focus();
+}
+
 function accountStep(next) {
   account=next;
   const hasAccess=next && !next.needsPassword;
   byId('account-entry').hidden=Boolean(hasAccess);
   onboardingForm.hidden=!hasAccess;
-  byId('account-start').hidden=Boolean(next);
-  byId('create-password-form').hidden=!next?.needsPassword;
-  byId('new-resident-id').textContent=next?.needsPassword?next.id:'';
-  if(hasAccess)loadProfile();
+  onboarding.setAttribute('aria-labelledby',hasAccess?'onboarding-title':'account-title');
+  if(hasAccess){
+    if(!next.judge)rememberUsername(next.id);
+    loadProfile();
+  }else if(next?.needsPassword){
+    showAccountForm(false,{focus:false});
+  }
 }
 
 let accountPending=false;
@@ -753,32 +779,55 @@ async function requestAccount(path,body) {
   accountPending=true;
   const error=byId('account-error');
   error.textContent='';
-  try {accountStep(await post('/api/auth/'+path,body));}
-  catch(failure){error.textContent=failure.message;}
+  accountStatus.hidden=true;
+  try {
+    const result=await post('/api/auth/'+path,body);
+    if(path==='register'){
+      rememberUsername(result.id);
+      signUpForm.reset();
+      showAccountForm(true,{username:result.id,message:'Account created. Sign in to continue.'});
+    }else{
+      signInForm.reset();
+      accountStep(result);
+    }
+  }catch(failure){error.textContent=failure.message;}
   finally{accountPending=false;}
 }
 
-byId('new-account').addEventListener('click',()=>requestAccount('start',{}));
+byId('show-sign-in').addEventListener('click',()=>showAccountForm(true));
+byId('show-sign-up').addEventListener('click',()=>showAccountForm(false));
 byId('judge-account').addEventListener('click',()=>requestAccount('start',{judge:true}));
-for(const [formId,action] of [['sign-in-form','login'],['create-password-form','register']]){
-  byId(formId).addEventListener('submit',event=>{
+for(const [form,action] of [[signInForm,'login'],[signUpForm,'register']]){
+  form.addEventListener('submit',event=>{
     event.preventDefault();
-    requestAccount(action,Object.fromEntries(new FormData(event.currentTarget)));
+    requestAccount(action,Object.fromEntries(new FormData(form)));
   });
 }
-byId('copy-resident-id').addEventListener('click',()=>{
-  navigator.clipboard?.writeText(account.id).catch(()=>{});
-});
-byId('sign-out').addEventListener('click',async()=>{
-  try {await post('/api/auth/logout',{});location.reload();}
-  catch(error){announce(error.message);}
+byId('sign-out').addEventListener('click',async event=>{
+  const control=event.currentTarget;
+  control.disabled=true;
+  try {
+    if(!account?.judge&&account?.id)rememberUsername(account.id);
+    await post('/api/auth/logout',{});
+    location.reload();
+  }catch(error){
+    control.disabled=false;
+    announce(error.message || 'Could not sign out. Try again.');
+  }
 });
 
 async function loadAccount() {
   try{
     const response=await fetch('/api/auth',{cache:'no-store'});
     if(!response.ok)throw new Error('Could not load your account.');
-    accountStep((await response.json()).account);
+    const {account:next}=await response.json();
+    if(!next){
+      let username='';
+      try {username=localStorage.getItem(lastUsernameKey)??'';}
+      catch { /* Browser storage is optional. */ }
+      if(username)showAccountForm(true,{username,focus:false});
+    }
+    accountStep(next);
   }catch(error){byId('account-error').textContent=error.message;}
 }
 
@@ -787,7 +836,7 @@ async function loadProfile() {
   retry.hidden = true;
   try {
     const response = await fetch('/api/profile', {cache:'no-store'});
-    if (!response.ok) throw new Error('Could not load your resident profile.');
+    if (!response.ok) throw new Error('Could not load your player profile.');
     const profile = await response.json();
     if (profile.completed) return enterGarden(profile);
     const options = byId('domain-options');
@@ -806,7 +855,7 @@ async function loadProfile() {
     join.disabled = false;
     (options.querySelector('input:checked') ?? options.querySelector('input')).focus();
   } catch (error) {
-    onboardingError.textContent = error.message || 'Could not load your resident profile.';
+    onboardingError.textContent = error.message || 'Could not load your player profile.';
     retry.hidden = false;
   }
 }
@@ -836,7 +885,7 @@ onboardingForm.addEventListener('submit', async event => {
   try {
     enterGarden(await post('/api/profile', body));
   } catch (error) {
-    onboardingError.textContent = error.message || 'Could not save your resident profile.';
+    onboardingError.textContent = error.message || 'Could not save your player profile.';
   } finally {
     onboardingFields.disabled = false;
     join.disabled = false;

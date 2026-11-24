@@ -21,7 +21,7 @@
       <span id="island-name"></span>
       <button type="button" id="sign-out" class="secondary">Sign out</button>
       <a id="resident-linkedin" target="_blank" rel="noopener noreferrer" hidden>LinkedIn</a>
-      <button type="button" id="share-resident-linkedin" aria-pressed="false" title="Let residents open your LinkedIn from your seeds and plants" hidden>Share LinkedIn</button>
+      <button type="button" id="share-resident-linkedin" aria-pressed="false" title="Let players open your LinkedIn from your seeds and plants" hidden>Share LinkedIn</button>
     </div>
     <canvas id="map" tabindex="0" aria-label="First-person island. Use W A S D to walk, arrow keys to look, and select a plant to read its research. Press Q to ready an acorn, then tap or click the scene to throw."></canvas>
     <div class="move-stick" id="move-stick" aria-hidden="true"><span></span></div>
@@ -70,28 +70,33 @@
       <p><a href="/studios">Island Studio</a></p>
     </aside>
   </section>
-  <dialog id="onboarding" aria-labelledby="onboarding-title">
+  <dialog id="onboarding" aria-labelledby="account-title">
     <section id="account-entry" aria-labelledby="account-title">
       <h1 id="account-title">Welcome to CHI Island</h1>
       <div id="account-start">
-        <button type="button" id="new-account" class="primary">Create a resident account</button>
-        <button type="button" id="judge-account" class="secondary">Login as Judge</button>
-        <form id="sign-in-form">
-          <label for="sign-in-id">Resident ID</label>
-          <input id="sign-in-id" name="id" autocomplete="username" required>
+        <form id="sign-up-form" method="post">
+          <label for="sign-up-username">Username</label>
+          <input id="sign-up-username" name="username" autocomplete="username" autocapitalize="none" spellcheck="false"
+            minlength="3" maxlength="24" pattern="[A-Za-z0-9_\-]{3,24}" aria-describedby="username-hint" required>
+          <small id="username-hint">Use 3–24 letters, numbers, hyphens, or underscores. Your username is visible to other players.</small>
+          <label for="new-password">Password</label>
+          <input id="new-password" name="password" type="password" autocomplete="new-password" minlength="6" maxlength="128" required>
+          <button type="submit" class="primary">Sign up</button>
+        </form>
+        <form id="sign-in-form" method="post" hidden>
+          <label for="sign-in-username">Username</label>
+          <input id="sign-in-username" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="24" required>
           <label for="sign-in-password">Password</label>
           <input id="sign-in-password" name="password" type="password" autocomplete="current-password" maxlength="128" required>
-          <button type="submit" class="secondary">Sign in</button>
+          <button type="submit" class="primary">Sign in</button>
         </form>
+        <div class="account-options">
+          <button type="button" id="show-sign-in" class="secondary">Already have an account? Sign in</button>
+          <button type="button" id="show-sign-up" class="secondary" hidden>Create an account</button>
+          <button type="button" id="judge-account" class="secondary">Sign in as a judge</button>
+        </div>
       </div>
-      <form id="create-password-form" hidden>
-        <p id="new-resident-id"></p>
-        <p class="muted">Save this ID. You’ll need it to log back in.</p>
-        <button type="button" class="secondary" id="copy-resident-id">Copy ID</button>
-        <label for="new-password">Password</label>
-        <input id="new-password" name="password" type="password" autocomplete="new-password" minlength="6" maxlength="128" required>
-        <button type="submit" class="primary">Continue</button>
-      </form>
+      <p id="account-status" class="muted" role="status" hidden></p>
       <p id="account-error" class="error" role="alert"></p>
     </section>
     <form id="onboarding-form" hidden>
@@ -104,7 +109,7 @@
         <input id="profile-linkedin" name="linkedin" type="url" maxlength="300" placeholder="https://www.linkedin.com/in/your-name" autocomplete="url">
         <label class="share-linkedin-option">
           <input type="checkbox" name="shareLinkedin">
-          Let residents open my LinkedIn from my seeds and plants
+          Let players open my LinkedIn from my seeds and plants
         </label>
       </fieldset>
       <p class="error" id="onboarding-error" role="alert"></p>
@@ -186,7 +191,7 @@
         <button class="secondary" id="follow" data-art="follow" type="button">Follow</button>
       </div>
       <aside id="participation-tip" class="guide-tip instruction-glass" aria-label="How plants grow" hidden>
-        <p>Like another resident’s plant to water it. Comment to fertilize it. Both help it grow.</p>
+        <p>Like another player’s plant to water it. Comment to fertilize it. Both help it grow.</p>
         <button type="button" class="secondary">Got it</button>
       </aside>
       <h3>Shared discussion</h3>

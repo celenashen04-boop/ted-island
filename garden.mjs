@@ -113,7 +113,7 @@ export function createGarden(db) {
   const commentById = db.prepare('SELECT player,island FROM comments WHERE id=? AND seed=?');
   const queueActivity = db.prepare('INSERT INTO activity(seed,player,island,kind) VALUES (?,?,?,?)');
   const cards = db.prepare(`SELECT p.id,p.title,p.idea,p.question,p.island AS originalIsland,
-    p.owner=? AS mine,length(p.pdf)>0 AS hasArticle,COALESCE(author.public_id,'Resident '||r.seq) AS creator,
+    p.owner=? AS mine,length(p.pdf)>0 AS hasArticle,COALESCE(author.public_id,'Player '||r.seq) AS creator,
     p.owner AS owner,activityClock.last_activity AS lastActivity,
     CASE WHEN profile.share_linkedin=1 THEN NULLIF(profile.linkedin,'') END AS authorLinkedin,
     (SELECT count(*) FROM watering WHERE plant=p.id) AS likes,
@@ -126,18 +126,18 @@ export function createGarden(db) {
     JOIN plant_activity activityClock ON activityClock.plant=p.id
     WHERE EXISTS(SELECT 1 FROM placements WHERE seed=p.id) ORDER BY p.planted_at,p.id`);
   const locations = db.prepare('SELECT seed,island,x,z FROM placements');
-  const discussions = db.prepare(`SELECT c.id,c.seed,c.island,c.body,c.created,c.reply_to AS replyTo,COALESCE(author.public_id,'Resident '||r.seq) AS resident,
-    parent.island AS replyIsland,COALESCE(parentAuthor.public_id,'Resident '||parentResident.seq) AS replyResident,
+  const discussions = db.prepare(`SELECT c.id,c.seed,c.island,c.body,c.created,c.reply_to AS replyTo,COALESCE(author.public_id,'Player '||r.seq) AS resident,
+    parent.island AS replyIsland,COALESCE(parentAuthor.public_id,'Player '||parentResident.seq) AS replyResident,
     CASE WHEN parent.id IS NULL THEN 0 ELSE c.player<>parent.player END AS repliesToAnother
     FROM comments c LEFT JOIN residents r ON r.player=c.player
     LEFT JOIN comments parent ON parent.id=c.reply_to
     LEFT JOIN residents parentResident ON parentResident.player=parent.player
     LEFT JOIN accounts author ON author.player=c.player
     LEFT JOIN accounts parentAuthor ON parentAuthor.player=parent.player ORDER BY c.id`);
-  const contributors = db.prepare(`SELECT DISTINCT a.seed,a.island,COALESCE(author.public_id,'Resident '||r.seq) AS resident,a.player
+  const contributors = db.prepare(`SELECT DISTINCT a.seed,a.island,COALESCE(author.public_id,'Player '||r.seq) AS resident,a.player
     FROM activity a JOIN residents r ON r.player=a.player LEFT JOIN accounts author ON author.player=a.player
     WHERE a.kind IN ('like','comment')
-    UNION SELECT DISTINCT w.plant,r.island,COALESCE(author.public_id,'Resident '||r.seq),w.player FROM watering w JOIN residents r ON r.player=w.player LEFT JOIN accounts author ON author.player=w.player`);
+    UNION SELECT DISTINCT w.plant,r.island,COALESCE(author.public_id,'Player '||r.seq),w.player FROM watering w JOIN residents r ON r.player=w.player LEFT JOIN accounts author ON author.player=w.player`);
   const follow = db.prepare('INSERT OR IGNORE INTO follows VALUES (?,?)');
   const unfollow = db.prepare('DELETE FROM follows WHERE seed=? AND player=?');
   const followers=db.prepare('SELECT player FROM follows WHERE seed=? AND player<>?');
@@ -225,7 +225,7 @@ export function createGarden(db) {
   }
   function participate(player,id,island,kind,body='',replyTo=null) {
     if(!placement.get(id,island)||!canVisit(player,island))return {status:404,error:'This plant is unavailable on that island.'};
-    if(kind==='like'&&seed.get(id).owner===player)return {status:403,error:'Other residents can water your plant.'};
+    if(kind==='like'&&seed.get(id).owner===player)return {status:403,error:'Other players can water your plant.'};
     const parent=replyTo===null?null:commentById.get(replyTo,id);
     if(replyTo!==null&&!parent)return {status:400,error:'This reply must refer to a comment on the same plant.'};
     const residentIsland=home(player).island;

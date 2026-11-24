@@ -186,9 +186,9 @@ canvas.over-plant{cursor:pointer}
 .share-linkedin-option{display:flex;align-items:center;font-size:.9rem;font-weight:500}
 .share-linkedin-option input{width:auto;flex:none;margin:0;accent-color:#315646}
 #resident-badge{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.4rem}
-#resident-badge a,#share-resident-linkedin{color:#fff4bd;font-size:.75rem;pointer-events:auto}
+#resident-badge a,#share-resident-linkedin,#sign-out{color:#fff4bd;font-size:.75rem;pointer-events:auto}
 #resident-photo{width:1.35rem;height:1.35rem;object-fit:cover;border-radius:50%;flex:none}
-#share-resident-linkedin{min-height:24px;padding:.1rem .35rem;border:1px solid #fff4bd77;border-radius:.3rem;background:transparent}
+#share-resident-linkedin,#sign-out{min-height:32px;padding:.1rem .35rem;border:1px solid #fff4bd77;border-radius:.3rem;background:transparent}
 #share-resident-linkedin[aria-pressed=true]{background:#fff4bd;color:#243227}
 .author-connection{margin-top:1rem;padding-top:.9rem;border-top:1px solid #74877c55}
 .author-connection a{min-height:44px}
@@ -305,3 +305,6 @@ dialog{background:var(--kit-surface,#fffdf4);color:var(--kit-text,#243227)}
   border-radius: 50%;
   background: #fac97c;
 }
+
+.account-options{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem}
+#username-hint{display:block;margin-top:.25rem;color:#526055}

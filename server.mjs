@@ -294,7 +294,7 @@ export async function handleRequest(req, res) {
     }
     if (req.method === 'GET' && (path === '/api/garden' || path === '/api/events')) {
       const player=accounts.player(req);
-      if(!player||!garden.profile(player).completed)return json(res,403,{error:'Complete your resident profile first.'});
+      if(!player||!garden.profile(player).completed)return json(res,403,{error:'Complete your player profile first.'});
       if(path==='/api/garden')return json(res,200,snapshot(player));
       res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', 'X-Accel-Buffering': 'no' });
       clients.set(res,{player,req});
@@ -338,7 +338,10 @@ export async function handleRequest(req, res) {
           if(!acceptRequest('account:'+req.socket.remoteAddress,60))return json(res,429,{error:'Try again in a minute.'});
           result=accounts.create(req,res,body.judge===true);
         }
-        else if(path==='/api/auth/register')result=await accounts.register(req,res,body);
+        else if(path==='/api/auth/register'){
+          if(!acceptRequest('register:'+req.socket.remoteAddress,60))return json(res,429,{error:'Try again in a minute.'});
+          result=await accounts.register(req,res,body);
+        }
         else if(path==='/api/auth/login')result=await accounts.login(req,res,body);
         else if(path==='/api/auth/logout'){
           const player=accounts.player(req);
@@ -350,7 +353,7 @@ export async function handleRequest(req, res) {
       const player = accounts.player(req);
       if (!player)return json(res,401,{error:'Sign in to the garden.'});
       if (path === '/api/profile') return await onboard(req,res,player);
-      if (!garden.profile(player).completed) return json(res,403,{error:'Complete your resident profile first.'});
+      if (!garden.profile(player).completed) return json(res,403,{error:'Complete your player profile first.'});
       if (path === '/api/profile/linkedin-sharing') {
         const body=await smallJSON(req);
         if(typeof body?.enabled!=='boolean')return json(res,400,{error:'Choose whether to share your LinkedIn profile.'});

@@ -26,9 +26,9 @@ Scenery plants on the islands must not be confused with idea plants. Remove scen
 
 ## Login and identity
 
-- The enter page creates the player’s session before they choose a domain.
-- The system generates an anonymous, readable user ID, such as `Mossy-Fern-4821`. Players cannot choose or change it. It is the player’s only public name. It appears as a semi-transparent label at the top right of the main page, on seeds and plants, and in comments.
-- On the first visit, show the ID with a **Copy** button and “Save this ID — you'll need it to log back in.” The player then sets a password of at least six characters. Returning players sign in with their ID and password. A cookie keeps the browser signed in.
+- The first visit opens **Sign up**. Players choose a public username of 3–24 letters, numbers, hyphens, or underscores and a password of at least six characters. Existing players can still sign in with their assigned username, such as `Mossy-Fern-4821`.
+- After registration, switch to **Sign in** and prefill the username. The browser may save credentials through its password manager. The game stores a password hash on the server and keeps a signed-in player’s session in a cookie. After sign-out, the browser can remember the last username for the next sign-in.
+- The username is the account’s public name. Show it on the main page, on seeds and plants, and in comments.
 - Email is optional and private. It is used only for notifications and password reset. Encourage players to add it, and warn players without an email that a forgotten password cannot be recovered. Provide consent, notification preferences, and an unsubscribe option.
 - **Login as Judge** creates a random ID without a password. Judges choose an island and play as regular players. Each judge session is unique, synchronizes in real time across browsers and devices, survives a refresh, and lasts for the browser session.
 - The CHI website’s entry button is a regular link to the game and passes no attendee data.
@@ -60,7 +60,7 @@ Scenery plants on the islands must not be confused with idea plants. Remove scen
 - Show the other islands and the bridges leading to them in the distance, using the same relative direction and height as World View. Use the island the player is standing on as the reference point.
 - Use the left joystick to move and drag on the right side to change the viewing direction.
 - Provide a circular globe button to switch to World View.
-- Show the resident’s user ID and a notification bell at the top right. One dropdown button opens the **Seed Catalog** and **Island Access**. Cassius (UI) decides its final contents and layout.
+- Show the player’s username and a notification bell at the top right. One dropdown button opens the **Seed Catalog** and **Island Access**. Cassius (UI) decides its final contents and layout.
 - Ready an acorn with the bottom-right plus button. It rotates into an × that cancels the throw. Show “Tap to throw.” A tap or click anywhere in the scene sends the acorn the same short distance in the direction the player faces, unless it hits an obstacle first. Frame the flight and hold briefly on the landing. Dragging adjusts the camera while the acorn is ready. After a failed throw, the player can retry by selecting the seed where it landed, without pressing the plus button again. Keep the earlier slingshot control in the scene code as an alternative.
 - Let residents select plants in the garden. Liking another resident’s plant waters it. Leaving a comment nourishes it. Each action plays an animation and shows how it contributes to growth and access.
 - Residents adopt seeds from other islands through the Seed Catalog. They discover seeds that originated on their own island in the physical garden. Those seeds appear in the catalogs of residents on other islands.

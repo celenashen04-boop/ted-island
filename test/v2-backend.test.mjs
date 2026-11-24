@@ -75,15 +75,28 @@ test('isolated sessions, island access, live events and persistence on restart',
     };
   }
   async function register(client,island,judge=false){
-    const start=await client('/api/auth/start',{judge});
-    assert.match(start.data.id,/^[A-Z][a-z]+-[A-Z][a-z]+-\d{4}$/);
-    if(judge)assert.doesNotMatch(start.setCookie,/Max-Age/);
-    else assert.equal((await client('/api/auth/register',{password})).status,200);
+    let id, sessionCookie;
+    if(judge){
+      const start=await client('/api/auth/start',{judge:true});
+      id=start.data.id;
+      sessionCookie=start.setCookie;
+      assert.match(id,/^[A-Z][a-z]+-[A-Z][a-z]+-\d{4}$/);
+      assert.doesNotMatch(sessionCookie,/Max-Age/);
+    }else{
+      const signup=await client('/api/auth/register',{username:'Garden_Pilot',password});
+      assert.equal(signup.status,200);
+      assert.deepEqual(signup.data,{id:'Garden_Pilot'});
+      assert.equal((await client('/api/auth')).data.account,null);
+      const login=await client('/api/auth/login',{username:'garden_pilot',password});
+      assert.equal(login.status,200);
+      id=login.data.id;
+      sessionCookie=login.setCookie;
+    }
     const form=new FormData();
-    if(railway)assert.match(start.setCookie,/; Secure/);
+    if(railway)assert.match(sessionCookie,/; Secure/);
     form.set('island',island);
     assert.equal((await client('/api/profile',form)).status,201);
-    return start.data.id;
+    return id;
   }
   async function plant(client,island,adopt) {
     const form=new FormData();
@@ -125,6 +138,14 @@ test('isolated sessions, island access, live events and persistence on restart',
   if(railway)assert.equal((await a('/api/auth/start',{}, {headers:{Origin:'https://other.example'}})).status,403);
   assert.equal((await a('/api/garden')).status,403);
   const aId=await register(a,0);
+  assert.equal((await newBrowser('/api/auth/register',{username:'Garden_PILOT',password})).status,409);
+  const temporary=client();
+  const judgeSession=await temporary('/api/auth/start',{judge:true});
+  const staleCookie=judgeSession.setCookie.split(';')[0];
+  const signedOut=await temporary('/api/auth/logout',{});
+  assert.match(signedOut.setCookie,/Max-Age=0/);
+  assert.equal((await temporary('/api/auth')).data.account,null);
+  assert.equal((await client()('/api/auth',undefined,{headers:{cookie:staleCookie}})).data.account,null);
   const bId=await register(b,1,true);
   assert.notEqual(aId,bId);
   assert.equal((await b('/api/cross',{island:0})).status,403);
@@ -171,7 +192,7 @@ test('isolated sessions, island access, live events and persistence on restart',
   database.prepare('UPDATE plant_activity SET last_activity=?').run(Date.now()-23*day);
   database.close();
   await start();
-  assert.equal((await newBrowser('/api/auth/login',{id:aId,password})).data.id,aId);
+  assert.equal((await newBrowser('/api/auth/login',{username:aId,password})).data.id,aId);
   view=(await newBrowser('/api/garden')).data;
   assert.equal(view.plants[0].comments.length,2);
   assert.equal(view.plants[0].dormant,true);
