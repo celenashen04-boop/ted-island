@@ -2,9 +2,38 @@ import { islandRim, islandLandmarks, islandSpacing } from './islands.mjs';
 import { bridgePath, traceOakConnection } from './plots.mjs';
 import { islandModel } from './island-kit/navigation.mjs';
 
+import { createWorldLabel, createWorldLegend } from './ui/world-labels.mjs';
+
 export function createWorld(canvas, artwork, homeButton, enterHome, islandRenderer=null) {
   const ctx=canvas.getContext('2d');
   let islands=[],bridges=[],home=0,yaw=.25,pitch=.55,drag=null,targets=[];
+
+  const labels = new Map();
+  canvas.after(createWorldLegend().element);
+
+  function updateLabels(state) {
+    for (const island of islands) {
+      const isHome = island.id === home;
+      const access = state.access?.find(item => item.island === island.id && item.active);
+      const details = {
+        island: island.id, access: isHome ? 'home' : access ? 'open' : 'locked',
+        maturity: { mature: island.mature, total: island.total },
+        hoursLeft: access ? (access.expiry - Date.now()) / 3_600_000 : null,
+      };
+      let label = labels.get(island.id);
+      if (!label) {
+        label = createWorldLabel(details);
+        labels.set(island.id, label);
+      } else label.set(details);
+      if (isHome) {
+        homeButton.replaceChildren(label.element);
+        homeButton.setAttribute('aria-label', 'Enter ' + island.name + ', your home island');
+      } else if (label.element.parentElement !== canvas.parentElement) {
+        canvas.after(label.element);
+      }
+    }
+    homeButton.hidden = !labels.has(home);
+  }
 
   function draw(){
     const width=canvas.clientWidth,height=canvas.clientHeight;
@@ -113,32 +142,21 @@ export function createWorld(canvas, artwork, homeButton, enterHome, islandRender
       }
       drawOaks(island.id);
     }
-    const labels=[];
-    const homeEntry=items.find(island=>island.id===home);
-    homeButton.hidden=!homeEntry;
-    for(const island of items){
-      const [x,y]=project({...island.position,y:island.position.y+.98});
-      ctx.font='600 14px system-ui';
-      const isHome=island.id===home;
-      const h=isHome?44:23;
-      const w=Math.min(width-16,ctx.measureText(island.name).width+(isHome?52:18));
-      const left=Math.max(8,Math.min(width-w-8,x-w/2));
-      let top=Math.max(8,Math.min(height-h-8,y-20));
-      while(labels.some(label=>left<label.left+label.w+4&&left+w+4>label.left&&top<label.top+label.h+4&&top+h+4>label.top))top+=h+4;
-      labels.push({left,top,w,h});
-      if(isHome){
-        homeButton.textContent=island.name;
-        homeButton.setAttribute('aria-label','Enter '+island.name+', your home island');
-        homeButton.style.left=left+'px';
-        homeButton.style.top=top+'px';
-        homeButton.style.width=w+'px';
-        continue;
-      }
-      ctx.fillStyle='#162c37';
-      ctx.beginPath();ctx.roundRect(left,top,w,h,6);ctx.fill();
-      ctx.fillStyle='#a2b3b4';
-      ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.fillText(island.name,left+w/2,top+12,w-10);
+    const occupied = [];
+    for (const island of items) {
+      const [x, y] = project({ ...island.position, y: island.position.y + .98 });
+      const label = island.id === home ? homeButton : labels.get(island.id)?.element;
+      if (!label) continue;
+      const w = label.offsetWidth;
+      const h = label.offsetHeight;
+      const left = Math.max(8, Math.min(width - w - 8, x - w / 2));
+      let top = Math.max(8, Math.min(height - h - 8, y - 24));
+      while (occupied.some(box => left < box.left + box.w + 4 && left + w + 4 > box.left &&
+          top < box.top + box.h + 4 && top + h + 4 > box.top)) top += h + 4;
+      if (top + h > height - 8) top = Math.max(8, Math.min(height - h - 8, y - 24));
+      occupied.push({ left, top, w, h });
+      label.style.left = left + 'px';
+      label.style.top = top + 'px';
     }
   }
 
@@ -197,7 +215,7 @@ export function createWorld(canvas, artwork, homeButton, enterHome, islandRender
     requestAnimationFrame(animate);
   }
   return {
-    update(state){({islands,home}=state);bridges=state.worldBridges??state.bridges;draw();},
+    update(state){({islands,home}=state);bridges=state.worldBridges??state.bridges;updateLabels(state);draw();},
     draw
   };
 }

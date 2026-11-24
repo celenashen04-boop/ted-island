@@ -1,0 +1,297 @@
+/* Phase 6 · Panels restyled in Direction G (Figma "Screens · World & Panels" 11:8).
+   Seed Catalog, New seed form, Plant detail and discussion, World View labels.
+   Load after tokens.css, components.css, motion.css and onboarding.css.
+   Every class starts with ui-; nothing here touches style.css or existing IDs. */
+
+.ui-badge--24 { width: 24px; height: 24px; }
+
+/* Shared panel body (panel.mjs) */
+.ui-panel__body { display: grid; align-content: start; gap: var(--space-12); }
+.ui-panel > .ui-panel-header {
+  padding: max(var(--space-16), env(safe-area-inset-top)) var(--space-24) 0;
+}
+.ui-panel > .ui-panel-header + .ui-panel__body { padding: var(--space-12) var(--space-24) var(--space-24); }
+.ui-panel:has(> .ui-panel-header) { display: flex; flex-direction: column; gap: 0; }
+
+/* Labels used across the panels: Label/S and Label/M */
+.ui-seed-card__island, .ui-seed-card__stage, .ui-seed-card__opens,
+.ui-plant-detail__byline, .ui-plant-detail__stage-meta, .ui-stat__label,
+.ui-comment__age, .ui-comment__reply, .ui-world-label__meta, .ui-world-legend {
+  font: 400 9px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ---------- Seed Catalog (23:187, filtered 23:335) ---------- */
+
+.ui-panel.ui-panel--catalog { width: min(700px, 100%); }
+
+/* Filter: square segments that share borders; the selected one is inverse. */
+.ui-filters { display: flex; flex-wrap: wrap; }
+.ui-filter {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  margin: 0 -1px 0 0;
+  padding: var(--space-8) var(--space-12);
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font: 400 11px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.ui-filter::after { /* 44 px hit area */
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: max(100%, var(--size-touch));
+  height: max(100%, var(--size-touch));
+  transform: translate(-50%, -50%);
+}
+.ui-filter[aria-pressed="true"] { z-index: 1; background: var(--color-bg-inverse); color: var(--color-text-inverse); }
+.ui-filter:focus-visible { z-index: 2; outline: 2px solid var(--color-border-default); outline-offset: 2px; }
+.ui-filter__swatch { width: 8px; height: 8px; flex: none; background: var(--island); }
+
+.ui-catalog__locked {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+  padding: var(--space-8) var(--space-12);
+  background: var(--color-bg-muted);
+  font: 500 13px/1.4 var(--font-sans);
+}
+.ui-catalog__locked .ui-icon { --icon-size: 16px; }
+.ui-catalog__grid { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-16); }
+.ui-catalog__empty { margin: 0; font: 400 13px/1.45 var(--font-sans); color: var(--color-text-secondary); }
+
+/* Catalog Card (16:257): Available and Growing */
+.ui-seed-card {
+  display: grid;
+  gap: var(--space-12);
+  width: min(300px, 100%);
+  padding: var(--space-16);
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface);
+}
+.ui-seed-card__head { display: flex; align-items: center; gap: 10px; }
+.ui-seed-card__stage { margin-left: auto; color: var(--color-text-secondary); }
+.ui-seed-card__main { display: flex; align-items: flex-start; gap: var(--space-12); }
+.ui-seed-card__text { display: grid; gap: var(--space-4); min-width: 0; }
+.ui-seed-card__title { margin: 0; font: 600 15px/1.25 var(--font-sans); letter-spacing: -0.01em; }
+.ui-seed-card__idea { margin: 0; font: 400 13px/1.45 var(--font-sans); color: var(--color-text-secondary); }
+.ui-seed-card__growing { margin: 0; font: 400 13px/1.45 var(--font-sans); }
+.ui-seed-card__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); }
+.ui-seed-card__opens { margin: 0; width: 120px; }
+.ui-seed-card__planted { display: flex; align-items: center; gap: var(--space-8); margin: 0; font: 500 13px/1.4 var(--font-sans); }
+.ui-seed-card__planted .ui-icon { --icon-size: 18px; }
+
+/* ---------- New seed form (20:903) ---------- */
+
+.ui-panel.ui-panel--seed { width: min(460px, 100%); }
+.ui-seed-form { display: grid; gap: var(--space-12); }
+.ui-seed-form__fields { display: grid; gap: var(--space-12); }
+.ui-seed-form__fields[hidden] { display: none; }
+.ui-seed-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-12); }
+.ui-seed-form .ui-field { max-width: none; }
+.ui-seed-form__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); }
+.ui-seed-form__attach .ui-btn__label { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ui-seed-form__adoption { margin: 0; font: 400 15px/1.5 var(--font-sans); }
+.ui-seed-form__error:empty, .ui-plant-detail__error:empty { display: none; }
+.ui-seed-form__error, .ui-plant-detail__error { margin: 0; font: 400 13px/1.45 var(--font-sans); color: var(--color-status-alert); }
+@media (max-width: 420px) { .ui-seed-form__row { grid-template-columns: 1fr; } }
+
+/* ---------- Plant detail (23:478) ----------
+   Fills a landscape phone (844 x 390). Larger screens get the same two
+   columns, centered, with room for the discussion to grow. */
+
+.ui-panel.ui-panel--plant {
+  inset: 0;
+  width: min(844px, 100%);
+  height: min(100%, 560px);
+  margin: auto;
+  overflow: hidden;
+  border: var(--stroke-hairline) solid var(--color-border-default);
+}
+.ui-plant-detail { display: grid; grid-template-columns: 400fr 444fr; height: 100%; gap: 0; }
+.ui-plant-detail__idea-col, .ui-plant-detail__discussion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  min-height: 0;
+  padding: max(var(--space-16), env(safe-area-inset-top)) var(--space-24) var(--space-16);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.ui-plant-detail__origin { display: flex; align-items: center; gap: var(--space-8); }
+.ui-plant-detail__byline { margin: 0; color: var(--color-text-secondary); }
+.ui-plant-detail__title { margin: 0; font: 800 28px/1.1 var(--font-sans); letter-spacing: -0.03em; }
+.ui-plant-detail__stage { display: flex; align-items: center; gap: var(--space-12); }
+.ui-plant-detail__stage > div { display: grid; gap: var(--space-2); }
+.ui-plant-detail__stage-title { margin: 0; font: 600 15px/1.25 var(--font-sans); letter-spacing: -0.01em; }
+.ui-plant-detail__stage-meta { margin: 0; color: var(--color-text-secondary); }
+.ui-plant-detail__idea, .ui-plant-detail__question { margin: 0; font: 400 13px/1.45 var(--font-sans); }
+.ui-plant-detail__idea { color: var(--color-text-secondary); }
+
+/* Stats: three boxes sharing borders. The bar marks the stat; the numbers carry the value. */
+.ui-plant-detail__stats { display: flex; }
+.ui-stat {
+  display: grid;
+  gap: var(--space-4);
+  flex: 0 1 120px;
+  margin-right: -1px;
+  padding: 0 var(--space-12) var(--space-8) 10px;
+  border: var(--stroke-hairline) solid var(--color-border-default);
+}
+.ui-stat__bar { height: 4px; width: 100%; }
+.ui-stat--water .ui-stat__bar { background: var(--island); }
+.ui-stat--nutrients .ui-stat__bar { background: var(--color-text-secondary); }
+.ui-stat--contributors .ui-stat__bar { background: var(--color-bg-inverse); }
+.ui-stat__label { color: var(--color-text-secondary); }
+.ui-stat__value { font: 700 20px/1.2 var(--font-sans); letter-spacing: -0.02em; white-space: nowrap; }
+.ui-plant-detail__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8); }
+.ui-plant-detail__actions [aria-pressed="true"] { background: var(--color-bg-inverse); color: var(--color-text-inverse); }
+
+/* Discussion */
+.ui-plant-detail__discussion { border-left: var(--stroke-hairline) solid var(--color-border-default); background: var(--color-bg-canvas); }
+.ui-plant-detail__discussion-head { display: flex; align-items: center; gap: var(--space-8); }
+.ui-plant-detail__discussion-title { flex: 1; margin: 0; font: 700 20px/1.2 var(--font-sans); letter-spacing: -0.02em; }
+.ui-plant-detail__close { margin: -10px -10px -10px 0; }
+.ui-thread { display: grid; gap: var(--space-12); margin: 0; padding: 0; list-style: none; }
+.ui-thread__empty { margin: 0; font: 400 13px/1.45 var(--font-sans); color: var(--color-text-secondary); }
+
+/* Comment (16:293): Comment and Reply (indented 32 px with a thread line) */
+.ui-comment { display: flex; gap: var(--space-12); }
+.ui-comment--reply { padding-left: 32px; }
+.ui-comment--reply::before { content: ""; flex: none; width: 1px; background: var(--color-border-subtle); }
+.ui-comment__body { display: grid; justify-items: start; gap: 6px; min-width: 0; }
+.ui-comment__meta { display: flex; align-items: center; gap: var(--space-8); margin: 0; }
+.ui-comment__author { font: 400 12px/1.3 var(--font-mono); letter-spacing: 0.04em; }
+.ui-comment__age { color: var(--color-text-secondary); }
+.ui-comment__text { margin: 0; font: 400 13px/1.45 var(--font-sans); overflow-wrap: anywhere; }
+.ui-comment__reply {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.ui-comment__reply .ui-icon { --icon-size: 14px; }
+.ui-comment__reply::after { content: ""; position: absolute; inset: 50% auto auto 50%; width: var(--size-touch); height: var(--size-touch); transform: translate(-50%, -50%); }
+.ui-comment__reply:focus-visible { outline: 2px solid var(--color-border-default); outline-offset: 2px; }
+
+/* Composer: label, field, Post; pinned to the bottom of the column */
+.ui-composer { display: grid; gap: var(--space-8); margin-top: auto; }
+.ui-composer__row { display: flex; align-items: flex-end; gap: var(--space-8); }
+.ui-composer .ui-field { flex: 1; max-width: none; }
+.ui-composer [hidden] { display: none; }
+
+@media (max-width: 640px) {
+  .ui-plant-detail { grid-template-columns: 1fr; overflow: auto; }
+  .ui-plant-detail__idea-col, .ui-plant-detail__discussion { overflow: visible; }
+  .ui-plant-detail__discussion { border-left: 0; border-top: var(--stroke-hairline) solid var(--color-border-default); }
+}
+
+/* ---------- World View labels (16:416) and legend (23:126) ---------- */
+
+.ui-world-label {
+  display: inline-grid;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-12);
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+.ui-world-label--home { background: var(--color-bg-inverse); color: var(--color-text-inverse); }
+.ui-world-label__row { display: flex; align-items: center; gap: 6px; }
+.ui-world-label__swatch { width: 10px; height: 10px; flex: none; background: var(--island); }
+.ui-world-label__name { font: 600 15px/1.25 var(--font-sans); letter-spacing: -0.01em; }
+.ui-world-label__mark { display: contents; }
+.ui-world-label__mark .ui-icon { --icon-size: 14px; }
+.ui-world-label__meta { color: var(--color-text-secondary); }
+.ui-world-label--home .ui-world-label__meta { color: var(--color-text-inverse); }
+
+.ui-world-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-16);
+  padding: var(--space-8) var(--space-12);
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  white-space: nowrap;
+}
+.ui-world-legend__open { width: 24px; height: 4px; flex: none; background: var(--color-island-sustainability); }
+.ui-world-legend__locked { display: block; flex: none; }
+.ui-world-legend__hint { color: var(--color-text-secondary); }
+
+/* ---------- Plant Row (30:273) · Followed plants (31:486) · Island plants (31:1150) ---------- */
+
+.ui-panel.ui-panel--followed, .ui-panel.ui-panel--email { width: min(440px, 100%); }
+.ui-panel.ui-panel--island-plants { width: min(560px, 100%); }
+.ui-panel--followed .ui-panel__body, .ui-panel--island-plants .ui-panel__body { gap: 10px; }
+
+.ui-plant-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.ui-plant-row {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ui-plant-row:hover { background: var(--color-bg-canvas); }
+.ui-plant-row:focus-visible { outline: 2px solid var(--color-border-default); outline-offset: 2px; }
+.ui-plant-row__tab { flex: none; width: 6px; }
+.ui-plant-row--new .ui-plant-row__tab { background: var(--color-bg-inverse); }
+.ui-plant-row__stage { flex: none; width: 48px; height: 48px; margin: var(--space-12) 0 var(--space-12) var(--space-12); align-self: center; }
+.ui-plant-row__text { display: grid; gap: 3px; flex: 1; min-width: 0; padding: var(--space-12); }
+.ui-plant-row__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 400 9px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.ui-plant-row__swatch { width: 8px; height: 8px; flex: none; background: var(--island); }
+.ui-plant-row__title, .ui-plant-row__status { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ui-plant-row__title { font: 600 15px/1.25 var(--font-sans); letter-spacing: -0.01em; }
+.ui-plant-row__status { font: 400 13px/1.45 var(--font-sans); color: var(--color-text-secondary); }
+.ui-plant-row--new .ui-plant-row__status { color: var(--color-text-primary); }
+.ui-plant-row > .ui-icon { --icon-size: 18px; flex: none; align-self: center; margin-right: var(--space-12); }
+
+.ui-plant-empty { display: grid; justify-items: start; gap: var(--space-12); }
+.ui-plant-empty__title { margin: 0; font: 700 20px/1.2 var(--font-sans); letter-spacing: -0.02em; }
+.ui-plant-empty__body { margin: 0; max-width: 392px; font: 400 13px/1.45 var(--font-sans); color: var(--color-text-secondary); }
+
+.ui-filter:disabled { cursor: default; color: var(--color-text-secondary); }
+
+/* Island chip as the Island plants entry point (it is a button in the game). */
+button.ui-island-chip { margin: 0; font: inherit; text-align: left; cursor: pointer; }
+button.ui-island-chip:hover { background: var(--color-bg-surface); }
+button.ui-island-chip:focus-visible { outline: 2px solid var(--color-border-default); outline-offset: 2px; }
+
+/* ---------- Email and reminders (31:834, saved 31:995) ---------- */
+
+.ui-email { display: grid; gap: 10px; }
+.ui-email .ui-field { max-width: none; }
+.ui-email__actions { display: flex; align-items: center; gap: var(--space-8); }
+.ui-email__remove { margin-left: auto; }
+.ui-email__error:empty { display: none; }
+.ui-email__error { margin: 0; font: 400 13px/1.45 var(--font-sans); color: var(--color-status-alert); }

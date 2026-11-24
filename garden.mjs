@@ -174,7 +174,6 @@ export function createGarden(db) {
       const inactiveDays=(now-card.lastActivity)/day;
       card.dormant=inactiveDays>=15;
       card.displayScale=card.dormant?Math.max(.28,1-(inactiveDays-15)*.72/15):1;
-      delete card.lastActivity;
       delete card.owner;
       for(const contributor of card.contributors)delete contributor.player;
     }

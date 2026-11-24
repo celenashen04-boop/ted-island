@@ -1,0 +1,325 @@
+/*
+ * CHI Island motion layer · Poster Signal
+ * Requires tokens.css (motion tokens) and components.css.
+ * CSS transitions and keyframes only. Only transform, opacity, clip-path,
+ * stroke-dashoffset and (for dormancy) filter are animated, to stay cheap on phones.
+ *
+ * Trigger classes are added by motion.mjs helpers, or by any code:
+ *   .ui-layer[data-state="open" | "closing"]   panels and backdrop
+ *   .ui-menu[data-state="open" | "closing"]    top-right dropdown
+ *   .ui-toast.is-entering                       toast life cycle (in, hold, out)
+ *   .is-playing                                 one-shot effects (ripple, pulse, shake, draw)
+ *
+ * Reduced motion: slides become fades (travel tokens are 0), one-shot effects
+ * are switched off, and value changes jump to the new value. See the end of the file.
+ */
+
+/* ---------- Shared keyframes ---------- */
+
+@keyframes ui-fade-in  { from { opacity: 0; } }
+@keyframes ui-fade-out { to   { opacity: 0; } }
+
+/* ---------- Panels: slide in from the right, backdrop fades ----------
+   Markup:
+   <div class="ui-layer" data-state="open">
+     <div class="ui-backdrop"></div>
+     <aside class="ui-panel">...</aside>
+   </div>
+   Island Access, Seed Catalog, Notifications, plant detail. */
+
+.ui-layer { position: fixed; inset: 0; z-index: 20; }
+.ui-layer:not([data-state]),
+.ui-layer[data-state="closed"] { display: none; }
+.ui-layer--contained { position: absolute; } /* inside a frame, for the gallery */
+
+.ui-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(17 17 17 / 0.32);
+}
+.ui-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(440px, 100%);
+  padding-right: env(safe-area-inset-right);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-left: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+@keyframes ui-panel-in  { from { transform: translateX(var(--motion-shift-panel)); opacity: 0; } }
+@keyframes ui-panel-out { to   { transform: translateX(var(--motion-shift-panel)); opacity: 0; } }
+
+.ui-layer[data-state="open"] .ui-backdrop { animation: ui-fade-in var(--motion-duration-base) var(--motion-ease-out) both; }
+.ui-layer[data-state="open"] .ui-panel    { animation: ui-panel-in var(--motion-duration-base) var(--motion-ease-out) both; }
+.ui-layer[data-state="closing"] .ui-backdrop { animation: ui-fade-out var(--motion-duration-fast) var(--motion-ease-in) both; }
+.ui-layer[data-state="closing"] .ui-panel    { animation: ui-panel-out var(--motion-duration-fast) var(--motion-ease-in) both; }
+
+/* ---------- Top-right menu: drops down, button switches to black ---------- */
+
+.ui-menu {
+  position: absolute;
+  top: calc(100% + var(--space-8));
+  right: 0;
+  z-index: 10;
+  min-width: 240px;
+  border: var(--stroke-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  transform-origin: top right;
+}
+.ui-menu:not([data-state]),
+.ui-menu[data-state="closed"] { display: none; }
+
+@keyframes ui-menu-in {
+  from { transform: translateY(var(--motion-shift-menu)); clip-path: inset(0 0 100% 0); opacity: 0; }
+  to   { clip-path: inset(0 0 0 0); }
+}
+.ui-menu[data-state="open"]    { animation: ui-menu-in var(--motion-duration-fast) var(--motion-ease-out) both; }
+.ui-menu[data-state="closing"] { animation: ui-fade-out var(--motion-duration-instant) var(--motion-ease-in) both; }
+
+/* Menu button and any icon button: the black state swaps quickly, no fade-through. */
+.ui-icon-btn {
+  transition:
+    background-color var(--motion-duration-instant) var(--motion-ease-out),
+    border-color var(--motion-duration-instant) var(--motion-ease-out),
+    color var(--motion-duration-instant) var(--motion-ease-out);
+}
+
+/* ---------- Plus button: + rotates 45 degrees into x ---------- */
+
+.ui-plus .ui-icon {
+  transition: transform var(--motion-duration-fast) var(--motion-ease-out);
+}
+.ui-plus[aria-pressed="true"] .ui-icon { transform: rotate(45deg); }
+
+/* ---------- Toast: slides down from the top, holds 3 s, slides out ----------
+   Place toasts in .ui-toast-region (top center). Add .is-entering to play.
+   motion.mjs showToast() removes the toast when the exit ends. */
+
+.ui-toast-region {
+  position: fixed;
+  top: max(var(--space-16), env(safe-area-inset-top));
+  left: 50%;
+  z-index: 30;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-8);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.ui-toast-region--contained { position: absolute; }
+
+@keyframes ui-toast-in  { from { transform: translateY(var(--motion-shift-toast)); opacity: 0; } }
+@keyframes ui-toast-out { to   { transform: translateY(var(--motion-shift-toast)); opacity: 0; } }
+
+.ui-toast.is-entering {
+  animation:
+    ui-toast-in var(--motion-duration-base) var(--motion-ease-out) both,
+    ui-toast-out var(--motion-duration-base) var(--motion-ease-in)
+      calc(var(--motion-duration-base) + var(--motion-toast-hold)) forwards;
+}
+
+/* ---------- Access ring: arc animates from old to new value ----------
+   <svg class="ui-ring" viewBox="0 0 80 80" style="--ring: 60">
+     <circle class="ui-ring__track" .../><circle class="ui-ring__arc" pathLength="100" .../>
+   </svg>
+   --ring is 0 to 100 on the fixed 120 h scale. Change it and the arc moves. */
+
+.ui-ring { display: block; width: 80px; height: 80px; overflow: visible; }
+/* Geometry from the Figma ring: 2 px track, 6 px arc (4 px on the 52 px row ring). */
+.ui-ring__track,
+.ui-ring__arc { fill: none; }
+.ui-ring__track { stroke: var(--color-ring-track); stroke-width: 2; }
+.ui-ring__arc { stroke-width: 6; }
+.ui-ring-wrap--row .ui-ring__arc { stroke-width: 4; }
+.ui-ring__arc {
+  stroke: var(--island);
+  stroke-dasharray: 100 100;
+  stroke-dashoffset: calc(100 - var(--ring, 0));
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset var(--motion-duration-count) var(--motion-ease-out);
+}
+
+/* ---------- Big numerals: count up to the new value ----------
+   <span class="ui-numeral" style="--num: 72" aria-hidden="true"></span>
+   Registered as an integer so the number itself can transition.
+   Keep an accessible copy of the value next to it (screen readers skip ::before). */
+
+@property --num {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+.ui-numeral {
+  font: 800 44px/1 var(--font-sans);
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  counter-reset: ui-num var(--num);
+  transition: --num var(--motion-duration-count) var(--motion-ease-out);
+}
+.ui-numeral::before { content: counter(ui-num, decimal-leading-zero) "H"; }
+
+/* ---------- Water ripple and nourish pulse (mocked in 2D) ----------
+   <span class="ui-fx ui-fx--water is-playing"><i></i><i></i></span> under a plant.
+   Both use the plant's origin island hue (set .ui-island-* on a parent).
+   Water: two thin rings expand outward.
+   Nourish: a filled disc swells and fades. */
+
+.ui-fx { position: absolute; left: 50%; bottom: 0; width: 96px; height: 32px; translate: -50% 50%; pointer-events: none; }
+.ui-fx > i { position: absolute; inset: 0; border-radius: 50%; opacity: 0; }
+
+.ui-fx--water > i { border: 2px solid var(--island, var(--color-text-primary)); }
+@keyframes ui-ripple {
+  from { transform: scale(0.2); opacity: 1; }
+  to   { transform: scale(1.4); opacity: 0; }
+}
+.ui-fx--water.is-playing > i { animation: ui-ripple var(--motion-duration-ripple) var(--motion-ease-out) both; }
+.ui-fx--water.is-playing > i + i { animation-delay: var(--motion-stagger); }
+
+.ui-fx--nourish > i { background: var(--island, var(--color-text-primary)); }
+@keyframes ui-soil-pulse {
+  0%   { transform: scale(0.4); opacity: 0; }
+  30%  { opacity: 0.55; }
+  100% { transform: scale(1.1); opacity: 0; }
+}
+.ui-fx--nourish.is-playing > i { animation: ui-soil-pulse var(--motion-duration-pulse) var(--motion-ease-out) both; }
+.ui-fx--nourish.is-playing > i + i { animation-delay: var(--motion-stagger); transform-origin: 50% 50%; inset: 25% 30%; }
+
+/* ---------- Landing marker: valid scales in, invalid shakes once ---------- */
+
+.ui-landing { display: inline-grid; justify-items: center; gap: var(--space-8); }
+.ui-landing__marker { display: block; width: 72px; height: 28px; }
+.ui-landing__label {
+  padding: var(--space-4) var(--space-8);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font: 400 9px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.ui-landing--invalid .ui-landing__label,
+.ui-landing--failed .ui-landing__label { background: var(--color-bg-inverse); color: var(--color-text-inverse); }
+
+@keyframes ui-scale-in { from { transform: scale(0.5); opacity: 0; } }
+@keyframes ui-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(3px); }
+}
+@keyframes ui-rise-in { from { transform: translateY(var(--motion-shift-card)); opacity: 0; } }
+
+.ui-landing--valid.is-playing .ui-landing__marker { animation: ui-scale-in var(--motion-duration-base) var(--motion-ease-out) both; }
+.ui-landing--invalid.is-playing .ui-landing__marker { animation: ui-shake var(--motion-duration-shake) var(--motion-ease-linear) both; }
+.ui-landing.is-playing .ui-landing__label { animation: ui-rise-in var(--motion-duration-base) var(--motion-ease-out) var(--motion-stagger) both; }
+
+/* ---------- Plant: stage change grows, dormancy shrinks and desaturates ----------
+   <span class="ui-plant"><img class="ui-stage" ...></span>
+   Stage change: motion.mjs swapStage() adds the new image with .is-entering
+   and the old one with .is-leaving. Dormant: toggle [data-dormant]. */
+
+.ui-plant { position: relative; display: inline-grid; place-items: end center; width: 48px; height: 48px; }
+.ui-plant > .ui-stage { grid-area: 1 / 1; transform-origin: 50% 100%; }
+
+@keyframes ui-grow-in  { from { transform: scale(0.82); opacity: 0; } }
+@keyframes ui-grow-out { to   { transform: scale(1.06); opacity: 0; } }
+.ui-plant > .ui-stage.is-entering { animation: ui-grow-in var(--motion-duration-grow) var(--motion-ease-out) both; }
+.ui-plant > .ui-stage.is-leaving  { animation: ui-grow-out var(--motion-duration-fast) var(--motion-ease-in) both; }
+
+.ui-plant > .ui-stage {
+  transition:
+    transform var(--motion-duration-dormant) var(--motion-ease-in-out),
+    filter var(--motion-duration-dormant) var(--motion-ease-in-out),
+    opacity var(--motion-duration-dormant) var(--motion-ease-in-out);
+}
+.ui-plant[data-dormant] > .ui-stage { transform: scale(0.7); filter: grayscale(1); opacity: 0.6; }
+
+/* ---------- Bridge unlock: dashed line draws to solid, lock drops away ---------- */
+
+.ui-bridge { display: block; width: 100%; height: auto; overflow: visible; }
+.ui-bridge__locked { fill: none; stroke: var(--color-island-muted); stroke-width: 3; stroke-dasharray: 4 6; }
+.ui-bridge__open {
+  fill: none;
+  stroke: var(--island);
+  stroke-width: 3;
+  stroke-dasharray: 100 100;
+  stroke-dashoffset: 100;
+}
+.ui-bridge__lock { transform-box: fill-box; transform-origin: 50% 50%; }
+
+@keyframes ui-draw { to { stroke-dashoffset: 0; } }
+@keyframes ui-drop-away { to { transform: translateY(14px); opacity: 0; } }
+
+.ui-bridge.is-unlocked .ui-bridge__open { stroke-dashoffset: 0; }
+.ui-bridge.is-unlocked .ui-bridge__lock { opacity: 0; }
+.ui-bridge.is-unlocked.is-playing .ui-bridge__open {
+  animation: ui-draw var(--motion-duration-draw) var(--motion-ease-in-out) var(--motion-duration-fast) both;
+  stroke-dashoffset: 100;
+}
+.ui-bridge.is-unlocked.is-playing .ui-bridge__lock {
+  opacity: 1;
+  animation: ui-drop-away var(--motion-duration-base) var(--motion-ease-in) both;
+}
+
+/* ---------- Unread dot: one soft pulse, then still ---------- */
+
+@keyframes ui-dot-pulse {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+.ui-icon-btn__dot.is-playing { animation: ui-dot-pulse var(--motion-duration-pulse) var(--motion-ease-out) both; }
+
+/* ---------- Tutorial: highlight box draws in, card fades up ---------- */
+
+.ui-highlight { position: absolute; inset: -6px; width: calc(100% + 12px); height: calc(100% + 12px); overflow: visible; pointer-events: none; }
+.ui-highlight rect {
+  fill: none;
+  stroke: var(--color-border-default);
+  stroke-width: 2;
+  stroke-dasharray: 100 100;
+  stroke-dashoffset: 0;
+}
+.ui-highlight.is-playing rect { animation: ui-draw var(--motion-duration-grow) var(--motion-ease-in-out) both; stroke-dashoffset: 100; }
+
+.ui-coach-card.is-playing {
+  animation: ui-rise-in var(--motion-duration-base) var(--motion-ease-out) var(--motion-duration-grow) both;
+}
+
+/* ---------- In-world prompts and the View idea pill: rise in ----------
+   world-feedback.mjs replays these when a prompt or pill appears.
+   Under reduced motion the shift token is 0, so they only fade. */
+
+.ui-world-prompt.is-playing,
+.ui-pill.is-playing { animation: ui-rise-in var(--motion-duration-base) var(--motion-ease-out) both; }
+
+/* ---------- Reduced motion ----------
+   Travel tokens are already 0 in tokens.css, so panels, menu, toasts and the
+   tutorial card become plain fades. Here: no rotation, no decorative effects,
+   and value changes jump straight to the new value. */
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-menu[data-state="open"] { animation-name: ui-fade-in; }
+  .ui-plus .ui-icon,
+  .ui-ring__arc,
+  .ui-numeral,
+  .ui-plant > .ui-stage { transition: none; }
+  .ui-fx.is-playing > i,
+  .ui-landing.is-playing .ui-landing__marker,
+  .ui-icon-btn__dot.is-playing,
+  .ui-plant > .ui-stage.is-entering,
+  .ui-plant > .ui-stage.is-leaving,
+  .ui-bridge.is-unlocked.is-playing .ui-bridge__open,
+  .ui-bridge.is-unlocked.is-playing .ui-bridge__lock,
+  .ui-highlight.is-playing rect { animation: none; }
+  .ui-bridge.is-unlocked.is-playing .ui-bridge__open { stroke-dashoffset: 0; }
+  .ui-bridge.is-unlocked.is-playing .ui-bridge__lock { opacity: 0; }
+  .ui-highlight.is-playing rect { stroke-dashoffset: 0; }
+}

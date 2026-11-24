@@ -2,7 +2,7 @@ import { islands, islandScale, islandLandmarks, islandSpacing } from './islands.
 import { onIsland, canPlant, tileWidth, tileDepth, bridgePath, bridgeSurfaceHeight, bridgeHalfWidth, oakTreeHeightScale, traceOakConnection } from './plots.mjs';
 import { islandModel, canPlantOnIsland } from './island-kit/navigation.mjs';
 
-export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwControl='tap', onCross=()=>{}, onBridgeLocked=()=>{}, artwork = new Map(), islandRenderer=null, isVisible=()=>true }) {
+export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwControl='tap', onCross=()=>{}, onBridgeLocked=()=>{}, onEdge=()=>{}, onFrame, artwork = new Map(), islandRenderer=null, isVisible=()=>true }) {
   let plants = [];
   const keys = new Set();
   let model=null;
@@ -495,6 +495,9 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
     pull=null;
     canvas.parentElement?.classList.toggle('is-throwing',active);
     throwButton.setAttribute('aria-pressed',String(active));
+    const label = active ? 'Cancel throw' : throwButton.dataset?.launchLabel ?? 'Plant a seed';
+    throwButton.setAttribute('aria-label',label);
+    throwButton.title = label + ' (Q)';
     plantingTip.hidden=!active;
     canvas.focus({preventScroll:true});
   }
@@ -654,15 +657,15 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
     const groundWalkable=nav?nav.walkable:onIsland(px,pz,radius);
     if(!groundWalkable && bridgeFloorAt(px,pz,Infinity)===-Infinity){
       if(grounded){
-        for(const {path,canCross,open} of bridges){
-          if(!open || canCross)continue;
-          const {distance,offset}=path.locate(px,pz);
-          if(distance<0 || distance>path.length || Math.abs(offset)>bridgeHalfWidth)continue;
-          if(performance.now()>=nextBridgeNotice){
-            nextBridgeNotice=performance.now()+3000;
-            onBridgeLocked();
-          }
-          break;
+        const nearbyBridge = bridges.find(({path, open}) => {
+          const {distance, offset} = path.locate(px,pz);
+          return open && distance >= 0 && distance <= path.length && Math.abs(offset) <= bridgeHalfWidth;
+        });
+        if (performance.now() >= nextBridgeNotice) {
+          nextBridgeNotice = performance.now() + 3200;
+          if (nearbyBridge && !nearbyBridge.canCross) {
+            onBridgeLocked(nearbyBridge.path.endpoints.find(end => end.island !== currentIsland)?.island);
+          } else if (!nearbyBridge) onEdge();
         }
       }
       return;
@@ -851,6 +854,22 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
         const [sx,sy]=screen(position);
         drawSeed(sx,sy,clamp(.085*focal/position[2],6,22),t*10-.64);
       }
+    }
+    if (onFrame) {
+      const plant = !throwing && !flight && (plantAt(width / 2, height / 2) ||
+        plantHits.findLast(hit => hit.left < width * .55 && hit.right > width * .45 &&
+          hit.top < height * .69 && hit.bottom > height * .38));
+      const projectedLanding = flight?.impact && view(flight.impact);
+      const plantLanding = projectedLanding?.[2] > near ? screen(projectedLanding) : null;
+      const bridge = bridges.map(({path}) => path.endpoints.find(end => end.island === currentIsland))
+        .filter(Boolean).map(end => view([end.x,end.y,end.z]))
+        .filter(point => point[2] > near).map(screen)
+        .find(([x,y]) => x > 0 && x < width && y > 0 && y < height);
+      onFrame({
+        width, height, plant,
+        bridge: bridge && { x: bridge[0], y: bridge[1] },
+        landing: plantLanding && { x: plantLanding[0], y: plantLanding[1], valid: flight.result === 'planted' },
+      });
     }
     const clickable=!throwing&&!flight&&cursor&&plantAt(cursor.x,cursor.y);
     canvas.classList?.toggle('over-plant',Boolean(clickable));

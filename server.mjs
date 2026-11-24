@@ -264,6 +264,21 @@ export async function handleRequest(req, res) {
       databaseHealth.get();
       return json(res,200,{ok:true,storage:railway?'railway-volume':vercelPreview&&!persistentDirectory?'temporary':'sqlite'});
     }
+    if (!vercelPreview && req.method === 'GET' && /^\/ui\/(?:[a-z0-9-]+\/)*[a-z0-9-]+\.(css|mjs|html|svg|png|woff2)$/i.test(path)) {
+      const types = {
+        css: 'text/css; charset=utf-8', mjs: 'text/javascript; charset=utf-8',
+        html: 'text/html; charset=utf-8', svg: 'image/svg+xml', png: 'image/png', woff2: 'font/woff2',
+      };
+      const extension = path.slice(path.lastIndexOf('.') + 1).toLowerCase();
+      try {
+        const data = readFileSync(new URL('./public' + path, import.meta.url));
+        res.writeHead(200, { 'Content-Type': types[extension], 'Cache-Control': 'no-cache' });
+        return res.end(data);
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+        return json(res, 404, { error: 'Not found.' });
+      }
+    }
     if (!vercelPreview && req.method === 'GET' && /^\/island-kit\/(?:[a-z]+\/)*[a-z0-9.-]+\.m?js$/i.test(path)) {
       let data;
       try { data = readFileSync(new URL('./public' + path, import.meta.url)); }

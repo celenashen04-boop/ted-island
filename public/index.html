@@ -6,71 +6,50 @@
   <meta name="description" content="A shared research garden on a floating island.">
   <title>CHI Island · Research Garden</title>
   <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/ui/tokens.css">
+  <link rel="stylesheet" href="/ui/components.css">
+  <link rel="stylesheet" href="/ui/motion.css">
+  <link rel="stylesheet" href="/ui/onboarding.css">
+  <link rel="stylesheet" href="/ui/panels.css">
+  <link rel="stylesheet" href="/ui/game.css">
 </head>
 <body>
   <main class="world" aria-label="CHI Island research garden">
-    <button type="button" id="open-world" data-art="world" class="round-button world-button" aria-label="Open World View" title="World View">
+    <button type="button" id="open-world" data-art="world" class="ui-icon-btn round-button world-button" aria-label="Open World View" title="World View">
       <svg class="hud-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.65">
         <circle cx="12" cy="12" r="9"/>
         <ellipse cx="12" cy="12" rx="4" ry="9"/>
         <path d="M3 12h18"/>
       </svg>
     </button>
-    <div class="island-name" id="resident-badge" hidden>
-      <img id="resident-photo" alt="Your profile photo" hidden>
-      <span id="island-name"></span>
-      <button type="button" id="sign-out" class="secondary">Sign out</button>
-      <a id="resident-linkedin" target="_blank" rel="noopener noreferrer" hidden>LinkedIn</a>
-      <button type="button" id="share-resident-linkedin" aria-pressed="false" title="Let players open your LinkedIn from your seeds and plants" hidden>Share LinkedIn</button>
-    </div>
+    <button type="button" id="browse-plants" class="ui-island-chip" hidden>
+      <span class="ui-island-chip__swatch" aria-hidden="true"></span>
+      <span class="ui-island-chip__text">
+        <span class="ui-island-chip__context" id="island-context"></span>
+        <span class="ui-island-chip__name" id="island-name"></span>
+      </span>
+      <span class="ui-icon ui-icon--arrow-right" aria-hidden="true"></span>
+    </button>
     <canvas id="map" tabindex="0" aria-label="First-person island. Use W A S D to walk, arrow keys to look, and select a plant to read its research. Press Q to ready an acorn, then tap or click the scene to throw."></canvas>
     <div class="move-stick" id="move-stick" aria-hidden="true"><span></span></div>
-    <button type="button" id="seed-mode" data-art="throw" class="round-button seed-launcher" aria-label="Plant a seed" aria-pressed="false" aria-keyshortcuts="Q" title="Plant a seed (Q)">
+    <button type="button" id="seed-mode" data-art="throw" class="ui-icon-btn ui-plus round-button seed-launcher" aria-label="Plant a seed" aria-pressed="false" aria-keyshortcuts="Q" title="Plant a seed (Q)">
       <svg class="hud-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
         <path d="M12 5v14M5 12h14"/>
       </svg>
     </button>
     <p id="planting-tip" class="planting-tip instruction-glass" role="status" hidden></p>
-    <button type="button" id="open-catalog" data-art="catalog" aria-label="Seed Catalog" title="Seed Catalog" class="catalog-button round-button" aria-haspopup="dialog" aria-controls="seed-catalog">
-      <svg class="hud-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M19.5 4.5c.8 4.5-.6 9-4.3 12.6-3 3-7.3 3.5-9.6 1.2s-1.8-6.6 1.2-9.6c3.6-3.7 8.1-5.1 12.7-4.2Z"/>
-        <path d="M8.5 15.5c1.7-3 4-5.3 7-7"/>
-      </svg>
-    </button>
-    <button type="button" id="open-notifications" class="round-button notification-button" aria-label="Notifications" title="Notifications" aria-haspopup="dialog">
-      <svg class="hud-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9m-8 12a2 2 0 0 0 4 0"/></svg>
-      <span id="notification-dot" hidden></span>
-    </button>
-    <button type="button" id="browse-plants" class="seed-mode" aria-haspopup="dialog" aria-controls="island-plants" hidden>Island plants</button>
-    <aside id="movement-tip" class="guide-tip scene-guide instruction-glass" aria-label="Movement controls" hidden>
-      <p id="movement-tip-text"></p>
-      <button type="button" class="secondary">Got it</button>
-    </aside>
     <p class="message instruction-glass" id="message" role="status"></p>
   </main>
   <section id="world-view" class="world-view" aria-label="World View" hidden>
-    <button type="button" id="toggle-dashboard" data-art="bridges" class="catalog-button round-button dashboard-button" aria-label="Island Access" title="Bridges" aria-controls="world-dashboard" aria-expanded="false">
+    <button type="button" id="toggle-dashboard" data-art="bridges" class="ui-icon-btn catalog-button round-button dashboard-button" aria-label="Island Access" title="Bridges" aria-expanded="false">
       <svg class="hud-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 15h18M7 5v14M17 5v14M3 10a5 5 0 0 0 4-5c1 4 2.8 6 5 6s4-2 5-6a5 5 0 0 0 4 5M10 10v5m4-5v5"/>
       </svg>
     </button>
     <canvas id="world-map" aria-label="Rotatable map of the CHI islands. Select your home island to return to Player View."></canvas>
-    <button type="button" id="home-island" class="home-island" data-art="player" hidden></button>
-    <aside id="world-tip" class="guide-tip scene-guide instruction-glass" aria-label="World View controls" hidden>
-      <p>Drag to rotate. Select your home island to return. Open <strong>Bridges</strong> to see where you can cross.</p>
-      <button type="button" class="secondary">Got it</button>
-    </aside>
-    <aside id="world-dashboard" class="world-dashboard" aria-labelledby="dashboard-title" inert>
-      <h1 id="dashboard-title">Island Access</h1>
-      <p id="world-home"></p>
-      <h2>Bridges</h2>
-      <div id="bridge-list"></div>
-      <h2>Followed plant updates</h2>
-      <div id="follow-updates"></div>
-      <p><a href="/studios">Island Studio</a></p>
-    </aside>
+    <button type="button" id="home-island" class="ui-world-home" hidden></button>
   </section>
-  <dialog id="onboarding" aria-labelledby="account-title">
+  <dialog id="onboarding" class="ui-onboard" aria-labelledby="account-title">
     <section id="account-entry" aria-labelledby="account-title">
       <h1 id="account-title">Welcome to CHI Island</h1>
       <div id="account-start">
@@ -117,109 +96,7 @@
       <button id="retry-profile" type="button" class="secondary" hidden>Try again</button>
     </form>
   </dialog>
-  <dialog id="notifications" aria-labelledby="notifications-title">
-    <div class="dialog-header">
-      <h2 id="notifications-title">Notifications</h2>
-      <button type="button" data-close aria-label="Close notifications">×</button>
-    </div>
-    <div id="notification-list"></div>
-  </dialog>
-  <dialog id="seed-catalog" aria-labelledby="catalog-title">
-    <div class="dialog-header">
-      <h2 id="catalog-title">Seed Catalog</h2>
-      <button type="button" data-close aria-label="Close Seed Catalog">×</button>
-    </div>
-    <aside id="catalog-tip" class="catalog-tip instruction-glass" aria-labelledby="catalog-tip-title" hidden>
-      <div>
-        <strong id="catalog-tip-title">Bring an idea home</strong>
-        <p>Open a seed packet and choose <b>Adopt seed</b>. Throw and plant it on your home island to grow the idea together and start a bridge to its original island.</p>
-      </div>
-      <button type="button" id="dismiss-catalog-tip" class="secondary">Got it</button>
-    </aside>
-    <div id="catalog-filters" class="catalog-filters" role="group" aria-label="Filter shelves by island"></div>
-    <div id="catalog-items"><p>Connecting to the catalog…</p></div>
-  </dialog>
-  <dialog id="catalog-seed" class="seed-detail" aria-labelledby="catalog-seed-title">
-    <div class="dialog-header seed-detail-header">
-      <span id="catalog-seed-origin" class="seed-island"></span>
-      <button type="button" data-close aria-label="Close seed details" autofocus>×</button>
-    </div>
-    <div class="seed-detail-body">
-      <h2 id="catalog-seed-title"></h2>
-      <p id="catalog-seed-idea"></p>
-      <p id="catalog-seed-question" class="packet-question"></p>
-      <p id="catalog-seed-status" class="seed-status" hidden></p>
-      <p id="catalog-seed-growth" class="muted" hidden>This idea is already growing. Bring its current tree and shared conversation to your island.</p>
-      <button type="button" id="catalog-seed-adopt" class="primary" data-art="adopt">Adopt seed</button>
-    </div>
-  </dialog>
-  <dialog id="plant-dialog">
-    <form id="plant-form">
-      <div class="dialog-header"><h2>Plant a research seed</h2><button type="button" data-close aria-label="Close">×</button></div>
-      <p class="muted">Your seed landed on open grass. Add your research to plant it.</p>
-      <div id="seed-fields">
-        <label>Seed title<input name="title" maxlength="120" required></label>
-        <label>Short description<textarea name="idea" required maxlength="500" rows="3"></textarea></label>
-        <label>Open question<input name="question" required maxlength="300"></label>
-        <label>Paper or poster PDF (optional)<input name="article" type="file" accept=".pdf,application/pdf"></label>
-      </div>
-      <p id="adoption-confirmation" hidden></p>
-      <p class="error" id="plant-error" role="alert"></p>
-      <button class="primary" type="submit">Plant research seed</button>
-    </form>
-  </dialog>
-  <dialog id="island-plants" aria-labelledby="island-plants-title">
-    <div class="dialog-header">
-      <h2 id="island-plants-title" tabindex="-1">Island plants</h2>
-      <button type="button" data-close aria-label="Close island plants">×</button>
-    </div>
-    <div id="island-plant-list"></div>
-  </dialog>
-  <dialog id="idea-dialog" class="seed-detail" aria-labelledby="idea-title">
-    <div class="dialog-header seed-detail-header">
-      <span id="idea-origin" class="seed-island"></span>
-      <button type="button" data-close aria-label="Close plant details" autofocus>×</button>
-    </div>
-    <div class="seed-detail-body">
-      <h2 id="idea-title"></h2>
-      <p id="idea-text"></p>
-      <p id="idea-question"></p>
-      <p id="idea-growth" class="muted" aria-live="polite"></p>
-      <div class="idea-actions">
-        <a class="secondary" id="article-link" target="_blank" rel="noopener">Open research PDF</a>
-        <button class="primary" id="water" data-art="water" type="button">♡ Like · Water</button>
-        <button class="secondary" id="follow" data-art="follow" type="button">Follow</button>
-      </div>
-      <aside id="participation-tip" class="guide-tip instruction-glass" aria-label="How plants grow" hidden>
-        <p>Like another player’s plant to water it. Comment to fertilize it. Both help it grow.</p>
-        <button type="button" class="secondary">Got it</button>
-      </aside>
-      <h3>Shared discussion</h3>
-      <p id="contributors" class="muted" hidden></p>
-      <div id="discussion"></div>
-      <form id="comment-form">
-        <div id="reply-context" class="reply-context" hidden>
-          <span id="reply-target"></span>
-          <button type="button" id="cancel-reply" class="secondary">Cancel reply</button>
-        </div>
-        <label>Comment · Fertilize<textarea name="comment" maxlength="1200" rows="2" required></textarea></label>
-        <button type="submit" id="post-comment" data-art="comment" class="primary">Post comment</button>
-      </form>
-      <p class="error" id="water-error" role="alert"></p>
-      <footer id="plant-author" class="author-connection" hidden>
-        <a class="secondary" target="_blank" rel="noopener noreferrer">Connect to author</a>
-      </footer>
-    </div>
-  </dialog>
-  <dialog id="landscape-required" class="instruction-glass" aria-labelledby="landscape-title" aria-describedby="landscape-instructions">
-    <svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="17" y="21" width="26" height="16" rx="3"/>
-      <path d="M22 19v-5a3 3 0 0 0-3-3H8a3 3 0 0 0-3 3v19a3 3 0 0 0 3 3h6m17-26a8 8 0 0 1 8 7m-4-2 4 3 3-4"/>
-    </svg>
-    <h1 id="landscape-title">Turn your phone sideways</h1>
-    <p id="landscape-instructions">CHI Island plays in landscape.</p>
-    <button id="play-landscape" type="button" class="primary" hidden>Open in landscape</button>
-  </dialog>
+  <dialog id="landscape-required" aria-labelledby="ui-rotate-title" aria-describedby="ui-rotate-body"></dialog>
   <template id="mobile-preview">
     <main class="mobile-preview">
       <iframe title="CHI Island landscape phone preview" width="844" height="390"></iframe>
