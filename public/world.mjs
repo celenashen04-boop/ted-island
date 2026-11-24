@@ -31,7 +31,8 @@ export function createWorld(canvas, artwork, homeButton, enterHome, islandRender
     };
     const oaks=new Map();
     for(const bridge of bridges){
-      const start=items.find(item=>item.id===home),end=items.find(item=>item.id===bridge.destination);
+      const from=bridge.ends?.[0].island??home;
+      const start=items.find(item=>item.id===from),end=items.find(item=>item.id===bridge.destination);
       if(!start||!end)continue;
       const [ax,ay]=project(start.position),[bx,by]=project(end.position);
       const art=artwork.get(bridge.open?'bridge-open':bridge.progress>=40?'bridge-walkway':'bridge-foundation');
@@ -41,11 +42,13 @@ export function createWorld(canvas, artwork, homeButton, enterHome, islandRender
         ctx.drawImage(art,0,-9,length,18);ctx.restore();
         continue;
       }
-      const route=bridgePath(bridge,home,Boolean(islandRenderer));
+      const route=bridgePath(bridge,from,Boolean(islandRenderer));
       if(!route)continue;
       const mapPoint=([x,y,z])=>project(rotate({
         x:start.x+x/islandSpacing,y:start.y+y/islandSpacing,z:start.z+z/islandSpacing
       }));
+      ctx.save();
+      if(bridge.permanent&&!bridge.canCross)ctx.globalAlpha=.45;
       const mapBough=(points,thickness,colors)=>{
         const projected=points.map(mapPoint);
         const stroke=(color,weight,raise=0)=>{
@@ -61,9 +64,10 @@ export function createWorld(canvas, artwork, homeButton, enterHome, islandRender
         stroke(colors[1],1.45,.7);
       };
       for(const [index,{island,tree}] of route.endpoints.entries()){
-        traceOakConnection(route,index,bridge.span.growth,bridge.open,mapBough);
-        if(bridge.span.growth>=3)oaks.set(island+':'+bridge.span.seed,{island,point:mapPoint([tree.x,tree.y,tree.z])});
+        traceOakConnection(route,index,bridge.permanent?4:bridge.span.growth,bridge.open,mapBough);
+        if(bridge.span?.growth>=3)oaks.set(island+':'+bridge.span.seed,{island,point:mapPoint([tree.x,tree.y,tree.z])});
       }
+      ctx.restore();
     }
     function drawOaks(island){
       for(const marker of oaks.values()){
@@ -193,7 +197,7 @@ export function createWorld(canvas, artwork, homeButton, enterHome, islandRender
     requestAnimationFrame(animate);
   }
   return {
-    update(state){({islands,bridges,home}=state);draw();},
+    update(state){({islands,home}=state);bridges=state.worldBridges??state.bridges;draw();},
     draw
   };
 }

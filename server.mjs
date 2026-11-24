@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { randomUUID } from 'node:crypto';
+import { createAccounts } from './accounts.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { tmpdir } from 'node:os';
@@ -8,7 +8,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createGarden } from './garden.mjs';
 import { islands, islandScale } from './public/islands.mjs';
 import { plots } from './public/plots.mjs';
-import { canPlantOnIsland } from './public/island-kit/navigation.mjs';
+import { canPlantOnIsland, islandModel } from './public/island-kit/navigation.mjs';
 
 const startedDirectly = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
 const vercelPreview = process.env.VERCEL === '1' || !startedDirectly;
@@ -78,10 +78,29 @@ if(ownerIsUnique){
     db.exec('PRAGMA foreign_keys = ON');
   }
 }
+const accounts = createAccounts(db);
 const garden = createGarden(db);
+const databaseHealth = db.prepare('SELECT 1');
 const getPDF = db.prepare('SELECT pdf FROM plants WHERE id=?');
 const clients = new Map();
+const canStand=(island,x,z)=>islandModel(island)?.queryIsland(x,z).walkable;
 const maxPDF = 10 * 1024 * 1024;
+const requestRates=new Map();
+function acceptRequest(scope,limit){
+  const now=Date.now();
+  if(requestRates.size>=10_000){
+    for(const [key,value] of requestRates)if(value.reset<=now)requestRates.delete(key);
+    if(requestRates.size>=10_000&&!requestRates.has(scope))return false;
+  }
+  let count=requestRates.get(scope);
+  if(!count||count.reset<=now){
+    count={total:0,reset:now+60_000};
+    requestRates.set(scope,count);
+  }
+  if(count.total>=limit)return false;
+  count.total++;
+  return true;
+}
 const files = new Map([
   ['/', [new URL('./public/index.html', import.meta.url), 'text/html; charset=utf-8']],
   ...['index','spiral','verdant','pinwheel'].flatMap(page=> {
@@ -103,15 +122,6 @@ const files = new Map([
   ['/plots.mjs', [new URL('./public/plots.mjs', import.meta.url), 'text/javascript; charset=utf-8']]
 ]);
 
-function playerFor(req, res) {
-  const existing = /(?:^|;\s*)ted-player=([a-f0-9-]{36})(?:;|$)/.exec(req.headers.cookie ?? '')?.[1];
-  if (existing) return existing;
-  const player = randomUUID();
-  const secure = process.env.TED_SECURE_COOKIE === '1' ? '; Secure' : '';
-  res.setHeader('Set-Cookie', 'ted-player=' + player + '; Path=/; Max-Age=31536000; HttpOnly; SameSite=Strict' + secure);
-  return player;
-}
-
 function json(res, status, value) {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
   res.end(JSON.stringify(value));
@@ -122,9 +132,18 @@ function snapshot(player) {
 }
 
 function broadcast() {
-  for (const [res, player] of clients) {
-    if (res.writableLength > 1024 * 1024) res.destroy();
-    else res.write('data: ' + JSON.stringify(snapshot(player)) + '\n\n');
+  const updates=new Map();
+  for (const [res, client] of clients) {
+    if(accounts.player(client.req)!==client.player){
+      res.end();
+      continue;
+    }
+    if(res.writableLength>1024*1024){
+      res.destroy();
+      continue;
+    }
+    if(!updates.has(client.player))updates.set(client.player,'data: '+JSON.stringify(snapshot(client.player))+'\n\n');
+    res.write(updates.get(client.player));
   }
 }
 
@@ -234,6 +253,10 @@ export async function handleRequest(req, res) {
   res.setHeader('Referrer-Policy', 'no-referrer');
   const path = new URL(req.url, 'http://localhost').pathname;
   try {
+    if(req.method==='GET' && path==='/api/health'){
+      databaseHealth.get();
+      return json(res,200,{ok:true,storage:vercelPreview&&!process.env.TED_DATA_DIR?'temporary':'sqlite'});
+    }
     if (!vercelPreview && req.method === 'GET' && /^\/island-kit\/(?:[a-z]+\/)*[a-z0-9.-]+\.m?js$/i.test(path)) {
       let data;
       try { data = readFileSync(new URL('./public' + path, import.meta.url)); }
@@ -250,29 +273,42 @@ export async function handleRequest(req, res) {
       res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-cache' });
       return res.end(data);
     }
-    if (req.method === 'GET' && path === '/api/profile') return json(res,200,garden.profile(playerFor(req,res)));
+    if (req.method==='GET' && path==='/api/auth')return json(res,200,{account:accounts.current(req)});
+    if (req.method==='GET' && path==='/api/profile'){
+      const player=accounts.player(req);
+      return player ? json(res,200,garden.profile(player)) : json(res,401,{error:'Sign in to the garden.'});
+    }
     if (req.method === 'GET' && path === '/api/profile/photo') {
-      const row=garden.photoFor.get(playerFor(req,res));
+      const player=accounts.player(req);
+      const row=player&&garden.photoFor.get(player);
       if(!row?.photo)return json(res,404,{error:'No profile photo.'});
       res.writeHead(200,{'Content-Type':row.type,'Cache-Control':'private, no-store'});
       return res.end(row.photo);
     }
     if (req.method === 'GET' && (path === '/api/garden' || path === '/api/events')) {
-      const player=playerFor(req,res);
-      if(!garden.profile(player).completed)return json(res,403,{error:'Complete your resident profile first.'});
+      const player=accounts.player(req);
+      if(!player||!garden.profile(player).completed)return json(res,403,{error:'Complete your resident profile first.'});
       if(path==='/api/garden')return json(res,200,snapshot(player));
       res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', 'X-Accel-Buffering': 'no' });
-      clients.set(res, player);
+      clients.set(res,{player,req});
       res.on('close', () => clients.delete(res));
       res.write('data: ' + JSON.stringify(snapshot(player)) + '\n\n');
       if (vercelPreview) await new Promise(resolve => res.once('close', resolve));
       return;
     }
+    const exportMatch=/^\/api\/plants\/([a-f0-9-]{36})\/export$/.exec(path);
+    if(req.method==='GET'&&exportMatch){
+      const player=accounts.player(req);
+      const data=player&&garden.exportPlant(player,exportMatch[1]);
+      if(!data)return json(res,404,{error:'Plant export is unavailable.'});
+      res.setHeader('Content-Disposition','attachment; filename="chi-island-plant.json"');
+      return json(res,200,data);
+    }
     const match = /^\/api\/plants\/([a-f0-9-]{36})\/(article|water|comment|follow)$/.exec(path);
     if (req.method === 'GET' && match?.[2] === 'article') {
       const row = getPDF.get(match[1]);
-      const player=playerFor(req,res);
-      if (!row?.pdf.length || !garden.profile(player).completed || !garden.canRead(player,match[1])) return json(res, 404, { error: 'Article not found.' });
+      const player=accounts.player(req);
+      if (!row?.pdf.length || !player || !garden.profile(player).completed || !garden.canRead(player,match[1])) return json(res, 404, { error: 'Article not found.' });
       res.writeHead(200, {
         'Content-Type': 'application/pdf', 'Content-Disposition': 'inline; filename="research-article.pdf"',
         'Content-Security-Policy': "sandbox; default-src 'none'", 'Cache-Control': 'no-store'
@@ -280,10 +316,32 @@ export async function handleRequest(req, res) {
       return res.end(row.pdf);
     }
     if (req.method === 'POST') {
-      if (req.headers['x-ted-island'] !== 'garden' || req.headers['sec-fetch-site'] === 'cross-site') {
+      const origin=req.headers.origin;
+      const expected=process.env.TED_ORIGIN??(req.headers.host
+        ?(vercelPreview||process.env.TED_SECURE_COOKIE==='1'?'https://':'http://')+req.headers.host:null);
+      if (req.headers['x-ted-island'] !== 'garden' || req.headers['sec-fetch-site'] === 'cross-site' ||
+        (origin && origin!==expected)) {
         return json(res, 403, { error: 'Open CHI Island to make changes.' });
       }
-      const player = playerFor(req, res);
+      if(path.startsWith('/api/auth/')){
+        const body=await smallJSON(req);
+        if(body===null)return json(res,400,{error:'Invalid account request.'});
+        let result;
+        if(path==='/api/auth/start'){
+          if(!acceptRequest('account:'+req.socket.remoteAddress,60))return json(res,429,{error:'Try again in a minute.'});
+          result=accounts.create(req,res,body.judge===true);
+        }
+        else if(path==='/api/auth/register')result=await accounts.register(req,res,body);
+        else if(path==='/api/auth/login')result=await accounts.login(req,res,body);
+        else if(path==='/api/auth/logout'){
+          const player=accounts.player(req);
+          result=accounts.logout(req,res);
+          for(const [stream,client] of clients)if(client.player===player&&accounts.player(client.req)!==player)stream.end();
+        }else return json(res,404,{error:'Not found.'});
+        return json(res,result.status??200,result.error?{error:result.error}:result);
+      }
+      const player = accounts.player(req);
+      if (!player)return json(res,401,{error:'Sign in to the garden.'});
       if (path === '/api/profile') return await onboard(req,res,player);
       if (!garden.profile(player).completed) return json(res,403,{error:'Complete your resident profile first.'});
       if (path === '/api/profile/linkedin-sharing') {
@@ -295,11 +353,36 @@ export async function handleRequest(req, res) {
         broadcast();
         return;
       }
-      if (path === '/api/plants') return await plant(req, res, player);
+      if(path==='/api/notifications/read'){
+        const body=await smallJSON(req);
+        if(!Number.isSafeInteger(body?.id))return json(res,400,{error:'Choose a notification.'});
+        const changed=garden.markNotification(player,body.id);
+        if(changed)broadcast();
+        return json(res,changed?200:404,{ok:changed});
+      }
+      if(path==='/api/cross'||path==='/api/position'){
+        const body=await smallJSON(req);
+        if(!Number.isInteger(body?.island))return json(res,400,{error:'Choose an island.'});
+        if(path==='/api/cross'){
+          const result=garden.cross(player,body.island);
+          return json(res,result.status??200,result.error?result:{...result,garden:snapshot(player)});
+        }
+        if(!['x','z','yaw','pitch'].every(key=>Number.isFinite(body[key])) ||
+          !canStand(body.island,body.x,body.z)){
+          return json(res,400,{error:'Position is outside the playable island.'});
+        }
+        const saved=garden.savePose(player,body.island,body);
+        return json(res,saved?200:409,{ok:saved});
+      }
+      if(path==='/api/plants'){
+        if(!acceptRequest('plant:'+player,12))return json(res,429,{error:'Wait a minute before planting another seed.'});
+        return await plant(req,res,player);
+      }
       if(match&&match[2]!=='article'){
         const body=await smallJSON(req);
         if(!Number.isInteger(body?.island))return json(res,400,{error:'Choose a plant on an island.'});
         const id=match[1], action=match[2];
+        if(action==='comment'&&!acceptRequest('comment:'+player,20))return json(res,429,{error:'Wait a minute before posting another comment.'});
         const message=typeof body.text==='string'?body.text.trim():'';
         if(action==='comment'&&(!message||message.length>1200)){
           return json(res,400,{error:'Write a comment of up to 1,200 characters.'});
@@ -312,7 +395,7 @@ export async function handleRequest(req, res) {
           ?garden.setFollow(player,id,body.island,body.enabled===true)
           :garden.participate(player,id,body.island,action==='water'?'like':'comment',message,replyTo);
         if(result.error)return json(res,result.status,{error:result.error});
-        json(res,200,{ok:true});
+        json(res,200,result);
         if(result.changed!==false)broadcast();
         return;
       }
@@ -325,12 +408,28 @@ export async function handleRequest(req, res) {
   }
 }
 const heartbeat = setInterval(() => {
-  for (const res of clients.keys()) res.write(': heartbeat\n\n');
+  for(const [res,client] of clients){
+    if(accounts.player(client.req)===client.player)res.write(': heartbeat\n\n');
+    else res.end();
+  }
 }, 15000);
 heartbeat.unref();
 if (startedDirectly) {
   const server = createServer(handleRequest);
+  const maintenance=setInterval(()=>{
+    try {if(garden.runMaintenance())broadcast();}
+    catch(error){console.error('Garden maintenance failed:',error.message);}
+  },60_000);
+  maintenance.unref();
   server.listen(Number(process.env.PORT ?? 4173), process.env.HOST ?? '127.0.0.1', () => {
     console.log('CHI Island running at http://' + server.address().address + ':' + server.address().port);
   });
+  function shutdown() {
+    clearInterval(heartbeat);
+    clearInterval(maintenance);
+    for(const client of clients.keys())client.end();
+    server.close(()=>db.close());
+  }
+  process.once('SIGTERM',shutdown);
+  process.once('SIGINT',shutdown);
 }

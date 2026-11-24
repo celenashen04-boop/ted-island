@@ -302,18 +302,18 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
     bridgeFaces=[];
     const bridgeTrees=new Map();
     bridges=next.flatMap(bridge=>{
-      if (!bridge.span?.ends.some(end=>end.island===currentIsland)) return [];
+      if (!(bridge.ends??bridge.span?.ends)?.some(end=>end.island===currentIsland)) return [];
       const path=bridgePath(bridge,currentIsland,Boolean(islandRenderer));
       return path?[{...bridge,path}]:[];
     });
     fallLimit=Math.min(-8,...bridges.filter(bridge=>bridge.canCross)
       .map(({path})=>Math.min(...path.endpoints.map(end=>end.y))-8));
-    for (const {span,path,open} of bridges) {
+    for (const {span,path,open,permanent} of bridges) {
       for (const [index,end] of path.endpoints.entries()) {
-        if (end.island!==currentIsland || (open && plants.find(plant=>plant.id===span.seed)?.growth!==4)) {
+        if (!permanent && (end.island!==currentIsland || (open && plants.find(plant=>plant.id===span.seed)?.growth!==4))) {
           bridgeTrees.set(end.island+':'+span.seed,{...end.tree,id:span.seed,growth:span.growth,remote:end.island!==currentIsland});
         }
-        traceOakConnection(path,index,span.growth,open,drawBough);
+        traceOakConnection(path,index,permanent?4:span.growth,open,drawBough);
       }
     }
     visiblePlants=[...plants.filter(plant=>!bridgeTrees.has(currentIsland+':'+plant.id)),...bridgeTrees.values()];
@@ -510,7 +510,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
   }
 
   function plantHeight(plant){
-    return plantSize(plant)*(plant.growth>=3?oakTreeHeightScale:1);
+    return plantSize(plant)*(plant.growth>=3?oakTreeHeightScale:1)*(plant.displayScale??1);
   }
 
   function plantPolygon(points,color){
@@ -572,7 +572,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
   function drawPlant(project,plant,scale,now) {
     const ground=plant.y??0;
     const [sx,sy]=project([plant.x,ground+.016,plant.z]);
-    const wide=plantSize(plant)*scale;
+    const wide=plantSize(plant)*scale*(plant.displayScale??1);
     const tall=plantHeight(plant)*scale;
     const sprite=artwork.get(['seed','sprout','young','tree','mature'][plant.growth]);
     const spriteWidth=sprite ? Math.min(wide*2,wide*sprite.width/sprite.height) : 0;
@@ -615,7 +615,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
       if(step>=ground+trunkHeight || step+bodyHeight<=ground)return false;
       const oldDistance=Math.hypot(x-plant.x,z-plant.z);
       const distance=Math.hypot(px-plant.x,pz-plant.z);
-      return distance<radius+plantSize(plant)*.07 && distance<oldDistance;
+      return distance<radius+plantSize(plant)*.07*(plant.displayScale??1) && distance<oldDistance;
     });
   }
 
@@ -1061,8 +1061,12 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
       plants=model ? next.map(plant=>({...plant,x:plant.x*islandScale,z:plant.z*islandScale})) : next;
       growBridgeMeshes(links);
     },
+    pose(){return grounded?{x,z,yaw,pitch}:null;},
     arrive(position){
-      ({x,z,feet}=position);
+      ({x,z}=position);
+      feet=position.feet??model?.queryIsland(x,z).height??0;
+      yaw=position.yaw??yaw;
+      pitch=position.pitch??pitch;
       verticalSpeed=0;grounded=true;standingOnObject=false;eye=feet+eyeHeight;flight=null;
       if(throwing)setThrowMode(false);
     },

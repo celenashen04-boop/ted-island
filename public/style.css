@@ -288,3 +288,20 @@ dialog{background:var(--kit-surface,#fffdf4);color:var(--kit-text,#243227)}
 .is-throwing #movement-tip{display:none}
 #world-tip{bottom:max(1rem,env(safe-area-inset-bottom))}
 #participation-tip{margin-top:.8rem}
+
+.notification-button {
+  position: absolute;
+  z-index: 2;
+  top: max(12px, env(safe-area-inset-top));
+  right: calc(max(12px, env(safe-area-inset-right)) + 58px);
+}
+
+#notification-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fac97c;
+}

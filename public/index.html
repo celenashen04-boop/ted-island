@@ -19,6 +19,7 @@
     <div class="island-name" id="resident-badge" hidden>
       <img id="resident-photo" alt="Your profile photo" hidden>
       <span id="island-name"></span>
+      <button type="button" id="sign-out" class="secondary">Sign out</button>
       <a id="resident-linkedin" target="_blank" rel="noopener noreferrer" hidden>LinkedIn</a>
       <button type="button" id="share-resident-linkedin" aria-pressed="false" title="Let residents open your LinkedIn from your seeds and plants" hidden>Share LinkedIn</button>
     </div>
@@ -36,6 +37,10 @@
         <path d="M8.5 15.5c1.7-3 4-5.3 7-7"/>
       </svg>
     </button>
+    <button type="button" id="open-notifications" class="round-button notification-button" aria-label="Notifications" title="Notifications" aria-haspopup="dialog">
+      <svg class="hud-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9m-8 12a2 2 0 0 0 4 0"/></svg>
+      <span id="notification-dot" hidden></span>
+    </button>
     <button type="button" id="browse-plants" class="seed-mode" aria-haspopup="dialog" aria-controls="island-plants" hidden>Island plants</button>
     <aside id="movement-tip" class="guide-tip scene-guide instruction-glass" aria-label="Movement controls" hidden>
       <p id="movement-tip-text"></p>
@@ -44,7 +49,7 @@
     <p class="message instruction-glass" id="message" role="status"></p>
   </main>
   <section id="world-view" class="world-view" aria-label="World View" hidden>
-    <button type="button" id="toggle-dashboard" data-art="bridges" class="catalog-button round-button dashboard-button" aria-label="Bridge dashboard" title="Bridges" aria-controls="world-dashboard" aria-expanded="false">
+    <button type="button" id="toggle-dashboard" data-art="bridges" class="catalog-button round-button dashboard-button" aria-label="Island Access" title="Bridges" aria-controls="world-dashboard" aria-expanded="false">
       <svg class="hud-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 15h18M7 5v14M17 5v14M3 10a5 5 0 0 0 4-5c1 4 2.8 6 5 6s4-2 5-6a5 5 0 0 0 4 5M10 10v5m4-5v5"/>
       </svg>
@@ -52,11 +57,11 @@
     <canvas id="world-map" aria-label="Rotatable map of the CHI islands. Select your home island to return to Player View."></canvas>
     <button type="button" id="home-island" class="home-island" data-art="player" hidden></button>
     <aside id="world-tip" class="guide-tip scene-guide instruction-glass" aria-label="World View controls" hidden>
-      <p>Drag to rotate. Select your home island to return. Open <strong>Bridges</strong> to see what you can build and cross.</p>
+      <p>Drag to rotate. Select your home island to return. Open <strong>Bridges</strong> to see where you can cross.</p>
       <button type="button" class="secondary">Got it</button>
     </aside>
     <aside id="world-dashboard" class="world-dashboard" aria-labelledby="dashboard-title" inert>
-      <h1 id="dashboard-title">Bridge dashboard</h1>
+      <h1 id="dashboard-title">Island Access</h1>
       <p id="world-home"></p>
       <h2>Bridges</h2>
       <div id="bridge-list"></div>
@@ -66,7 +71,30 @@
     </aside>
   </section>
   <dialog id="onboarding" aria-labelledby="onboarding-title">
-    <form id="onboarding-form">
+    <section id="account-entry" aria-labelledby="account-title">
+      <h1 id="account-title">Welcome to CHI Island</h1>
+      <div id="account-start">
+        <button type="button" id="new-account" class="primary">Create a resident account</button>
+        <button type="button" id="judge-account" class="secondary">Login as Judge</button>
+        <form id="sign-in-form">
+          <label for="sign-in-id">Resident ID</label>
+          <input id="sign-in-id" name="id" autocomplete="username" required>
+          <label for="sign-in-password">Password</label>
+          <input id="sign-in-password" name="password" type="password" autocomplete="current-password" maxlength="128" required>
+          <button type="submit" class="secondary">Sign in</button>
+        </form>
+      </div>
+      <form id="create-password-form" hidden>
+        <p id="new-resident-id"></p>
+        <p class="muted">Save this ID. You’ll need it to log back in.</p>
+        <button type="button" class="secondary" id="copy-resident-id">Copy ID</button>
+        <label for="new-password">Password</label>
+        <input id="new-password" name="password" type="password" autocomplete="new-password" minlength="6" maxlength="128" required>
+        <button type="submit" class="primary">Continue</button>
+      </form>
+      <p id="account-error" class="error" role="alert"></p>
+    </section>
+    <form id="onboarding-form" hidden>
       <h1 id="onboarding-title">Welcome to CHI Island</h1>
       <p class="muted">Choose the domain you’re from. It becomes your home island.</p>
       <fieldset id="onboarding-fields" disabled>
@@ -81,9 +109,15 @@
       </fieldset>
       <p class="error" id="onboarding-error" role="alert"></p>
       <button id="join-island" type="submit" class="primary" disabled>Enter island</button>
-      <p><a href="/studios">Explore the islands in Island Studio</a></p>
       <button id="retry-profile" type="button" class="secondary" hidden>Try again</button>
     </form>
+  </dialog>
+  <dialog id="notifications" aria-labelledby="notifications-title">
+    <div class="dialog-header">
+      <h2 id="notifications-title">Notifications</h2>
+      <button type="button" data-close aria-label="Close notifications">×</button>
+    </div>
+    <div id="notification-list"></div>
   </dialog>
   <dialog id="seed-catalog" aria-labelledby="catalog-title">
     <div class="dialog-header">

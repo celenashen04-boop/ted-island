@@ -41,9 +41,10 @@ const boughRadius = .69;
 const boughOval = .86;
 
 export function bridgePath(bridge, currentIsland, useKit=true) {
-  if (!bridge.span) return null;
+  const placements=bridge.ends??bridge.span?.ends;
+  if (!placements) return null;
   const origin = islands.find(island=>island.id===currentIsland);
-  const ends = bridge.span.ends.map(plant=>({...plant, location:islands.find(island=>island.id===plant.island)}));
+  const ends = placements.map(plant=>({...plant, location:islands.find(island=>island.id===plant.island)}));
   if (!origin || ends.length!==2 || ends.some(end=>!end.location)) return null;
   const [first,last] = ends.map(end=>end.location);
   const lengthBetweenIslands = Math.hypot(last.x-first.x,last.z-first.z);
@@ -59,6 +60,10 @@ export function bridgePath(bridge, currentIsland, useKit=true) {
       const model=islandModel(island);
       const landing=model.landingFor(ends[1-index].island);
       const [wx,wy,wz]=landing.world;
+      if(bridge.permanent){
+        const point={x:wx-origin.x*islandSpacing,z:wz-origin.z*islandSpacing,y:wy-origin.y*islandSpacing+.04};
+        return {island,...point,tree:point};
+      }
       const treeX=x*islandScale,treeZ=z*islandScale;
       const ground=model.queryIsland(treeX,treeZ,0).height;
       return {island,x:wx-origin.x*islandSpacing,z:wz-origin.z*islandSpacing,y:wy-origin.y*islandSpacing+.04,
@@ -66,8 +71,8 @@ export function bridgePath(bridge, currentIsland, useKit=true) {
     }
     let distance=0;
     while(onIsland((distance+.05)*dx*sign,(distance+.05)*dz*sign,bridgeHalfWidth+.15))distance+=.05;
-    return {island,x:offsetX+distance*dx*sign,z:offsetZ+distance*dz*sign,y:y+.06,
-      tree:{x:offsetX+x,y,z:offsetZ+z}};
+    const point={x:offsetX+distance*dx*sign,z:offsetZ+distance*dz*sign,y:y+.06};
+    return {island,...point,tree:bridge.permanent?point:{x:offsetX+x,y,z:offsetZ+z}};
   });
   const [start,end] = endpoints;
   const length = Math.hypot(end.x-start.x,end.z-start.z);
@@ -76,8 +81,12 @@ export function bridgePath(bridge, currentIsland, useKit=true) {
     endpoints,length,
     point(distance,offset=0) {
       const t=distance/length;
+      const approach=bridge.permanent?Math.min(5/length,.25):0;
+      const ramp=Math.max(0,Math.min(1,(t-approach)/(1-2*approach)));
+      // Keep the deck above the island rim while leaving either landing.
+      const elevation=bridge.permanent?ramp*ramp*(3-2*ramp):t;
       return [start.x+alongX*distance-alongZ*offset,
-        start.y+(end.y-start.y)*t+.35*Math.sin(Math.PI*t),
+        start.y+(end.y-start.y)*elevation+.35*Math.sin(Math.PI*t),
         start.z+alongZ*distance+alongX*offset];
     },
     locate(x,z) {
@@ -128,7 +137,7 @@ export function traceOakConnection(path,index,growth,joined,drawBough) {
       const t=rootReach*step/8;
       return base.map((value,axis)=>value+(start[axis]-value)*t+(axis===1?.16*Math.sin(Math.PI*t):0));
     });
-    drawBough(root,t=>radius*(extent?.43+.57*t:.9-.56*t),bark);
+    if(end.tree.x!==end.x || end.tree.z!==end.z)drawBough(root,t=>radius*(extent?.43+.57*t:.9-.56*t),bark);
     if(!extent)continue;
     const segments=Math.ceil(extent*38);
     const limbs=Array.from({length:segments+1},(_,step)=>curve(extent*step/segments));
