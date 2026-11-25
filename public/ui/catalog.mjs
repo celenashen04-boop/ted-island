@@ -8,7 +8,7 @@
 //     seeds: [ { id, island: 2, title, idea, stage: 'seed' | 'sprout' | 'young' | 'mature', growing: false, planted: false }, ... ],
 //     isLocked: islandId => !access.has(islandId),     // for the filtered note
 //     onAdopt: seed => startAdoption(seed),            // close the catalog, ready the acorn
-//     onView: seed => openPlant(seed.id),              // a seed already planted on your island
+//     onView: seed => goToPlant(seed.id),              // a seed already planted on your island
 //   });
 //   document.body.append(catalog.layer);
 //   catalog.open();                 // all islands
@@ -41,12 +41,13 @@ function createCard(seed, onAdopt, onView) {
         el('p', { class: 'ui-seed-card__idea' }, seed.idea),
         seed.question ? el('p', { class: 'ui-seed-card__idea' }, seed.question) : null)),
     seed.growing && !seed.planted ? el('p', { class: 'ui-seed-card__growing' }, 'This idea is already growing. Bring its current tree and shared conversation to your island.') : null,
-    // Planted (16:202): already on your island, so View idea replaces Adopt seed.
+    // Planted (16:202): already on your island, so Go to plant replaces Adopt seed
+    // and takes the player to it in the scene.
     seed.planted
       ? el('div', { class: 'ui-seed-card__foot' },
         el('p', { class: 'ui-seed-card__planted' }, icon('check'), 'Planted on your island'),
         el('button', { type: 'button', class: 'ui-btn ui-btn--ghost ui-btn--s', 'aria-describedby': titleId, onclick: () => onView?.(seed) },
-          icon('arrow-right'), el('span', { class: 'ui-btn__label' }, 'View idea')))
+          icon('arrow-right'), el('span', { class: 'ui-btn__label' }, 'Go to plant')))
       : el('div', { class: 'ui-seed-card__foot' },
         el('p', { class: 'ui-seed-card__opens', id: `${titleId}-opens` }, `Plant to open 48 hours on ${island.name}`),
         adopt));

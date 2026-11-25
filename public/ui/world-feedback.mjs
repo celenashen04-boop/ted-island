@@ -107,6 +107,22 @@ export function createLockedPrompt({ island, onUnlock }) {
   return { element };
 }
 
+/* Go to plant while visiting: the adopted seed grows on the home island, so ask
+   before crossing back. Same layout as the locked bridge prompt, two actions. */
+export function createHomePlantPrompt({ island, title, onReturn, onStay }) {
+  const name = islandUi(island).name;
+  const stay = el('button', { type: 'button', class: 'ui-btn ui-btn--ghost ui-btn--s ui-prompt__action', onclick: () => onStay?.() },
+    el('span', { class: 'ui-btn__label' }, 'Stay here'));
+  const back = el('button', { type: 'button', class: 'ui-btn ui-btn--s ui-prompt__action', onclick: () => onReturn?.() },
+    icon('home'), el('span', { class: 'ui-btn__label' }, 'Return home'));
+  const element = el('div', { class: `ui-prompt ui-prompt--locked ui-world-prompt ${islandClass(island)}`, role: 'group', 'aria-label': `Planted on your home island, ${name}` },
+    el('p', { class: 'ui-prompt__eyebrow' }, icon('check'), el('span', { class: 'ui-prompt__swatch', 'aria-hidden': 'true' }), `Planted on your home island · ${name}`),
+    el('p', { class: 'ui-prompt__body' }, `${title} is growing on ${name}. Return home to see it?`),
+    el('div', { class: 'ui-prompt__actions' }, back, stay));
+  replay(element);
+  return { element, focus: () => back.focus() };
+}
+
 /* Water and nourish feedback, under the reticle after a like or comment.
    Pair it with accessToast() from toast.mjs for the hours gained. */
 export function createActionFeedback({ kind = 'water', island, until }) {

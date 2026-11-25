@@ -17,7 +17,7 @@ import { createEmailSettings, emailMenuMeta } from './ui/email-settings.mjs';
 import { createField } from './ui/fields.mjs';
 import { createTutorial, TUTORIAL_STEPS } from './ui/tutorial.mjs';
 import { createRotatePrompt } from './ui/rotate-prompt.mjs';
-import { createViewIdeaPill, createLandingMarker, createLockedPrompt, createEdgePrompt, createActionFeedback } from './ui/world-feedback.mjs';
+import { createViewIdeaPill, createLandingMarker, createLockedPrompt, createEdgePrompt, createActionFeedback, createHomePlantPrompt } from './ui/world-feedback.mjs';
 import { accessToast, plantedToast, toastRegion } from './ui/toast.mjs';
 
 const byId = id => document.getElementById(id);
@@ -57,10 +57,10 @@ landing.element.hidden = true;
 sceneFeedback.append(ideaPill.element, landing.element, prompt);
 playerView.append(sceneFeedback);
 
-function showScenePrompt(element) {
+function showScenePrompt(element, { persist = false } = {}) {
   prompt.replaceChildren(element);
   clearTimeout(promptTimer);
-  promptTimer = setTimeout(() => prompt.replaceChildren(), 3300);
+  if (!persist) promptTimer = setTimeout(() => prompt.replaceChildren(), 3300);
 }
 
 function positionOverlay(element, x, y) {
@@ -370,7 +370,7 @@ function setupHomePanels() {
         if (seedLauncher.getAttribute('aria-pressed') !== 'true') seedLauncher.click();
       } else announce('Seed selected. Return home to plant it.');
     },
-    onView: seed => showIdea(seed.id, state.home),
+    onView: seed => goToPlant(seed.id),
     onClose: () => panelClosed(catalog),
   });
   access = createAccessPanel({
@@ -397,6 +397,44 @@ function accessRows() {
 function openCatalog(island = null) {
   if (!worldView.hidden) closeWorld();
   openPanel(catalog, [{ island }], 'catalog');
+}
+
+// Take the player to a plant on their home island: close the panel, then stand
+// beside the plant and face it. While visiting, ask before crossing home.
+function goToPlant(id) {
+  dismissPanel();
+  playerView.inert = false;
+  const plant = state.plants.find(item => item.id === id && item.island === state.home);
+  if (currentIsland === state.home || !plant) { travelToPlant(id); return; }
+  const choice = createHomePlantPrompt({
+    island: state.home,
+    title: plant.title,
+    onReturn: () => { prompt.replaceChildren(); travelToPlant(id); },
+    onStay: () => { prompt.replaceChildren(); map.focus({ preventScroll: true }); },
+  });
+  showScenePrompt(choice.element, { persist: true });
+  choice.focus();
+}
+
+async function travelToPlant(id) {
+  if (currentIsland !== state.home) {
+    if (crossing || !live) { announce('Connecting to the garden…'); return; }
+    crossing = true;
+    try {
+      const result = await post('/api/cross', { island: state.home });
+      receiveGarden(result.garden, { restorePosition: false });
+    } catch (error) {
+      announce(error.message);
+      return;
+    } finally {
+      crossing = false;
+    }
+  }
+  const plant = state.plants.find(item => item.id === id && item.island === state.home);
+  if (!plant || !scene.facePlant(id)) { announce('That plant could not be found on your island.'); return; }
+  savePosition();
+  map.focus({ preventScroll: true });
+  announce('Here is ' + plant.title + '. Select it to read the idea.');
 }
 
 function findBridge(destination) {

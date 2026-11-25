@@ -196,6 +196,7 @@ body > .ui-tutorial {
 .game-scene-feedback > .ui-landing { transform: translate(-50%, -30%); }
 .game-scene-prompt { position: absolute; inset: auto 12px 20%; display: grid; place-items: center; }
 .game-scene-prompt > :is(.ui-prompt, .ui-landing) { position: static; transform: none; pointer-events: auto; }
+.ui-prompt__actions { display: flex; flex-wrap: wrap; gap: var(--space-8); }
 .ui-plant-detail__discussion-head {
   position: sticky;
   top: calc(-1 * max(var(--space-16), env(safe-area-inset-top)));

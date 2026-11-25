@@ -1140,6 +1140,39 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
       pitch=target===far?Math.atan2(far.y-near.y,bridge.path.length)*.65-.06:-.12;
       return true;
     },
+    // Stand a short walk from a plant on this island and look at it, so the
+    // View idea pill picks it up. Tries the side the player is on first, then
+    // works around the plant until it finds open, walkable ground.
+    facePlant(id){
+      const plant=plants.find(item=>item.id===id);
+      if(!plant)return false;
+      const groundAt=(px,pz)=>{
+        if(!model)return onIsland(px,pz,radius)?0:null;
+        const nav=model.queryIsland(px,pz,radius);
+        return nav.walkable&&!nav.blockedBy?nav.height:null;
+      };
+      const start=Math.atan2(x-plant.x,z-plant.z);
+      let spot=null;
+      for(const distance of [1.5,2.1,1.1]){
+        for(let step=0;step<16&&!spot;step++){
+          const angle=start+Math.ceil(step/2)*(step%2?1:-1)*Math.PI/8;
+          const px=plant.x+Math.sin(angle)*distance, pz=plant.z+Math.cos(angle)*distance;
+          const height=groundAt(px,pz);
+          if(height!==null)spot={x:px,z:pz,feet:height};
+        }
+        if(spot)break;
+      }
+      if(spot){
+        ({x,z,feet}=spot);
+        verticalSpeed=0;grounded=true;standingOnObject=false;eye=feet+eyeHeight;flight=null;
+      }
+      if(throwing)setThrowMode(false);
+      resetInput();
+      const groundY=model?model.queryIsland(plant.x,plant.z,0).height:0;
+      yaw=Math.atan2(plant.x-x,z-plant.z);
+      pitch=clamp(Math.atan2(groundY+.35-eye,Math.hypot(plant.x-x,plant.z-z)),-.7,.2);
+      return true;
+    },
     reset(){
       ({x,z,yaw,pitch,feet}=spawn);
       verticalSpeed=0;grounded=true;standingOnObject=false;eye=feet+eyeHeight;flight=null;
