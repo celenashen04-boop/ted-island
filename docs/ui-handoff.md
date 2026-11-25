@@ -20,6 +20,7 @@ Contents:
 11. [Element ID map](#11-element-id-map)
 12. [Wiring checklist](#12-wiring-checklist)
 13. [Open items](#13-open-items)
+14. [UI v3: phone fit, planted seeds, and requests for Cassius](#14-ui-v3)
 
 ---
 
@@ -264,6 +265,7 @@ Figma 21:1302. Tables and inline styles, safe for mail clients. `{{placeholders}
 | Edge prompt | `createEdgePrompt()` | "The bridges are this way" | Part of `#message` |
 | Locked bridge | `createLockedPrompt({ island, onUnlock })` | **Unlock access** opens the catalog filtered to that island | Locked-bridge text in `#message` |
 | Water or nourish feedback | `createActionFeedback({ kind: 'water' \| 'nourish', island, until })` | Water, and nourish ("+1 nutrient · {island} access until {time}") | Part of `#message` |
+| Home plant choice (v3) | `createHomePlantPrompt({ island, title, onReturn, onStay })` | Return home, Stay here. Stays until the player chooses. See [§14](#14-ui-v3) | New |
 
 Classes `.ui-pill`, `.ui-landing`, `.ui-prompt`, `.ui-world-prompt`. Pair water and nourish with an `accessToast()`. The scene effects themselves (water ripple, nourish pulse, in the plant's island hue) belong to the canvas and are specified in the gallery's Motion section.
 
@@ -281,7 +283,7 @@ const catalog = createSeedCatalog({
   seeds: [{ id, island: 2, title, idea, stage: 'seed' | 'sprout' | 'young' | 'mature', growing: false, planted: false }],
   isLocked: islandId => !hasAccess(islandId),
   onAdopt: seed => startAdoption(seed),   // close the catalog, ready the acorn
-  onView: seed => openPlant(seed.id),
+  onView: seed => goToPlant(seed.id),     // v3: Go to plant, see §14
 });
 document.body.append(catalog.layer);
 catalog.open();               // all other islands
@@ -289,7 +291,7 @@ catalog.open({ island: 2 });  // from Unlock access: filtered, with the locked-b
 catalog.update(seeds);
 ```
 
-Card states: **Available** (Adopt seed, "Opens 48 hours on {island}"), **Growing** ("This idea is already growing..."), **Planted** ("Planted on your island" and View idea). Filtered and locked: "Adopt a {island} seed to unlock this bridge for 48 hours." Empty: "No seeds from other islands yet." or "No {island} seeds yet." Classes `.ui-panel--catalog`, `.ui-seed-card`, `.ui-filter`.
+Card states: **Available** (Adopt seed, "Opens 48 hours on {island}"), **Growing** ("This idea is already growing..."), **Planted** ("Planted on your island" and Go to plant, changed from View idea in v3, see [§14](#14-ui-v3)). Filtered and locked: "Adopt a {island} seed to unlock this bridge for 48 hours." Empty: "No seeds from other islands yet." or "No {island} seeds yet." Classes `.ui-panel--catalog`, `.ui-seed-card`, `.ui-filter`.
 
 ### New seed form: `seed-form.mjs` → `createSeedForm()`
 
@@ -510,3 +512,80 @@ What each current element in `index.html` becomes.
 - Hover, pressed, disabled and focus states are placeholders; Figma has no variants for them.
 - The tip component and its example copy are not in Figma.
 - Figma bugs worked around in code: the Icon Button Active L globe draws black on black; the empty state's Open Seed Catalog button has a blank icon; the selected card's expiry line overflows; tutorial steps 4 and 6 run off the frame. Followed plants' Figma subtitle says "2 with new activity" with one new-activity row; the code counts plants with new activity.
+
+## 14. UI v3
+
+*Branch `feat/v2-backend`, November 24, 2026. Written for Cassius (UI and look). Items 14.2 and 14.3 are built and live on Railway. Items in 14.4 are proposals that need a design decision from Cassius before anyone builds them.*
+
+v3 comes from testing the v2 game on real iPhones in Safari and Chrome. It covers three things: how the game fits phone screens, how players find a seed they adopted, and the design work still open.
+
+### 14.1 Phone layout rules
+
+These are measured on an iPhone 14 Pro class phone in landscape (screen 932 × 430 CSS px). Design every HUD element and panel against them.
+
+| Browser | What the page gets | What it means for the UI |
+|---|---|---|
+| iPhone Safari | Full width (932 px). Safe area: 59 px left, 59 px right, 21 px bottom. The address bar and tab bar take about a quarter of the height and cannot be hidden by the page | Keep controls out of the side safe areas and the bottom 21 px. The playable height can be as low as about 320 px |
+| iPhone Chrome | 814 px wide. Chrome keeps the 59 px notch areas for itself and reports a safe area of 0 left and right, 20 px bottom | The two side bands are outside the page. Chrome paints them with the page background color (see 14.3) |
+| Any iPhone browser | No fullscreen. Apple allows fullscreen for video only, so the existing Open in landscape button hides itself on iPhone | True fullscreen on iPhone needs Add to Home Screen (see 14.4) |
+| Android Chrome | Fullscreen works | Open in landscape can go fullscreen |
+
+Rules:
+
+1. **Edge spacing.** HUD controls sit at least 12 px from the game edge, or at the safe area inset when that is larger. In CSS use `--game-hud-left`, `--game-hud-right`, `--game-hud-top` and `--game-hud-bottom` from `game.css`. Never hard-code `12px` or `env()` in a component.
+2. **Size.** HUD buttons scale between 44 and 52 px (`--game-hud-size`). Hit areas stay at least 44 × 44.
+3. **Smallest screen.** Check every screen at 640 × 320. Panels must scroll inside themselves, with the header and close button reachable at the top.
+4. **Size from the visible area.** The game box follows the browser's visible area (`--game-width`, `--game-height`, `--game-left`, `--game-top`). Full-screen layers use these variables, not `100vh` or `100vw`.
+5. **Two kinds of prompts.** Information prompts (edge, locked bridge, feedback) hide on their own after 3.3 seconds. Prompts that ask the player to choose stay until the player answers. Put the primary action first, with an icon, and the secondary action as a ghost button.
+6. **Copy.** No em dashes in new UI copy. Use periods, commas, colons or parentheses.
+
+**Checking a phone.** Add `?debug=viewport` to any game URL. A box in the middle of the screen lists what the browser reports: screen, visible area, safe areas, and where the game box and the World View button sit. It loads only with that parameter. A screenshot of it is enough to diagnose a fit problem.
+
+### 14.2 Planted seeds in the Seed Catalog (built)
+
+A foreign seed can be adopted once per player, and only onto the player's home island. It stays in the catalog after planting, marked as planted.
+
+**Planted card.** The footer reads "✓ Planted on your island" with a ghost button **Go to plant** (arrow right icon). It used to say View idea.
+
+**Go to plant, at home.** One tap closes the catalog, places the player a short walk from the plant, and faces it. The existing View idea pill appears on the plant, and the message line says "Here is {title}. Select it to read the idea."
+
+**Go to plant, while visiting another island.** The catalog closes and this prompt opens over the scene:
+
+| Part | Content |
+|---|---|
+| Eyebrow | ✓, home island color swatch, "Planted on your home island · {home island}" |
+| Body | "{title} is growing on {home island}. Return home to see it?" |
+| Primary | **Return home** (home icon). Crosses home, then does Go to plant |
+| Secondary | **Stay here** (ghost). Closes the prompt and leaves the player where they are |
+
+It uses the locked bridge prompt layout (`.ui-prompt--locked`) with a new `.ui-prompt__actions` row. Keyboard focus starts on Return home. Code: `createHomePlantPrompt()` in `world-feedback.mjs`, wired in `goToPlant()` in `app.mjs`.
+
+**Cassius to confirm:** the copy above, the home icon, and whether the prompt needs its own Figma frame.
+
+**Behavior to know about:** Go to plant moves the player to the plant. It does not walk there, and Return home does not use a bridge. If a plant stands right against a building, the player can briefly land inside it and is pushed out on the next step.
+
+### 14.3 Side bands on iPhone Chrome (built, can change)
+
+The page background is the Player View sky, `#91a7d3`, and switches to `#172b37` while World View is open. Before this, Chrome showed one white band and one navy band.
+
+**Cassius to decide:** keep these two colors, pick different ones, or go ambient (14.4, item 2).
+
+### 14.4 Design requests for Cassius
+
+For each item, please share 2 or 3 options with a screenshot or Figma frame, as with earlier phases.
+
+1. **Return to home island button.** When visiting, the + button is hidden because players can only plant at home. Proposal: put a Return home button in that bottom-right spot. Decide the label ("Return home" or "Return to home island"), the icon, the size, and whether it asks for confirmation. The server already allows crossing home at any time, so no backend change is needed.
+2. **Ambient side bands.** Option: sample the colors at the left and right edges of the scene twice a second, so the Chrome bands follow the scene (wood in the greenhouse, green on the meadow). The bands can only be one flat color, the same on both sides. Decide whether this is worth it, or whether a fixed color is better.
+3. **Add to Home Screen.** This is the only way to play fullscreen on iPhone. It needs:
+   - an app icon, 180 × 180 PNG (`public/ui/`), plus the name shown under it;
+   - the status bar style when opened from the home screen;
+   - a hint shown only in iPhone browsers, telling players to use Share, then Add to Home Screen, for fullscreen. Decide when it appears (first visit, or after the rotate prompt), how to dismiss it, and whether it comes back.
+   - Note: the home screen app does not share sign in with the browser, so players log in once with I have an ID.
+4. **Connection states.** "Reconnecting to the garden…" can stay on screen after the server restarts, with no sign of recovery. Design a reconnecting state and a short "Back online" confirmation. (The automatic reconnect itself is a separate code fix.)
+5. **Empty catalog explanation.** Residents never see seeds from their own island in the catalog, even after those seeds spread to other islands. A player whose island holds the only seeds sees "No seeds from other islands yet." and may think the catalog is broken. Consider a line such as "Seeds from your own island are in Island plants."
+
+### 14.5 Copy to confirm (v3)
+
+- Catalog: "Go to plant"
+- Home plant prompt: "Planted on your home island · {island}", "{title} is growing on {island}. Return home to see it?", "Return home", "Stay here"
+- Message line: "Here is {title}. Select it to read the idea.", "That plant could not be found on your island."
