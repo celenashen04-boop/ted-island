@@ -72,6 +72,7 @@ function positionOverlay(element, x, y) {
 
 function updateSceneFeedback(frame) {
   sceneTargets = frame;
+  let ideaBounds = null;
   const plant = plants.find(plant => plant.id === frame.plant?.id);
   if (plant && !activePanel && !playerView.inert) {
     if (focusedPlant !== plant || ideaPill.element.hidden) {
@@ -79,9 +80,11 @@ function updateSceneFeedback(frame) {
       ideaPill.set({ stage: stageNames[plant.growth], island: plant.originalIsland, title: plant.title, dormant: plant.dormant });
     }
     const pillWidth = ideaPill.element.offsetWidth;
+    const pillHeight = ideaPill.element.offsetHeight;
     const x = Math.max(8, Math.min(frame.width - pillWidth - 8, frame.plant.right + 12));
-    const y = Math.max(72, Math.min(frame.height - ideaPill.element.offsetHeight - 12, frame.plant.top));
+    const y = Math.max(72, Math.min(frame.height - pillHeight - 12, frame.plant.top));
     positionOverlay(ideaPill.element, x, y);
+    ideaBounds = { left: x, top: y, right: x + pillWidth, bottom: y + pillHeight };
   } else {
     focusedPlant = null;
     ideaPill.hide();
@@ -93,6 +96,7 @@ function updateSceneFeedback(frame) {
     landing.set(frame.landing.valid ? 'valid' : 'invalid');
     positionOverlay(landing.element, frame.landing.x, frame.landing.y);
   }
+  return ideaBounds;
 }
 
 function announce(text) {

@@ -1150,6 +1150,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
         drawSeed(sx,sy,clamp(.085*focal/position[2],6,22),t*10-.64,ctx,currentIsland);
       }
     }
+    let ideaBounds=null;
     if (onFrame) {
       const plant = !throwing && !flight && (plantAt(width / 2, height / 2) ||
         plantHits.findLast(hit => hit.left < width * .55 && hit.right > width * .45 &&
@@ -1160,13 +1161,13 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
         .filter(Boolean).map(end => view([end.x,end.y,end.z]))
         .filter(point => point[2] > near).map(screen)
         .find(([x,y]) => x > 0 && x < width && y > 0 && y < height);
-      onFrame({
+      ideaBounds=onFrame({
         width, height, plant,
         bridge: bridge && { x: bridge[0], y: bridge[1] },
         landing: plantLanding && { x: plantLanding[0], y: plantLanding[1], valid: flight.result === 'planted' },
       });
     }
-    if(treeTagsEnabled)drawTreeTags(view,screen,now);
+    if(treeTagsEnabled)drawTreeTags(view,screen,now,ideaBounds);
     const clickable=!throwing&&!flight&&cursor&&plantAt(cursor.x,cursor.y);
     canvas.classList?.toggle('over-plant',Boolean(clickable));
   }
@@ -1192,7 +1193,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
     if(!occlusion.hidden)return {plant,px,py,distance,depth};
   }
 
-  function drawTreeTags(view,screen,now){
+  function drawTreeTags(view,screen,now,ideaBounds){
     const tags=[];
     if(!throwing && !flight && isFeedbackVisible()){
       const plantsInView=visiblePlants.filter(plant=>!plant.remote);
@@ -1206,7 +1207,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
     for(const anchor of tags){
       const index=occupied.length;
       const tag=treeTags[index]??(treeTags[index]=createTreeTag());
-      drawTreeTag(anchor,tag,occupied,now);
+      drawTreeTag(anchor,tag,occupied,now,ideaBounds);
     }
     for(let index=occupied.length;index<treeTags.length;index++)treeTags[index].treeTag.hidden=true;
   }
@@ -1225,7 +1226,7 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
     return blocked;
   }
 
-  function drawTreeTag({plant,px,py,distance,depth},{treeTag,tagStage,tagOrigin,originLabel},occupied,now){
+  function drawTreeTag({plant,px,py,distance,depth},{treeTag,tagStage,tagOrigin,originLabel},occupied,now,ideaBounds){
     const scaleDistance=Math.min(distance,5)+Math.max(0,distance-5)*.45;
     const scale=Math.min(1,2.9/scaleDistance,width/(tagCardWidth+10));
     const fade=clamp((distance-tagFadeStart)/(tagRange-tagFadeStart),0,1);
@@ -1246,6 +1247,10 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
         const left=clamp(px+xOffset,5,Math.max(5,width-cardWidthPx-5));
         const top=clamp(py+yOffset,5,Math.max(5,height-cardHeightPx-5));
         const rect={left,top,right:left+cardWidthPx,bottom:top+cardHeightPx};
+        // Keep the interactive idea card clear even when every candidate is crowded.
+        const gap=10;
+        if(ideaBounds && left<ideaBounds.right+gap && rect.right>ideaBounds.left-gap &&
+           top<ideaBounds.bottom+gap && rect.bottom>ideaBounds.top-gap)continue;
         let overlap=0;
         for(const other of occupied){
           overlap+=Math.max(0,Math.min(rect.right,other.right)-Math.max(left,other.left)+5)*
@@ -1281,6 +1286,12 @@ export function createScene(canvas, { onPlant, onLanding, onThrowRequest, throwC
     treeTag.style.transform=`translate(${left}px,${top}px) scale(${scale})`;
     treeTag.style.opacity=opacity;
     ctx.save();
+    if(ideaBounds){
+      ctx.beginPath();
+      ctx.rect(0,0,width,height);
+      ctx.rect(ideaBounds.left,ideaBounds.top,ideaBounds.right-ideaBounds.left,ideaBounds.bottom-ideaBounds.top);
+      ctx.clip('evenodd');
+    }
     ctx.globalAlpha*=opacity;
     ctx.strokeStyle='#fff';
     ctx.lineWidth=scale;

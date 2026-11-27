@@ -839,6 +839,7 @@
 }
 
 .tree-tag[hidden] { display: none; }
+.tree-tag.ui-prompt > * { opacity: .8; }
 .tree-origin-field { display: grid; gap: 2px; }
 .tree-origin-label { font: 400 10px/1.2 var(--font-mono); }
 .tree-origin { font: 600 13px/1.25 var(--font-sans); white-space: pre-line; }
