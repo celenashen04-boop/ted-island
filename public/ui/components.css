@@ -821,8 +821,10 @@
 /* Tree stage and origin labels */
 .tree-tag.ui-prompt {
   position: absolute;
-  background: rgb(255 255 255 / .76);
-  backdrop-filter: blur(var(--blur-hud));
+  background: rgb(255 255 255 / .30);
+  border-color: rgb(0 0 0 / .38);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
   z-index: 2;
   top: 0;
   left: 0;
