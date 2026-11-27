@@ -3,10 +3,10 @@ import { createIsland } from './source/index.js';
 import { createIslandCollision } from './collision.mjs';
 
 const models = new Map();
-const spawnCandidates = {
-  spiral: [[.4, 2.6], [0, 2.4]],
-  verdant: [[0, 3.3], [-2.4, 2.8]],
-  pinwheel: [[.8, 2.7], [1.7, 2.5]],
+const homeViews = {
+  spiral: { starts: [[-2.3,4.47],[-2.95,4.4],[-3.72,4.28]], target: [-1.08,.64], pitch: .075 },
+  verdant: { starts: [[-4.4,3.4],[-3.65,4.05],[.4,4.65]], target: [-1.80,.60], pitch: .045 },
+  pinwheel: { starts: [[3.35,-3.45],[2.15,-4.15],[3.30,-2.02]], target: [.65,-.35], pitch: .11 },
 };
 
 export function islandModel(id) {
@@ -26,6 +26,7 @@ export function islandModel(id) {
     rotationY: rotation,
     scale: islandScale,
   });
+  model.setSceneryTreesSolid(false);
   const localToIsland = (x, z) => [
     (x * cos + z * sin) * islandScale,
     (-x * sin + z * cos) * islandScale,
@@ -47,6 +48,12 @@ export function islandModel(id) {
       collision ??= createIslandCollision(model);
       return collision.floorAt(...location);
     },
+    containsLand(x, z) {
+      return model.blockedReason(...toLocal(x,z),0) !== 'island_boundary';
+    },
+    floorHeight(x,z,ceiling) {
+      return model.floorHeight(...toLocal(x,z),ceiling/islandScale)*islandScale;
+    },
     queryIsland(x, z, radius = .13) {
       const nav = model.query(...toLocal(x, z), { radius: radius / islandScale });
       return {
@@ -60,10 +67,15 @@ export function islandModel(id) {
       return bridgeLandings[peer === west.id ? 0 : 1];
     },
     spawn() {
-      const start = spawnCandidates[island.model].find(([x, z]) => model.query(x, z).walkable)
+      const view = homeViews[island.model];
+      const start = view.starts.find(([x,z]) => {
+        const surface=model.query(x,z);
+        return surface.walkable&&!surface.waterBelow;
+      })
         ?? [0, 0];
       const [x, z] = localToIsland(...start);
-      return { x, z, yaw: rotation * -1, pitch: -.12 };
+      const [targetX,targetZ] = localToIsland(...view.target);
+      return { x, z, yaw: Math.atan2(targetX-x,z-targetZ), pitch: view.pitch };
     },
   };
   models.set(id, navigation);

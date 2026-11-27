@@ -100,12 +100,13 @@ test('isolated sessions, island access, live events and persistence on restart',
     assert.equal((await client('/api/profile',form)).status,201);
     return id;
   }
-  async function plant(client,island,adopt) {
+  async function plant(client,island,adopt,emblemYaw) {
     const form=new FormData();
     for(const [key,value] of Object.entries({island,...soil(island),title:'A shared seed',idea:'Conference prototype',question:'What grows?'})){
       form.set(key,value);
     }
     if(adopt)form.set('adopt',adopt);
+    if(emblemYaw!==undefined)form.set('emblemYaw',String(emblemYaw));
     const answer=await client('/api/plants',form);
     assert.equal(answer.status,201,JSON.stringify(answer.data));
     return answer.data;
@@ -175,12 +176,16 @@ test('isolated sessions, island access, live events and persistence on restart',
   assert.equal((await b('/api/cross',{island:0})).status,403);
   const live=await events(b);
   assert.equal((await live()).worldBridges.length,3);
-  const original=await plant(a,0);
+  const original=await plant(a,0,undefined,-1.25);
   assert.equal((await a('/api/email-settings', { email:'author@example.test', remindReplies:true })).status,200);
   assert.equal((await live()).catalog[0].id,original.id);
-  const adopt=await plant(b,1,original.id);
+  const adopt=await plant(b,1,original.id,2.1);
   assert.equal(adopt.access.addedHours,48);
-  assert.equal((await live()).plants[0].id,original.id);
+  const adoptedPlacement=(await live()).plants[0];
+  assert.equal(adoptedPlacement.id,original.id);
+  assert.equal(adoptedPlacement.originalIsland,0);
+  assert.deepEqual(adoptedPlacement.originIslands,[0]);
+  assert.equal(adoptedPlacement.emblemYaw,2.1);
   assert.equal((await plant(b,1,original.id)).unchanged,true);
   assert.equal((await a('/api/plants/'+original.id+'/follow',{island:0,enabled:true})).status,200);
   assert.equal((await b('/api/cross',{island:0})).status,200);
@@ -193,6 +198,7 @@ test('isolated sessions, island access, live events and persistence on restart',
   const commentNotice = view.notifications.find(item => item.type === 'comment');
   assert.ok(commentNotice);
   assert.equal(view.plants[0].growth,1);
+  assert.equal(view.plants[0].emblemYaw,-1.25);
   assert.equal(view.plants[0].comments[0].resident,bId);
   assert.equal(view.followed[0].newReplies, 2);
   assert.equal((await a('/api/followed/seen',{id:original.id,through:view.plants[0].comments[0].id})).status,200);

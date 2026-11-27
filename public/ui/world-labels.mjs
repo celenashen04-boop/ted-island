@@ -7,7 +7,7 @@
 //   label.set({ access: 'locked' });
 //   worldLayer.append(createWorldLegend().element);
 
-import { el, icon, islandClass, islandUi } from './islands-ui.mjs';
+import { el, icon, islandBadgeSrc, islandClass, islandUi } from './islands-ui.mjs';
 import { maturityText } from './access-ring.mjs';
 
 /** "3d left" (24 h or more), "6h left". */
@@ -18,10 +18,11 @@ export function shortLeft(hours) {
 
 export function createWorldLabel(initial) {
   const name = el('span', { class: 'ui-world-label__name' });
+  const badge = el('img', { class: 'ui-badge ui-badge--sm', alt: '' });
   const mark = el('span', { class: 'ui-world-label__mark' });
   const meta = el('span', { class: 'ui-world-label__meta' });
   const element = el('span', { class: 'ui-world-label' },
-    el('span', { class: 'ui-world-label__row' }, el('span', { class: 'ui-world-label__swatch', 'aria-hidden': 'true' }), name, mark),
+    el('span', { class: 'ui-world-label__row' }, badge, name, mark),
     meta);
   let state = {};
 
@@ -29,6 +30,7 @@ export function createWorldLabel(initial) {
     state = { ...state, ...next };
     const { island, access = 'locked', maturity, hoursLeft } = state;
     element.className = `ui-world-label ui-world-label--${access} ${islandClass(island)}`;
+    badge.src = islandBadgeSrc(island);
     name.textContent = islandUi(island).name;
     mark.replaceChildren(access === 'home' ? icon('home') : access === 'locked' ? icon('lock') : '');
     const parts = [maturityText(maturity)];

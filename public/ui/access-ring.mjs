@@ -7,7 +7,7 @@
 //     islandId: 1,                 // id from islands.mjs
 //     name: 'Sustainability',      // optional, defaults from islands-ui.mjs
 //     hue: '#1E9E6A',              // optional, defaults to the island token
-//     iconSvg: '<svg>...</svg>',   // optional, Ray's island icon; placeholder badge otherwise
+//     iconSvg: '<svg>...</svg>',   // optional custom icon; shared island badge otherwise
 //     expiresAt: 1764021600000,    // ms timestamp, or null if never opened
 //     now: Date.now(),
 //     maturity: { mature: 4, total: 12 },
@@ -104,11 +104,10 @@ export function createRing({ islandId, hue, iconSvg, size = 'card' }) {
   );
 
   const badge = el('span', { class: 'ui-ring__badge', 'aria-hidden': 'true' });
-  const placeholder = el('img', { class: 'ui-badge', src: islandBadgeSrc(islandId), alt: '' });
-  const muted = el('img', { class: 'ui-badge', src: '/ui/badges/muted.svg', alt: '' });
+  const islandBadge = el('img', { class: 'ui-badge', src: islandBadgeSrc(islandId), alt: '' });
   const custom = iconSvg ? el('span', { class: 'ui-ring__icon' }) : null;
   if (custom) custom.innerHTML = iconSvg;
-  badge.append(custom ?? placeholder);
+  badge.append(custom ?? islandBadge);
 
   const element = el('span', { class: `ui-ring-wrap ui-ring-wrap--${size} ${islandClass(islandId)}` }, svg, badge);
   if (hue) element.style.setProperty('--island', hue);
@@ -116,7 +115,6 @@ export function createRing({ islandId, hue, iconSvg, size = 'card' }) {
   function update(state) {
     const off = state.kind === 'expired' || state.kind === 'never';
     element.classList.toggle('is-muted', off);
-    badge.replaceChildren(off ? muted : (custom ?? placeholder));
     // setRing works in hours on the fixed scale; home is always full.
     setRing(svg, state.kind === 'home' ? ACCESS_CAP_HOURS : state.hours);
   }

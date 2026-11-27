@@ -21,3 +21,10 @@ The Studio started from general-site commit `a5fa553`. The revised procedural mo
 - The full game keeps its onboarding, Seed Catalog, planting, and player movement. As of November 22, 2026, bridge construction is replaced by permanent bridges with time-limited island access. See [the change log](logic-changes-2026-11-22.md) for details. The Studio provides a separate viewing and local editing workflow and has no garden session.
 - Island Studio is no longer linked from the onboarding screen, because the link confused new players. The Node server and Vercel route configuration both expose `/studios` and its three island pages.
 - Permanent bridge models, revised plant stages, island icons, and scenery-plant changes are tracked in [the modeling brief](modeling-brief.md).
+
+## Railway island release
+
+- Updated all three resident islands with revised spawn views, lighter ground vegetation, island icons, and grounded bridge gates. Bridge movements preserve the camera at the handoff and ease speed back to normal at the shore.
+- Player plantings now use each island’s seed art and native 3D species. The existing interaction thresholds, inactivity clock, and access rules are preserved. The Young tree milestone first shows a sapling. Dormancy changes foliage while preserving the earned form and its solid stems. A qualifying interaction animates the return to that form.
+- Nearby visible plants show their stage and origin tags automatically. Tapping a planted tree still opens its idea, and the Seed Catalog’s Go to plant checks the current tree and scenery collision before placing the player.
+- The placement migration adds a nullable emblem heading. Older records use a visual fallback direction. Workbench admin commands, test plantings, and autoplay stay in the local workbench.

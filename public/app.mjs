@@ -4,7 +4,7 @@ import { createWorld } from './world.mjs';
 import { islands } from './islands.mjs';
 import { createIslandRenderer } from './island-kit/render.mjs';
 import { createTopRight, MENU_ITEMS } from './ui/hud.mjs';
-import { el, islandClass } from './ui/islands-ui.mjs';
+import { el, islandBadgeSrc, islandClass } from './ui/islands-ui.mjs';
 import { createSeedCatalog } from './ui/catalog.mjs';
 import { createSeedForm } from './ui/seed-form.mjs';
 import { createPlantDetail } from './ui/plant-detail.mjs';
@@ -30,7 +30,7 @@ const worldView = byId('world-view');
 const playerView = map.closest('main');
 const islandChip = byId('browse-plants');
 const artwork = new Map();
-const islandRenderer = createIslandRenderer();
+const islandRenderer = createIslandRenderer({nativePlants: true});
 const world = createWorld(byId('world-map'), artwork, byId('home-island'), closeWorld, islandRenderer);
 const toasts = toastRegion();
 const stageNames = ['seed', 'sprout', 'young', 'tree', 'mature'];
@@ -58,6 +58,8 @@ sceneFeedback.append(ideaPill.element, landing.element, prompt);
 playerView.append(sceneFeedback);
 
 function showScenePrompt(element, { persist = false } = {}) {
+  if (!persist && prompt.firstElementChild?.dataset.requiresChoice) return;
+  if (persist) element.dataset.requiresChoice = "true";
   prompt.replaceChildren(element);
   clearTimeout(promptTimer);
   if (!persist) promptTimer = setTimeout(() => prompt.replaceChildren(), 3300);
@@ -106,13 +108,12 @@ const scene = createScene(map, {
   isFeedbackVisible: () => !activePanel,
   onPlant(id) { showIdea(id, currentIsland); },
   onFrame: updateSceneFeedback,
-  async onCross(destination, position) {
+  async onCross(destination) {
     if (crossing || !live) return;
     crossing = true;
     try {
       const result = await post('/api/cross', { island: destination });
-      receiveGarden(result.garden, { restorePosition: false });
-      scene.arrive(position);
+      receiveGarden(result.garden, { restorePosition: false, carryPose: true });
       savePosition();
       announce(destination === state.home ? 'Back on your home island.' : 'You crossed to ' + islandName(destination) + '.');
     } catch (error) {
@@ -123,7 +124,10 @@ const scene = createScene(map, {
     }
   },
   onBridgeLocked(destination) {
-    showScenePrompt(createLockedPrompt({ island: destination, onUnlock: openCatalog }).element);
+    const {element}=createLockedPrompt({ island: destination, onUnlock: openCatalog });
+    element.dataset.bridgeDestination=destination;
+    element.dataset.bridgeIsland=currentIsland;
+    if (!prompt.firstElementChild?.dataset.requiresChoice) showScenePrompt(element);
   },
   onEdge() { showScenePrompt(createEdgePrompt('Use a bridge to leave the island.').element); },
   onThrowRequest() {
@@ -246,6 +250,7 @@ const seedForm = createSeedForm({
     if (!point) return { ok: false, error: 'Throw an acorn to choose where to plant.' };
     const body = new FormData();
     for (const key of ['x', 'z', 'island']) body.set(key, String(point[key]));
+    if (Number.isFinite(point.emblemYaw)) body.set('emblemYaw', String(point.emblemYaw));
     if (adoption) body.set('adopt', adoption.id);
     else {
       for (const [key, value] of Object.entries({ title, idea, question })) body.set(key, value);
@@ -553,12 +558,20 @@ function reportAccess(access) {
   });
 }
 
-function updateGarden() {
+function updateGarden(carryPose = false) {
   plants = state.plants.filter(plant => plant.island === currentIsland);
-  scene.update(plants, currentIsland, state.bridges);
+  const bridgePrompt=prompt.firstElementChild?.dataset;
+  if(bridgePrompt?.bridgeDestination!==undefined &&
+    (Number(bridgePrompt.bridgeIsland)!==currentIsland ||
+     state.bridges.some(bridge=>bridge.destination===Number(bridgePrompt.bridgeDestination)&&bridge.canCross))){
+    clearTimeout(promptTimer);
+    prompt.replaceChildren();
+  }
+  scene.update(plants, currentIsland, state.bridges, { carryPose, worldBridges: state.worldBridges });
   const visiting = currentIsland !== state.home;
   islandChip.hidden = false;
   islandChip.className = 'ui-island-chip ' + islandClass(currentIsland);
+  byId('island-badge').src = islandBadgeSrc(currentIsland);
   byId('island-name').textContent = islandName(currentIsland);
   byId('island-context').textContent = visiting ? 'Visiting' : 'Home island';
   seedLauncher.hidden = visiting;
@@ -614,7 +627,7 @@ function renderPanels() {
   }
 }
 
-function receiveGarden(next, { restorePosition = true } = {}) {
+function receiveGarden(next, { restorePosition = true, carryPose = false } = {}) {
   if (crossing && restorePosition) return;
   const firstArrival = currentIsland === null;
   const changedIsland = currentIsland !== next.position.island;
@@ -625,7 +638,7 @@ function receiveGarden(next, { restorePosition = true } = {}) {
   if (firstArrival) setupHomePanels();
   if (selectedAdoption && next.catalog.find(seed => seed.id === selectedAdoption.id)?.plantedHere) selectedAdoption = null;
   live = true;
-  updateGarden();
+  updateGarden(carryPose);
   if (restorePosition && changedIsland && Number.isFinite(next.position.x)) scene.arrive(next.position);
   renderPanels();
   if (!worldView.hidden) world.update(state);

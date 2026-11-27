@@ -196,7 +196,10 @@ export function addMeadowPlants(id, island, terrain, inner, outer, wet) {
     const y=groundAt(x,z);
     if(y===null)return;
     const slot=random()<.42?null:Math.floor(random()*7);
-    plant(x,y,z,slot,cluster,random()*2*Math.PI);
+    const heading=random()*2*Math.PI;
+    // Retain the seeded spacing and variety while thinning each patch.
+    if((roots.length+cluster)%2===0&&(Math.floor(roots.length/2)+cluster*3)%10!==0)
+      plant(x,y,z,slot,cluster,heading);
     roots.push([x,z]);
   }
 

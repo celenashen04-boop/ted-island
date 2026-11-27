@@ -1,12 +1,13 @@
-// Island identity for UI components. Ids match public/islands.mjs.
-// Kept separate from islands.mjs so the UI kit has no game imports.
+// UI presentation for the shared island IDs and names.
 // short is the one-word form used in small labels ("Young plant · Health").
+import { islands } from '../islands.mjs';
 
-export const ISLAND_UI = [
-  { id: 0, key: 'health', name: 'Health & Wellbeing', short: 'Health' },
-  { id: 1, key: 'sustainability', name: 'Sustainability', short: 'Sustainability' },
-  { id: 2, key: 'games', name: 'Games & Play', short: 'Games' },
+const presentation = [
+  { key: 'health', short: 'Health' },
+  { key: 'sustainability', short: 'Sustainability' },
+  { key: 'games', short: 'Games' },
 ];
+export const ISLAND_UI = islands.map(({id,name})=>({id,name,...presentation[id]}));
 
 /** Island record by id, or the muted placeholder if unknown. */
 export function islandUi(id) {
@@ -16,7 +17,7 @@ export function islandUi(id) {
 /** CSS class that sets --island to that island's hue. */
 export const islandClass = id => 'ui-island-' + islandUi(id).key;
 
-/** Island badge image path (placeholder glyphs until Ray's icons arrive). */
+/** Shared island badge image path. */
 export const islandBadgeSrc = id => `/ui/badges/${islandUi(id).key}.svg`;
 
 /** Small DOM helper used by the UI modules: el('span', { class: 'x' }, 'text'). */

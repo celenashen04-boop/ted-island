@@ -95,6 +95,73 @@ export function bridgePath(bridge, currentIsland, useKit=true) {
   };
 }
 
+export function bridgeAirSpan(path, currentIsland, useKit) {
+  const origin = islands.find(island => island.id === currentIsland);
+  const mid = path.length / 2;
+  const shore = (end, index) => {
+    const island = islands.find(item => item.id === end.island);
+    const offsetX = (island.x - origin.x) * islandSpacing;
+    const offsetZ = (island.z - origin.z) * islandSpacing;
+    const model = useKit ? islandModel(island.id) : null;
+    const sign = index === 0 ? 1 : -1;
+    const anchor = index === 0 ? 0 : path.length;
+    const onLandAt = distance => {
+      const [x,,z] = path.point(distance);
+      return model ? model.containsLand(x-offsetX,z-offsetZ) : onIsland(x-offsetX,z-offsetZ);
+    };
+    let inside = anchor;
+    if (!onLandAt(inside)) return anchor;
+    let outside = anchor + sign * .25;
+    while (Math.abs(outside-anchor) < mid && onLandAt(outside)) {
+      inside = outside;
+      outside += sign * .25;
+    }
+    if (Math.abs(outside-anchor) >= mid) return mid;
+    for (let i=0;i<8;i++) {
+      const sample = (inside+outside)*.5;
+      if (onLandAt(sample)) inside=sample;
+      else outside=sample;
+    }
+    return (inside+outside)*.5;
+  };
+  const start = shore(path.endpoints[0],0), end = shore(path.endpoints[1],1);
+  return { start,end,handoff:(start+end)*.5 };
+}
+
+export function bridgeSpeedFactor(distance, {start,end}) {
+  const t = Math.max(0,Math.min(1,Math.min(distance-start,end-distance)/2.75));
+  return 1+.35*t*t*(3-2*t);
+}
+
+export function bridgeGateDistance(path, index, currentIsland, useKit) {
+  const outward = index === 0 ? 1 : -1;
+  const anchor = index === 0 ? 0 : path.length;
+  let shore = 0;
+  if (useKit) {
+    const origin = islands.find(item => item.id === currentIsland);
+    const island = islands.find(item => item.id === path.endpoints[index].island);
+    const model = islandModel(island.id);
+    const border = model.boundary().map(point => {
+      const [x,z] = model.localToIsland(...point);
+      return path.locate(x+(island.x-origin.x)*islandSpacing,z+(island.z-origin.z)*islandSpacing);
+    });
+    // Clip the island outline to the whole deck strip plus room for a player.
+    // A shoreline measured only in the centre can leave land beside the gate.
+    const edge = bridgeHalfWidth+.16;
+    const include = distance => { shore = Math.max(shore,(distance-anchor)*outward); };
+    for (const [i,a] of border.entries()) {
+      const b = border[(i+1)%border.length];
+      if (Math.abs(a.offset)<=edge) include(a.distance);
+      if (a.offset===b.offset) continue;
+      for (const limit of [-edge,edge]) {
+        const t = (limit-a.offset)/(b.offset-a.offset);
+        if (t>0&&t<1) include(a.distance+(b.distance-a.distance)*t);
+      }
+    }
+  }
+  return anchor+outward*Math.min(path.length*.5-1,shore+.46);
+}
+
 function boughCrown(distance, length) {
   return .24*Math.sin(Math.PI*distance/length);
 }

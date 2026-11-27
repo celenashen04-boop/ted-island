@@ -15,7 +15,7 @@
 // The game owns placement: put these in a layer over the canvas and set
 // left/top from the projected world position. Nothing here reads the scene.
 
-import { el, icon, islandClass, islandUi } from './islands-ui.mjs';
+import { el, icon, islandBadgeSrc, islandClass, islandUi } from './islands-ui.mjs';
 import { replay } from './motion.mjs';
 
 const STAGE_LABEL = { seed: 'Seed', sprout: 'Sprout', young: 'Young plant', mature: 'Mature plant' };
@@ -99,7 +99,7 @@ export function createEdgePrompt(text = 'The bridges are this way') {
 export function createLockedPrompt({ island, onUnlock }) {
   const name = islandUi(island).name;
   const element = el('div', { class: `ui-prompt ui-prompt--locked ui-world-prompt ${islandClass(island)}`, role: 'status' },
-    el('p', { class: 'ui-prompt__eyebrow' }, icon('lock'), el('span', { class: 'ui-prompt__swatch', 'aria-hidden': 'true' }), `Bridge locked · ${name}`),
+    el('p', { class: 'ui-prompt__eyebrow' }, icon('lock'), el('img', { class: 'ui-badge ui-badge--sm', src: islandBadgeSrc(island), alt: '' }), `Bridge locked · ${name}`),
     el('p', { class: 'ui-prompt__body' }, `Adopt a ${name} seed and plant it on your home island to unlock this bridge.`),
     el('button', { type: 'button', class: 'ui-btn ui-btn--s ui-prompt__action', onclick: () => onUnlock?.(island) },
       el('span', { class: 'ui-btn__label' }, 'Unlock access')));

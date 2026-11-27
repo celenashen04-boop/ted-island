@@ -10,7 +10,7 @@ export function createIslandCollision(model) {
     if (!mesh.isMesh || !mesh.visible || walkables.has(mesh)) return;
     if (mesh.userData.isWater || mesh.userData.walkableTrim || mesh.userData.nonBlockingDecoration) return;
     for (let parent = mesh.parent; parent; parent = parent.parent) {
-      if (parent.userData.nonBlockingVegetation) return;
+      if (parent.userData.nonBlockingVegetation || parent.userData.lifecycleTree) return;
     }
     const geometry = mesh.geometry;
     if (!geometry.boundingBox) geometry.computeBoundingBox();

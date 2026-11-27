@@ -1,4 +1,5 @@
 import * as THREE from '../three.module.min.js';
+import {islands} from '../../islands.mjs';
 import {createTerrain as spiralTerrain,spiralRim} from './spiral/terrain.js';
 import {createArchitecture as spiralArchitecture,pavilion} from './spiral/architecture.js';
 import {createWater as spiralWater,pondRadius,pondTerrainHeight,waterSurfaceY as spiralWaterY} from './spiral/water.js';
@@ -19,11 +20,7 @@ import {edge} from './pinwheel/common.js';
 import {containsPoint} from './meadow.js';
 import {addMeadowPlants} from './meadow-plants.js';
 
-export const ISLANDS={
-  spiral:{name:'Spiral Harbor',theme:'Health, Wellbeing & Accessibility'},
-  verdant:{name:'Verdant Springs',theme:'Sustainability & Environmental HCI'},
-  pinwheel:{name:'Pinwheel Island',theme:"Games, Play & Children's Technology"}
-};
+export const ISLANDS=Object.fromEntries(islands.map(({model,name})=>[model,{name,theme:name}]));
 
 const landings={
   spiral:[[-4.6,-.16,-1,1.12],[4.45,1.25,1,1.12]],
@@ -107,12 +104,23 @@ export function createIsland(id,{position=[0,0,0],rotationY=0,scale=1}={}){
   group.updateMatrixWorld(true);
   const ray=new THREE.Raycaster();
   const normalMatrix=new THREE.Matrix3();
-  function localHit(x,z){
+  const floorNormal=new THREE.Vector3();
+  function localHit(x,z,ceiling=Infinity){
     group.updateWorldMatrix(true,false);
     const start=group.localToWorld(new THREE.Vector3(x,8,z));
     const below=group.localToWorld(new THREE.Vector3(x,7,z));
     ray.set(start,below.sub(start).normalize());
-    const hit=ray.intersectObjects(walkables,false)[0];
+    const hits=ray.intersectObjects(walkables,false);
+    // An overhead deck can hide the meadow in the topmost hit. Gravity needs
+    // an upward-facing surface below the player's feet, not a deck underside.
+    const ceilingY=start.y+(ceiling-8)*scale;
+    const hit=ceiling===Infinity ? hits[0] : hits.find(candidate=>{
+      if(candidate.point.y>ceilingY)return false;
+      // Terrain is a single, double-sided sheet with downward winding.
+      if(candidate.object===walkables[0])return true;
+      normalMatrix.getNormalMatrix(candidate.object.matrixWorld);
+      return floorNormal.copy(candidate.face.normal).applyMatrix3(normalMatrix).y>.0001;
+    });
     if(!hit)return null;
     const point=group.worldToLocal(hit.point.clone());
     normalMatrix.getNormalMatrix(hit.object.matrixWorld);
@@ -120,9 +128,11 @@ export function createIsland(id,{position=[0,0,0],rotationY=0,scale=1}={}){
     return {height:point.y,normal:[n.x,n.y,n.z],slopeDegrees:Math.acos(Math.min(1,n.y))*180/Math.PI,
       surfaceType:hit.object.userData.navSurface||'terrain',mesh:hit.object};
   }
+  let sceneryTreesSolid=true;
   function blockedReason(x,z,radius=.22){
     if(!containsPoint(outline,x,z,radius))return 'island_boundary';
     for(const o of obstacles){
+      if(!sceneryTreesSolid&&o.kind==='tree')continue;
       if(o.type==='circle'&&Math.hypot(x-o.x,z-o.z)<o.r+radius)return o.kind;
       if(o.type==='greenhouse_walls'){
         const dx=Math.abs(x-o.x),dz=Math.abs(z-o.z);
@@ -162,6 +172,11 @@ export function createIsland(id,{position=[0,0,0],rotationY=0,scale=1}={}){
       bridgeLandings:bridgeLandings(),notes:['The water mask marks a wading area, not an obstacle. Use query() for exact water depth and ground height.','Island boundaries and solid obstacles block movement. Small plants and decorative details are nonblocking.','The GLB is a visual snapshot; run the source update() method for animation.']};
   }
   return {id,name:ISLANDS[id].name,group,walkables,obstacles,boundary,query,blockedReason,toWorld,fromWorld,bridgeLandings,navigationManifest,
+    setSceneryTreesSolid(enabled){sceneryTreesSolid=enabled;},
+    floorHeight(x,z,ceiling){
+      if(!containsPoint(outline,x,z,0))return -Infinity;
+      return localHit(x,z,ceiling)?.height??-Infinity;
+    },
     queryWorld(point,options){const p=fromWorld(point),info=query(p.x,p.z,options);return {...info,worldPosition:toWorld(p.x,info.height,p.z).toArray()}},
     update(deltaSeconds,elapsedSeconds){if(id==='spiral')water.update(elapsedSeconds);else if(id==='verdant')kinetic.update(deltaSeconds);else kinetic.update(elapsedSeconds)},
     dispose(){group.traverse(o=>{if(o.geometry)o.geometry.dispose();for(const m of (Array.isArray(o.material)?o.material:[o.material]))m?.dispose?.()});group.removeFromParent()}

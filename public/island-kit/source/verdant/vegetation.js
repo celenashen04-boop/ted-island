@@ -20,6 +20,7 @@ export function createVegetation(scene,surface,outline){
     trunks.push({x,z,r:.12*s});
     const tree=new THREE.Group();
     tree.name=name;
+    tree.userData.lifecycleTree={x,y,z,style:'willow'};
     g.add(tree);
     beam(tree,[x,y-.015,z],[x-.06*s,y+h,z+.03*s],.095*s,bark,9);
     for(let j=0;j<7;j++){
@@ -70,7 +71,10 @@ export function createVegetation(scene,surface,outline){
     const [cx,cz,rx,rz,n]=zone;
     for(let i=0;i<n;i++){
       const x=cx+(random()-.5)*2*rx,z=cz+(random()-.5)*2*rz;
-      if(inside(x,z,.45)&&!inWater(x,z,.08)&&groundAt(x,z)!==null)fernClump(x,z,.65+random()*.55);
+      if(inside(x,z,.45)&&!inWater(x,z,.08)&&groundAt(x,z)!==null){
+        const size=.65+random()*.55;
+        if(i%2===0&&i%20!==6)fernClump(x,z,size);
+      }
     }
   }
 
@@ -78,7 +82,7 @@ export function createVegetation(scene,surface,outline){
     const x=-5.25+random()*10.4,z=2.28+random()*1.75;
     if(!inside(x,z,.44)||trunks.some(t=>Math.hypot(x-t.x,z-t.z)<.6)||x>2.7&&x<4.7)continue;
     const y=groundAt(x,z);if(y===null)continue;const r=.09+random()*.16;
-    if(nearGreenhouseApproach(x,z))continue;
+    if(i%2!==0||i%20===6||nearGreenhouseApproach(x,z))continue;
     ball(g,[x,y+.09,z],[r,.12,r*.9],i%3?moss:material(C.grassDark),1);
   }
 

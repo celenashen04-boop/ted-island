@@ -220,6 +220,11 @@ async function plant(req, res, player) {
   };
   const coordinate = (name) => field(name) ? Math.round(Number(field(name))*1000)/1000 : NaN;
   const x = coordinate('x'), z = coordinate('z');
+  const heading = field('emblemYaw');
+  const emblemYaw = heading ? Number(heading) : null;
+  if (emblemYaw !== null && (!Number.isFinite(emblemYaw) || Math.abs(emblemYaw) > Math.PI)) {
+    return json(res,400,{error:'Invalid seed throw orientation.'});
+  }
   const island = garden.home(player).island;
   if (field('island') !== String(island)) {
     return json(res,403,{error:'Return to your home island to plant.'});
@@ -243,7 +248,7 @@ async function plant(req, res, player) {
       }
     }
   }
-  const result=garden.plant(player,{x,z,title,idea,question,pdf,adopt});
+  const result=garden.plant(player,{x,z,title,idea,question,pdf,adopt,emblemYaw});
   if(result.error)return json(res,result.status,{error:result.error});
   json(res,201,result);
   broadcast();

@@ -25,7 +25,7 @@ export function createGarden(db) {
     );
     CREATE TABLE IF NOT EXISTS placements (
       seed TEXT NOT NULL REFERENCES plants(id), island INTEGER NOT NULL,
-      x REAL NOT NULL, z REAL NOT NULL, PRIMARY KEY(seed,island)
+      x REAL NOT NULL, z REAL NOT NULL, emblem_yaw REAL, PRIMARY KEY(seed,island)
     );
     CREATE TABLE IF NOT EXISTS comments (
       id INTEGER PRIMARY KEY, seed TEXT NOT NULL REFERENCES plants(id), player TEXT NOT NULL,
@@ -43,6 +43,9 @@ export function createGarden(db) {
       SELECT id,island,x,z FROM plants WHERE x IS NOT NULL AND z IS NOT NULL;
   `);
 
+  if (!db.prepare('PRAGMA table_info(placements)').all().some(column => column.name === 'emblem_yaw')) {
+    db.exec('ALTER TABLE placements ADD COLUMN emblem_yaw REAL');
+  }
   if (!db.prepare('PRAGMA table_info(comments)').all().some(column => column.name === 'reply_to')) {
     db.exec('ALTER TABLE comments ADD COLUMN reply_to INTEGER REFERENCES comments(id)');
   }
@@ -105,7 +108,7 @@ export function createGarden(db) {
   const seed = db.prepare('SELECT id,owner,island,title,length(pdf) AS fileSize FROM plants WHERE id=?');
   const placement = db.prepare('SELECT 1 FROM placements WHERE seed=? AND island=?');
   const occupied = db.prepare('SELECT 1 FROM placements WHERE island=? AND (x-?)*(x-?)+(z-?)*(z-?) < .16');
-  const place = db.prepare('INSERT INTO placements VALUES (?,?,?,?)');
+  const place = db.prepare('INSERT INTO placements (seed,island,x,z,emblem_yaw) VALUES (?,?,?,?,?)');
   const insert = db.prepare(`INSERT INTO plants (id,owner,island,plot,title,idea,pdf,planted_at,x,z,question)
     VALUES (?,?,?,(SELECT COALESCE(MAX(plot),-1)+1 FROM plants WHERE island=?),?,?,?,?,?,?,?)`);
   const water = db.prepare('INSERT OR IGNORE INTO watering VALUES (?,?)');
@@ -123,7 +126,7 @@ export function createGarden(db) {
     LEFT JOIN accounts author ON author.player=p.owner
     JOIN plant_activity activityClock ON activityClock.plant=p.id
     WHERE EXISTS(SELECT 1 FROM placements WHERE seed=p.id) ORDER BY p.planted_at,p.id`);
-  const locations = db.prepare('SELECT seed,island,x,z FROM placements');
+  const locations = db.prepare('SELECT seed,island,x,z,emblem_yaw AS emblemYaw FROM placements');
   const discussions = db.prepare(`SELECT c.id,c.seed,c.island,c.body,c.created,c.reply_to AS replyTo,COALESCE(author.public_id,'Player '||r.seq) AS resident,
     parent.island AS replyIsland,COALESCE(parentAuthor.public_id,'Player '||parentResident.seq) AS replyResident,
     CASE WHEN parent.id IS NULL THEN 0 ELSE c.player<>parent.player END AS repliesToAnother
@@ -209,7 +212,11 @@ export function createGarden(db) {
         .map(({id,title,idea,question,originalIsland,growth,plantedOn})=>({
           id,title,idea,question,originalIsland,growth,plantedHere:plantedOn.includes(island)
         })),
-      plants:visiblePlants.map(({seed,...location})=>({...bySeed.get(seed),...location})),
+      plants:visiblePlants.map(({seed,...location})=>{
+        const plant=bySeed.get(seed);
+        // Send a list so the UI can show multiple origins when the data model supports them.
+        return {...plant,...location,originIslands:[plant.originalIsland]};
+      }),
       followed:followedSeeds.all(player).flatMap(({seed,newReplies})=>{
         const card = bySeed.get(seed);
         if (!card) return [];
@@ -223,7 +230,7 @@ export function createGarden(db) {
       updates:updates.all(player,player).filter(item=>readableSeeds.has(item.seed))
     };
   }
-  function plant(player, {x,z,title,idea,question,pdf,adopt}) {
+  function plant(player, {x,z,title,idea,question,pdf,adopt,emblemYaw=null}) {
     const island=home(player).island;
     return transaction(()=>{
       if(access.location(player,island).island!==island)return {status:403,error:'Return to your home island to plant.'};
@@ -238,7 +245,8 @@ export function createGarden(db) {
         insert.run(id,player,island,island,title,idea,pdf,new Date().toISOString(),x,z,question);
         notifications.touch(id);
       }
-      place.run(id,island,x,z);
+      // Each placement keeps the heading from its own throw, including adopted seeds.
+      place.run(id,island,x,z,emblemYaw);
       if(adopt)recordActivity(id,player,island,'plant');
       return {id,access:adopt?access.grant(player,island,source,'plant'):null};
     });
